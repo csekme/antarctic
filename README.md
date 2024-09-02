@@ -83,27 +83,6 @@ This project is open-source and available under the [GNU GENERAL PUBLIC LICENSE 
 For any questions or suggestions, please feel free to reach out to [csekme.krisztian@outlook.com](mailto:csekme.krisztian@outlook.com).
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-# antarcitc
-Antarctic PHP Web Framework
-
-
 # How to configure
 
 For Database connection create an **.env** file on the root and define the following properties.
