@@ -1,0 +1,24 @@
+{% extends "base.twig" %}
+{% block title %}Dashboard{% endblock %}
+{% block header %}
+    <style>
+        main {
+            margin: auto;
+            width: 80%;
+        }
+        h1 {
+            margin-top: 90px;
+        }
+    </style>
+{% endblock %}
+{% block body %}
+<main>
+<h1>Internal Server Error</h1>
+
+The server encountered an internal error or misconfiguration and was unable to complete your request.
+
+Please contact the server adminisztrator, <b>{{ server_administrator_email }}</b> and inform them of the time the error might have done that may have caused the error.
+
+More information about this error may be available in the server error log. 
+</main>
+{% endblock %}

@@ -1,0 +1,11 @@
+{
+    "autoload": {
+        "psr-4": {
+            "Application\\": "Application/",
+            "Framework\\": "Framework/"
+        }
+    },
+    "require": {
+        "twig/twig": "^3.0"
+    }
+}
