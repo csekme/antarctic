@@ -107,14 +107,6 @@ Antarctic PHP Web Framework
 # How to configure
 
 For Database connection create an **.env** file on the root and define the following properties.
-```ini
-    DATABASE=mariadb
-    DATABASE_USER=csk
-    DATABASE_PASSWORD=csk
-    DATABASE_ROOT_PASSWORD=csk
-    DATABASE_NAME=csk
-    DATABASE_PORT=3306
-```
 
 Application configuration file
 
