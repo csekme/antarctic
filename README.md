@@ -94,6 +94,24 @@ Application configuration file
 {
     "administrator": {
         "email": "xy@server.com"
+    },
+    "application": {
+      "name": "My Production",
+      "description": "This is my application based on Antrarctic Web Framework",
+      "secretKey": "MY-SECRET-KEY"
+    },
+    "smtp": {
+        "debug": 0,
+        "host": "smtp.mail.com",
+        "auth": true,
+        "username": "username",
+        "password": "your-password",
+        "secure": "ssl",
+        "port": 465,
+        "from": "noreply@mail.com",
+        "alias": "Jhon Doe",
+        "charset": "UTF-8",
+        "method": 0
     }
 }
 
