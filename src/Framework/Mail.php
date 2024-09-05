@@ -33,21 +33,21 @@ class Mail
     {
         $mail = new PHPMailer(true);
         $mail->isSMTP(); // Set mailer to use SMTP
-
+        $smtp_config = Config::get_config()["smtp"];
         //Server settings
-        $mail->SMTPDebug = Config::SMTP_DEBUG;
-        $mail->Host = Config::SMTP_MAIL_HOST;
-        $mail->SMTPAuth = Config::SMTP_AUTH;
-        $mail->Username = Config::SMTP_USERNAME;
-        $mail->Password = Config::SMTP_PASSWORD;
-        $mail->SMTPSecure = Config::SMTP_SECURE;
-        $mail->Port = Config::SMTP_PORT;
+        $mail->SMTPDebug = $smtp_config["debug"];
+        $mail->Host = $smtp_config["host"];
+        $mail->SMTPAuth = $smtp_config["auth"]; 
+        $mail->Username = $smtp_config["username"];
+        $mail->Password = $smtp_config["password"];
+        $mail->SMTPSecure = $smtp_config["secure"];
+        $mail->Port = $smtp_config["port"];
 
         //Char set
-        $mail->CharSet = Config::SMTP_CHARSET;
+        $mail->CharSet = $smtp_config["charset"];
 
         //Mail alias
-        $mail->setFrom(Config::SMTP_FROM, Config::SMTP_ALIAS);
+        $mail->setFrom($smtp_config["from"], $smtp_config["alias"]);
         return $mail;
     }
 
@@ -58,10 +58,11 @@ class Mail
      * @param string $text Text-only content of the message
      * @param string $html HTML content of the message
      */
-    public static function sendHtmlMessage($to, $subject, $html)
+    public static function sendHtmlMessage($to, $subject, $html): bool | string
     {
-        if (Config::MAIL_ENABLE) {
-            if (Config::MAIL_METHOD == Config::SMTP){
+        $smtp_config = Config::get_config()["smtp"];
+        if ($smtp_config["enabled"]) {
+            if ($smtp_config['method'] == 0){
                 $mail = Mail::smtp();
             } else {
                 $mail = Mail::sp();
@@ -81,13 +82,12 @@ class Mail
                 $mail->Body = $html;
 
                 $mail->send();
-                if (Config::SMTP_DEBUG > 0) {
-                    echo 'Message has been sent';
-                }
+                return true;
             } catch (Exception $e) {
-                if (Config::SMTP_DEBUG > 0) {
+                if ($smtp_config["debug"] > 0) {
                     echo 'Message could not be sent. Mailer Error: ', $mail->ErrorInfo;
                 }
+                return $mail->ErrorInfo;
             }
         }
     }
@@ -103,9 +103,9 @@ class Mail
      */
     public static function send($to, $subject, $text, $html)
     {
-        if (Config::MAIL_ENABLE) {
-
-            if (Config::MAIL_METHOD == Config::SMTP){
+        $smtp_config = Config::get_config()["smtp"];
+        if ($smtp_config["enabled"]) {
+            if ($smtp_config['method'] == 0){
                 $mail = Mail::smtp();
             } else {
                 $mail = Mail::sp();
@@ -126,11 +126,11 @@ class Mail
                 $mail->AltBody = $text;
 
                 $mail->send();
-                if (Config::SMTP_DEBUG > 0) {
+                if ($smtp_config["enabled"] > 0) {
                     echo 'Message has been sent';
                 }
             } catch (Exception $e) {
-                if (Config::SMTP_DEBUG > 0) {
+                if ($smtp_config["enabled"] > 0) {
                     echo 'Message could not be sent. Mailer Error: ', $mail->ErrorInfo;
                 }
             }

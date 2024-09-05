@@ -26,6 +26,7 @@ $router = new \Framework\Routing\StandardRouterImpl();
 
 // Add the routes
 $router->add('', ['controller' => 'FrameworkDashboardController', 'action' => 'index']);
+$router->add('test-email', ['controller' => 'FrameworkDashboardController', 'action' => 'testEmail']);
 $router->add('password/reset/{token:[\da-f]+}', ['controller' => 'Password', 'action' => 'reset']);
 $router->add('signup/activate/{token:[\da-f]+}', ['controller' => 'Signup', 'action' => 'activate']);
 $router->add('test', ['controller' => 'TestController', 'action' => 'test']);

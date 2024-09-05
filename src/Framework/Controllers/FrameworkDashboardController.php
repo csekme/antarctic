@@ -7,6 +7,7 @@ use Framework\Path as Path;
 use Framework\Config as Config;
 use Framework\Response;
 use Framework\Flash as Flash;
+use Framework\Mail as Mail;
 
 #[Path('/FrameworkDashboard')]
 class FrameworkDashboardController extends Controller
@@ -20,5 +21,16 @@ class FrameworkDashboardController extends Controller
             'is_exist_appconfig' => file_exists(dirname(__DIR__) . Config::APPLICATION_CONFIG_FILE)?"true":"false",
             'year' => date("Y")
         ]);
+    }
+
+    function testEmailAction() {
+        $res = Mail::sendHtmlMessage($_POST["email"], $_POST["subject"], $_POST["body"]);
+        if ($res === true) {
+            Flash::addMessage(message: "Üzenet sikeresen elküldve", type: Flash::SUCCESS);
+        } else {
+            Flash::addMessage(message: "<h5>An error has occurred</h5>". $res, type: Flash::ERROR);
+        }
+        $this->redirect("");
+        
     }
 }

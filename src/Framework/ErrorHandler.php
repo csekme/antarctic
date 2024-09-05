@@ -40,9 +40,10 @@ class ErrorHandler
         if ($code != 404) {
             $code = 500;
         }
-        http_response_code($code);
-
-        if (false) { //TODO: config boolean
+        if (!headers_sent()) {
+            http_response_code($code);
+        }
+        if (true) { //TODO: config boolean
             echo "<h1>Fatal error</h1>";
             echo "<p>Uncaught exception: '" . get_class($exception) . "'</p>";
             echo "<p>Message: '" . $exception->getMessage() . "'</p>";
