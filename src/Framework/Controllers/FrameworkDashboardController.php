@@ -19,7 +19,7 @@ class FrameworkDashboardController extends Controller
     function indexAction() : Response {
         return $this->view('dashboard.twig',
         [
-            'is_exist_appconfig' => file_exists(dirname(__DIR__) . Config::APPLICATION_CONFIG_FILE)?"true":"false",
+            'is_exist_appconfig' => file_exists(dirname($_SERVER['DOCUMENT_ROOT']). Config::APPLICATION_CONFIG_FILE)?"true":"false",
             'year' => date("Y")
         ]);
     }
