@@ -111,7 +111,8 @@ Application configuration file
         "from": "noreply@mail.com",
         "alias": "Jhon Doe",
         "charset": "UTF-8",
-        "method": 0
+        "method": 0,
+        "enabled": true
     }
 }
 

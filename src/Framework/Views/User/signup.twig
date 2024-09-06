@@ -1,0 +1,51 @@
+{% extends "base.twig" %}
+{% block title %}User Signup{% endblock %}
+{% block header %}
+    <style>
+        html,
+        body {
+            height: 100%;
+        }
+        .form-signup {
+            max-width: 500px;
+            padding: 1rem;
+        }
+    </style>
+{% endblock %}
+{% block body %}
+
+    <main class="form-signup w-100 m-auto">
+        <form action="/signup/signup" method="post">
+            <h1 class="h3 mb-3 fw-normal">Sign up</h1>
+            <div class="mb-3">
+                <label for="username" class="form-label">Username</label>
+                <input id="username" name="username" type="text" class="form-control">
+            </div>
+            <div class="row">
+                <div class="col">
+                    <label for="firstname" class="form-label">Firstname</label>
+                    <input id="firstname" name="firstname" type="text" class="form-control">
+                </div>
+                <div class="col">
+                    <label for="lastname" class="form-label">Lastname</label>
+                    <input id="lastname" name="lastname" type="text" class="form-control">
+                </div>
+            </div>
+            <div class="mb-3">
+                <label for="email" class="form-label">Email</label>
+                <input id="email" name="email" type="email" class="form-control" value="{{ email }}">
+            </div>
+            <div class="mb-3">
+                <label for="password" class="form-label">Password</label>
+                <input id="password" name="password" type="password" class="form-control">
+            </div>
+            <div class="mb-3">
+                <label for="password_retry" class="form-label">Password retry</label>
+                <input id="password_retry" name="password_retry" type="password" class="form-control">
+            </div>
+            <button class="btn btn-primary w-100 py-2" type="submit">Sign up</button>
+        </form>
+    </main>
+
+
+{% endblock %}

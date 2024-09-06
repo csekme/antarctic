@@ -31,6 +31,9 @@ $router->add('password/reset/{token:[\da-f]+}', ['controller' => 'Password', 'ac
 $router->add('signup/activate/{token:[\da-f]+}', ['controller' => 'Signup', 'action' => 'activate']);
 $router->add('test', ['controller' => 'TestController', 'action' => 'test']);
 
+$router->add('signup/new', ['controller' => 'SignupController', 'action' => 'new']);
+$router->add('signup/signup', ['controller' => 'SignupController', 'action' => 'signup']);
+
 $router->add('{controller}/{action}');
 
 

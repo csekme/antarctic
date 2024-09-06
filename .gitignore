@@ -1,5 +1,6 @@
 .env
 .vscode
+.idea
 /src/composer.lock
 /src/vendor
 /src/Application/application.json

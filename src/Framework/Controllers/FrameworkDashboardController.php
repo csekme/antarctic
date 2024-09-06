@@ -2,6 +2,7 @@
 
 namespace Framework\Controllers;
 
+use Framework\AbstractController;
 use Framework\Controller as Controller;
 use Framework\Path as Path;
 use Framework\Config as Config;
@@ -14,7 +15,7 @@ class FrameworkDashboardController extends Controller
 {
 
     
-    #[Path(path:'', method:Controller::GET)]
+    #[Path(path:'', method: AbstractController::GET)]
     function indexAction() : Response {
         return $this->view('dashboard.twig',
         [
