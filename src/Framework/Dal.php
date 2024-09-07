@@ -80,5 +80,9 @@ abstract class Dal {
         return $db;
     }
 
+    public function getErrors() {
+        return $this->errors;
+    }
+
 
 }

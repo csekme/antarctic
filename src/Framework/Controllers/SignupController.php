@@ -21,12 +21,18 @@ class SignupController extends Controller {
 
     /**
      * @throws RandomException
+     * @throws \Exception
      */
     #[Path(path: '/signup', method: AbstractController::POST)]
     function signupAction() : Response {
         $user = new User($this->request->post);
-        Flash::addMessage(message: '<b>'.$user->username.'</b> has been successfully created.', title: 'New User', type: Flash::SUCCESS);
-        $this->redirect('');
+        if ($user->save()) {
+            Flash::addMessage(message: '<b>'.$user->username.'</b> has been successfully created.', title: 'New User', type: Flash::SUCCESS);
+            $this->redirect('');
+        } else {
+            return $this->view('User/signup.twig',[ 'user' => $user, 'errors' => $user->getErrors() ]);
+        }
+
     }
 
 }
