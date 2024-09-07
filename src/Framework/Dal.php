@@ -80,8 +80,9 @@ abstract class Dal {
         return $db;
     }
 
-    public function getErrors() {
-        return $this->errors;
+    public function getErrors(): false|string
+    {
+        return json_encode($this->errors, JSON_UNESCAPED_UNICODE);
     }
 
 

@@ -64,9 +64,6 @@ class View
             }
             $loader = new \Twig\Loader\FilesystemLoader($dir);
             $twig = new \Twig\Environment($loader, array('debug' => true));
-            if (array_key_exists('errors', $args)) {
-                $args['errors'] = json_encode($args['errors'], JSON_UNESCAPED_UNICODE);
-            }
             $twig->addGlobal('session', $_SESSION);
             $twig->addGlobal('flash_messages', Flash::getMessages());
             $twig->addGlobal('base_path', "/");
