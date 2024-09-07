@@ -4,7 +4,7 @@
  * Default User Model
  */
 CREATE TABLE `user` (
-     `id` int(11) NOT NULL,
+     `id` int(11) AUTO_INCREMENT PRIMARY KEY,
      `uuid` UUID NOT NULL,
      `username` varchar(45) DEFAULT NULL,
      `firstname` varchar(45) DEFAULT NULL,
@@ -21,7 +21,6 @@ CREATE TABLE `user` (
 );
 
 ALTER TABLE `user`
-    ADD PRIMARY KEY (`id`),
     ADD UNIQUE KEY `UQ_USERNAME` (`username`),
     ADD UNIQUE KEY `UQ_PASSWORD_RESET_HASH` (`password_reset_hash`),
     ADD UNIQUE KEY `UQ_ACTIVATION_HASH` (`activation_hash`);

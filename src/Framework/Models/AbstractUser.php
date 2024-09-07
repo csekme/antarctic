@@ -40,15 +40,16 @@ abstract class AbstractUser extends Dal
             $token = new Token();
             $hashed_token = $token->getHash();
             $this->activation_hash = $token->getValue();
-            $sql = 'INSERT INTO users (username, firstname, lastname, email, password, activation_hash)
-                    VALUES (:username, :firstname, :lastname, :email, :password, :activation_hash)';
+            $sql = 'INSERT INTO user (uuid, username, firstname, lastname, email, password_hash, activation_hash)
+                    VALUES (:uuid, :username, :firstname, :lastname, :email, :password_hash, :activation_hash)';
             $connection = self::connection();
             $statement = $connection->prepare($sql);
+            $statement->bindValue(':uuid', $this->uuid);
             $statement->bindValue(':username', $this->username);
             $statement->bindValue(':firstname', $this->firstname);
             $statement->bindValue(':lastname', $this->lastname);
             $statement->bindValue(':email', $this->email);
-            $statement->bindValue(':password', $password_hash);
+            $statement->bindValue(':password_hash', $password_hash);
             $statement->bindValue(':activation_hash', $hashed_token);
             return $statement->execute();
         }

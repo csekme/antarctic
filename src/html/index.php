@@ -1,6 +1,9 @@
 <?php
-//declare(strict_types=1);
+declare(strict_types=1);
 use \Framework\Request as Request;
+
+define("ROOT_PATH", dirname(__DIR__));
+
 /**
  * Composer
  */
@@ -19,6 +22,8 @@ set_exception_handler('Framework\ErrorHandler::exceptionHandlerHtml');
  */
 session_start();
 
+$dotenv = new Framework\Dotenv;
+$dotenv->load(ROOT_PATH . "/.env");
 
 $container = new \Framework\Container();
 $router = new \Framework\Routing\StandardRouterImpl();

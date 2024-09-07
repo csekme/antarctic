@@ -1,4 +1,4 @@
-.env
+src/.env
 .vscode
 .idea
 /src/composer.lock
