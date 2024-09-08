@@ -15,8 +15,7 @@ class SignupController extends Controller {
 
     #[Path(path: '/new', method: AbstractController::GET)]
     function newAction() : Response {
-        $email = 'some@email.com';
-        return $this->view('User/signup.twig',[ 'email' => $email ]);
+        return $this->view('User/signup.twig',[]);
     }
 
     /**
@@ -30,7 +29,6 @@ class SignupController extends Controller {
             Flash::addMessage(message: '<b>'.$user->username.'</b> has been successfully created.', title: 'New User', type: Flash::SUCCESS);
             $this->redirect('');
         } else {
-
             return $this->view('User/signup.twig',[ 'errors' => $user->getErrors(), 'user' => $user ]);
         }
 

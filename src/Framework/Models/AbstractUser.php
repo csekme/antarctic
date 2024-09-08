@@ -3,6 +3,7 @@ namespace Framework\Models;
 use Exception;
 use Framework\Dal as Dal;
 use Framework\Token;
+use PDO;
 
 /**
  * Default User Model
@@ -13,7 +14,7 @@ use Framework\Token;
  * @property $lastname
  * @property $email
  * @property $password not persist
- * @property $password_retry not persist
+ * @property $password_confirm not persist
  * @property $password_hash
  * @property $activation_hash
  * @property $is_active
@@ -23,9 +24,9 @@ use Framework\Token;
  */
 abstract class AbstractUser extends Dal
 {
-    public function validate()
+    public function validate() : bool
     {
-
+        return false;
     }
 
     /**
@@ -34,8 +35,7 @@ abstract class AbstractUser extends Dal
      */
     public function save(): bool
     {
-        $this->validate();
-        if (empty($this->errors)) {
+        if ($this->validate()) {
             $password_hash = password_hash($this->password, PASSWORD_DEFAULT);
             $token = new Token();
             $hashed_token = $token->getHash();
@@ -55,4 +55,84 @@ abstract class AbstractUser extends Dal
         }
         return false;
     }
+
+
+    /**
+     * Find a user model by email address
+     * @param string $email email address to search for
+     * @return AbstractUser|false User object if found, false otherwise
+ */
+    public static function findByEmail(string $email): AbstractUser|false
+    {
+        $sql = 'SELECT * FROM user WHERE email = :email';
+        $db = static::connection();
+        $stmt = $db->prepare($sql);
+        $stmt->bindParam(':email', $email, PDO::PARAM_STR);
+
+        //Az adatbázis record egy entity osztályként jön létre
+        $stmt->setFetchMode(PDO::FETCH_CLASS, get_called_class());
+
+        $stmt->execute();
+
+        return $stmt->fetch();
+    }
+
+    /**
+     * Find a user model by username
+     * @param string $username The username
+     * @return AbstractUser|false User object if found, false otherwise
+     */
+    public static function findByUsername(string $username) : AbstractUser|false
+    {
+        $sql = 'SELECT * FROM user WHERE username = :username';
+        $db = static::connection();
+        $stmt = $db->prepare($sql);
+        $stmt->bindParam(':username', $username, PDO::PARAM_STR);
+
+        //Az adatbázis record egy entity osztályként jön létre
+        $stmt->setFetchMode(PDO::FETCH_CLASS, get_called_class());
+
+        $stmt->execute();
+
+        return $stmt->fetch();
+    }
+
+    /**
+     * Find a user model by ID
+     * @param int $id The user ID
+     * @return AbstractUser|false User object if found, false otherwise
+     */
+    public static function findByID(int $id): AbstractUser | false
+    {
+        $sql = 'SELECT * FROM users WHERE id = :id';
+        $db = static::connection();
+        $stmt = $db->prepare($sql);
+        $stmt->bindParam(':id', $id, PDO::PARAM_INT);
+
+        $stmt->setFetchMode(PDO::FETCH_CLASS, get_called_class());
+
+        $stmt->execute();
+
+        return $stmt->fetch();
+    }
+
+    /**
+     * Find a user model by UUID
+     * @param string $uuid The user UUID
+     * @return AbstractUser|false User object if found, false otherwise
+     */
+    public static function findByUUID(string $uuid): AbstractUser | false
+    {
+        $sql = 'SELECT * FROM users WHERE uuid = :uuid';
+        $db = static::connection();
+        $stmt = $db->prepare($sql);
+        $stmt->bindParam(':uuid', $uuid, PDO::PARAM_STR);
+
+        $stmt->setFetchMode(PDO::FETCH_CLASS, get_called_class());
+
+        $stmt->execute();
+
+        return $stmt->fetch();
+    }
+
 }
