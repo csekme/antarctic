@@ -22,5 +22,6 @@ CREATE TABLE `user` (
 
 ALTER TABLE `user`
     ADD UNIQUE KEY `UQ_USERNAME` (`username`),
+    ADD UNIQUE KEY `UQ_EMAIL` (`email`),
     ADD UNIQUE KEY `UQ_PASSWORD_RESET_HASH` (`password_reset_hash`),
     ADD UNIQUE KEY `UQ_ACTIVATION_HASH` (`activation_hash`);

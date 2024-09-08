@@ -24,7 +24,7 @@ class User extends AbstractUser {
              return false;
          }
 
-         if (User::findByEmail($this->email) === false) {
+         if (User::findByEmail($this->email)) {
              $this->errors[] = ['name' => 'email', 'text'=>'This email is already registered'];
              return false;
          }
