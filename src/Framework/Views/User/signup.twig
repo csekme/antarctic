@@ -1,7 +1,9 @@
 {% extends "base.twig" %}
 {% block title %}User Signup{% endblock %}
+
 {% block header %}
     <style>
+        {% include 'bs-stepper.css' %}
         html,
         body {
             height: 100%;
@@ -15,6 +17,39 @@
 {% block body %}
 
     <main class="form-signup w-100 m-auto">
+            <div class="bs-stepper">
+                <div class="bs-stepper-header" role="tablist">
+                    <!-- your steps here -->
+                    <div class="step {%if step == 'signup' %}active{% endif %}" data-target="#logins-part">
+                        <button type="button" {%if step != 'signup' %}disabled="disabled"{% endif %} class="step-trigger" role="tab" aria-controls="logins-part" id="logins-part-trigger" aria-selected="true">
+                            <span class="bs-stepper-circle">1</span>
+                            <span class="bs-stepper-label">Signup</span>
+                        </button>
+                    </div>
+                    <div class="line"></div>
+                    <div class="step {%if step == 'activate' %}active{% endif %}" data-target="#information-part">
+                        <button type="button" {%if step != 'activate' %}disabled="disabled"{% endif %} class="step-trigger" role="tab" aria-controls="information-part" id="information-part-trigger">
+                            <span class="bs-stepper-circle">2</span>
+                            <span class="bs-stepper-label">Validation</span>
+                        </button>
+                    </div>
+                    <div class="line"></div>
+                    <div class="step" data-target="#information-part">
+                        <button type="button" disabled="disabled" class="step-trigger" role="tab" aria-controls="information-part" id="information-part-trigger">
+                            <span class="bs-stepper-circle">3</span>
+                            <span class="bs-stepper-label">Login</span>
+                        </button>
+                    </div>
+
+                </div>
+                <div class="bs-stepper-content">
+                    <!-- your steps content here -->
+                    <div id="logins-part" class="content" role="tabpanel" aria-labelledby="logins-part-trigger"></div>
+                    <div id="information-part" class="content" role="tabpanel" aria-labelledby="information-part-trigger"></div>
+                </div>
+            </div>
+
+{% if step == 'signup' %}
         <form action="/signup/signup" method="post" class="p-4 p-md-5 border rounded-3 bg-body-tertiary">
             <h1 class="h3 mb-3 fw-normal">Sign up</h1>
             <div class="mb-3">
@@ -53,6 +88,19 @@
             <hr class="my-4">
             <small class="text-body-secondary">By clicking Sign up, you agree to the terms of use.</small>
         </form>
+{% elseif step == 'activate' %}
+        <div class="p-4 p-md-5 border rounded-3 bg-body-tertiary">
+            <h1 class="h3 mb-3 fw-normal">Signup Successful</h1>
+            Thank you for signing up! Please check your email inbox, where you will find an activation link. To activate your account, click on the link.
+
+            Important: You will only be able to log in and use your account after activation.
+
+
+            <hr class="my-4">
+            <small class="text-body-secondary">If you don't see the email, please check your spam/junk folder, or try requesting a new activation email.</small>
+        </div>
+{% endif %}
+
     </main>
 
 
