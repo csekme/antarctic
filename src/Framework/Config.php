@@ -7,7 +7,7 @@ use Exception;
 class Config {
 
     private static mixed $_config = null;
-    private const HTTP_PROTOCOL = 'http';
+    private const string HTTP_PROTOCOL = 'http';
     public const string APPLICATION_CONFIG_FILE = '/Application/application.json';
 
     private static function set_config($path) {
@@ -26,11 +26,7 @@ class Config {
 
     public static function get_server_protocol()  {
         $_config = Config::get_config();
-        if (isset($_config['server']['protocol'])) {
-            return $_config['server']['protocol'];
-        } else {
-            return Config::HTTP_PROTOCOL;
-        }
+        return $_config['server']['protocol'] ?? Config::HTTP_PROTOCOL;
     }
 
 }

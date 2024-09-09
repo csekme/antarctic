@@ -6,7 +6,7 @@ use Framework\Token;
 use PDO;
 
 /**
- * Default User Model
+ * Default Signup Model
  * @property $id
  * @property $uuid
  * @property $username
@@ -17,6 +17,7 @@ use PDO;
  * @property $password_confirm not persist
  * @property $password_hash
  * @property $activation_hash
+ * @property $activation_token not persist
  * @property $is_active
  * @property $password_reset_hash
  * @property $password_reset_expires_at
@@ -39,7 +40,7 @@ abstract class AbstractUser extends Dal
             $password_hash = password_hash($this->password, PASSWORD_DEFAULT);
             $token = new Token();
             $hashed_token = $token->getHash();
-            $this->activation_hash = $token->getValue();
+            $this->activation_token = $token->getValue();
             $sql = 'INSERT INTO user (uuid, username, firstname, lastname, email, password_hash, activation_hash)
                     VALUES (:uuid, :username, :firstname, :lastname, :email, :password_hash, :activation_hash)';
             $connection = self::connection();
@@ -60,7 +61,7 @@ abstract class AbstractUser extends Dal
     /**
      * Find a user model by email address
      * @param string $email email address to search for
-     * @return AbstractUser|false User object if found, false otherwise
+     * @return AbstractUser|false Signup object if found, false otherwise
  */
     public static function findByEmail(string $email): AbstractUser|false
     {
@@ -80,7 +81,7 @@ abstract class AbstractUser extends Dal
     /**
      * Find a user model by username
      * @param string $username The username
-     * @return AbstractUser|false User object if found, false otherwise
+     * @return AbstractUser|false Signup object if found, false otherwise
      */
     public static function findByUsername(string $username) : AbstractUser|false
     {
@@ -100,7 +101,7 @@ abstract class AbstractUser extends Dal
     /**
      * Find a user model by ID
      * @param int $id The user ID
-     * @return AbstractUser|false User object if found, false otherwise
+     * @return AbstractUser|false Signup object if found, false otherwise
      */
     public static function findByID(int $id): AbstractUser | false
     {
@@ -119,7 +120,7 @@ abstract class AbstractUser extends Dal
     /**
      * Find a user model by UUID
      * @param string $uuid The user UUID
-     * @return AbstractUser|false User object if found, false otherwise
+     * @return AbstractUser|false Signup object if found, false otherwise
      */
     public static function findByUUID(string $uuid): AbstractUser | false
     {
@@ -133,6 +134,20 @@ abstract class AbstractUser extends Dal
         $stmt->execute();
 
         return $stmt->fetch();
+    }
+
+    /**
+     * @param string $activation_hash
+     * @return bool
+     */
+    public static function activateByActivationHash(string $activation_hash): bool
+    {
+        $sql = 'UPDATE user SET is_active = 1 , activation_hash = NULL
+             WHERE activation_hash = :activation_hash';
+        $db = static::connection();
+        $stmt = $db->prepare($sql);
+        $stmt->bindParam(':activation_hash', $activation_hash, PDO::PARAM_STR);
+        return $stmt->execute();
     }
 
 }

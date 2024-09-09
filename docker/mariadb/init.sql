@@ -1,7 +1,7 @@
 -- initial script
 
 /**
- * Default User Model
+ * Default Signup Model
  */
 CREATE TABLE `user` (
      `id` int(11) AUTO_INCREMENT PRIMARY KEY,

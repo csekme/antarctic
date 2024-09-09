@@ -101,7 +101,7 @@ class Mail
      *
      * @return mixed
      */
-    public static function send($to, $subject, $text, $html)
+    public static function send($to, $subject, $text, $html) : void
     {
         $smtp_config = Config::get_config()["smtp"];
         if ($smtp_config["enabled"]) {
@@ -126,11 +126,8 @@ class Mail
                 $mail->AltBody = $text;
 
                 $mail->send();
-                if ($smtp_config["enabled"] > 0) {
-                    echo 'Message has been sent';
-                }
             } catch (Exception $e) {
-                if ($smtp_config["enabled"] > 0) {
+                if ($smtp_config["debug"] > 0) {
                     echo 'Message could not be sent. Mailer Error: ', $mail->ErrorInfo;
                 }
             }

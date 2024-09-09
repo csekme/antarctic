@@ -1,0 +1,2 @@
+Activate your registration
+Please click on the link {{ url }} to activate your account.

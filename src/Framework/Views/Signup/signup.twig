@@ -34,8 +34,8 @@
                         </button>
                     </div>
                     <div class="line"></div>
-                    <div class="step" data-target="#information-part">
-                        <button type="button" disabled="disabled" class="step-trigger" role="tab" aria-controls="information-part" id="information-part-trigger">
+                    <div class="step {%if step == 'success' %}active{% endif %}" data-target="#information-part">
+                        <button type="button" {%if step != 'success' %}disabled="disabled"{% endif %} class="step-trigger" role="tab" aria-controls="information-part" id="information-part-trigger">
                             <span class="bs-stepper-circle">3</span>
                             <span class="bs-stepper-label">Login</span>
                         </button>
@@ -99,6 +99,20 @@
             <hr class="my-4">
             <small class="text-body-secondary">If you don't see the email, please check your spam/junk folder, or try requesting a new activation email.</small>
         </div>
+{% elseif step == 'success' %}
+    <div class="p-4 p-md-5 border rounded-3 bg-body-tertiary">
+        <h1 class="h3 mb-3 fw-normal">User account has been activated</h1>
+        Your user profile has been activated, you can now <a href="/login" class="btn btn-primary btn-sm">log in</a> to the application.
+        <hr class="my-4">
+        <small class="text-body-secondary">Click the log in button, which will navigate you to the application's login screen.</small>
+    </div>
+{% elseif step == 'unsuccessful' %}
+    <div class="p-4 p-md-5 border rounded-3 bg-body-tertiary">
+        <h1 class="h3 mb-3 fw-normal">Something went wrong</h1>
+        Your profile activation was unsuccessful
+        <hr class="my-4">
+        <small class="text-body-secondary">Please contact the server administrator, <b>{{ server_administrator_email }}</b> and inform them of the time the error might have done that may have caused the error.</small>
+    </div>
 {% endif %}
 
     </main>
