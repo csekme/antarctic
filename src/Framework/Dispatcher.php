@@ -34,11 +34,14 @@ class Dispatcher
             $_SESSION['scrf'] = $token;
         } else {
             if (isset($_SESSION['scrf'])) {
+                if (!isset($_POST['_scrf'])) {
+                    throw new \Exception(message: "Method not allowed", code: 405);
+                }
                 $token = $_SESSION['scrf'];
                 $value = $_POST['_scrf'];
                 $check = new Token($value);
                 if ($check->getHash() != $token->getHash()) {
-                    throw new \Exception(message: "Method not allowed '$value'", code: 405);
+                    throw new \Exception(message: "Method not allowed", code: 405);
                 }
             }
         }

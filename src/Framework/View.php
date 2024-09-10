@@ -67,11 +67,13 @@ class View
             $twig->addGlobal('session', $_SESSION);
             $twig->addGlobal('flash_messages', Flash::getMessages());
             $twig->addGlobal('base_path', "/");
-            if (isset($_SESSION['scrf'])) {
-                $twig->addGlobal('_scrf', $_SESSION['scrf']->getValue());
-            }
         }
-
-        return $twig->render($template, $args);
+        $html = $twig->render($template, $args);
+        if (isset($_SESSION['scrf'])) {
+            $csrfToken = $_SESSION['scrf']->getValue();
+            $csrfExtension = new CsrfExtension($csrfToken);
+            $html = $csrfExtension->addCsrfToForms($html);
+        }
+        return $html;
     }
 }
