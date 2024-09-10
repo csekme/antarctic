@@ -12,17 +12,12 @@ class Dispatcher
 
     public function __construct(private Router $router, private Container $container) {}
 
-    // public function handleRequest(Request $request) : Response {
-    //    $this->router->setContainer($this->container);
-    //   $response = $this->router->handleRequest($request);
-    //   $response->send();
-    //   return $response;
-    // }
 
     /**
      * Handle the incoming request
      * @param Request request
      * @return Response response
+     * @throws \Exception
      */
     public function handleRequest(Request $request)
     {
@@ -31,6 +26,21 @@ class Dispatcher
 
         if ($params === false) {
             throw new \Exception(message: "No route matched for '$request->uri' with method '{$request->method}'", code: 404);
+        }
+
+        // Cross-site request forgery protection token
+        if ($request->method ==  AbstractController::GET) {
+            $token = new Token();
+            $_SESSION['scrf'] = $token;
+        } else {
+            if (isset($_SESSION['scrf'])) {
+                $token = $_SESSION['scrf'];
+                $value = $_POST['_scrf'];
+                $check = new Token($value);
+                if ($check->getHash() != $token->getHash()) {
+                    throw new \Exception(message: "Method not allowed '$value'", code: 405);
+                }
+            }
         }
 
         $controller = $params['controller'];
