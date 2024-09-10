@@ -150,4 +150,25 @@ abstract class AbstractUser extends Dal
         return $stmt->execute();
     }
 
+    /**
+     * Authenticate a user by email and password.
+     *
+     * @param string $email email address
+     * @param string $password password
+     *
+     * @return User|false The user object or false if authentication fails
+     */
+    public static function authenticate(string $email, string $password) : User | false
+    {
+        $user = static::findByEmail($email);
+
+        if ($user && $user->is_active) {
+            if (password_verify($password, $user->password)) {
+                return $user;
+            }
+        }
+
+        return false;
+    }
+
 }
