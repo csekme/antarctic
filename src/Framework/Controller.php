@@ -35,6 +35,9 @@ abstract class Controller extends AbstractController {
     public function __call($name, $args) : Response
     {
         $method = $name . 'Action';
+        if ($name == 'requireLogin') {
+         $method = $name;
+        }
 
         if (method_exists($this, $method)) {
             if ($this->before() !== false) {
@@ -70,20 +73,20 @@ abstract class Controller extends AbstractController {
     /**
      * Require the user to be logged in before giving access to the requested page.
      * Remember the requested page for later, then redirect to the login page
-     * 
+     *
      * @return void
+     * @throws \Exception
      */
-    public function requireLogin()
+    public function requireLogin(): void
     {
-        //if (! Auth::getUser() )
-        //{
+        if (! Auth::getUser() )
+        {
+           // Flash::addMessage('Please log in first.','Attention', type: Flash::WARNING);
 
-       //     Flash::addMessage('Kérem előbb jelentkezzen be!','Figyelem!', null);
-
-       //     Auth::rememberRequestedPage();
+            Auth::rememberRequestedPage();
             
-      //      $this->redirect('/login');
-      //  }
+            $this->redirect('/login');
+        }
     }
 
     /**

@@ -56,12 +56,27 @@ class Dispatcher
         }
         if (class_exists($controller)) {
             $controller_object = new $controller($params);
+            $reflectionClass = new \ReflectionClass($controller_object::class);
+            $attributes = $reflectionClass->getAttributes();
+            foreach ($attributes as $attribute) {
+                $attribute = $attribute->newInstance();
+                if ($attribute instanceof RequireLogin) {
+                    $controller_object->requireLogin();
+                }
+            }
             $controller_object->setRequest($request);
             $controller_object->setResponse($this->container->get(Response::class));
             $action = $params['action'];
             $action = $this->convertToCamelCase($action);
 
             if (preg_match('/action$/i', $action) == 0) {
+                $attributes = $reflectionClass->getMethod($action.'Action')->getAttributes();
+                foreach ($attributes as $attribute) {
+                    $attribute = $attribute->newInstance();
+                    if ($attribute instanceof RequireLogin) {
+                        $controller_object->requireLogin();
+                    }
+                }
                 $response = $controller_object->$action();
                 $response->send();
             } else {

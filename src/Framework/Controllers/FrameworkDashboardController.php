@@ -6,14 +6,15 @@ use Framework\AbstractController;
 use Framework\Controller as Controller;
 use Framework\Path as Path;
 use Framework\Config as Config;
+use Framework\RequireLogin;
 use Framework\Response;
 use Framework\Flash as Flash;
 use Framework\Mail as Mail;
 
 #[Path('/FrameworkDashboard')]
+#[RequireLogin]
 class FrameworkDashboardController extends Controller
 {
-
     
     #[Path(path:'', method: AbstractController::GET)]
     function indexAction() : Response {
@@ -23,6 +24,7 @@ class FrameworkDashboardController extends Controller
             'year' => date("Y")
         ]);
     }
+
 
     function testEmailAction() {
         $res = Mail::sendHtmlMessage($_POST["email"], $_POST["subject"], $_POST["body"]);

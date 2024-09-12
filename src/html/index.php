@@ -45,6 +45,8 @@ $router->add('signup/activate/{token:[\da-f]+}', ['controller' => 'SignupControl
 
 // Login routes
 $router->add('login', ['controller' => 'LoginController', 'action' => 'login']);
+$router->add('login/enter', ['controller' => 'LoginController', 'action' => 'enter']);
+
 
 $router->add('password/reset/{token:[\da-f]+}', ['controller' => 'Password', 'action' => 'reset']);
 $router->add('{controller}/{action}');
