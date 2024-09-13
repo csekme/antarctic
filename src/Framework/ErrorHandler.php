@@ -37,7 +37,7 @@ class ErrorHandler
     {
         // Code is 404 (not found) or 500 (general error)
         $code = $exception->getCode();
-        if ($code != 404) {
+        if ($code != 404 && $code != 401 && $code != 403) {
             $code = 500;
         }
         if (!headers_sent()) {
@@ -64,7 +64,7 @@ class ErrorHandler
             if (isset(Config::get_config()["administrator"]["email"])) {
                 $server_administrator_email = Config::get_config()["administrator"]["email"];
             }
-            echo View::renderTemplate("$code.twig", [ "server_administrator_email" => $server_administrator_email]);
+            echo View::renderTemplate("Errors/$code.twig", [ "server_administrator_email" => $server_administrator_email]);
         }
     }
 }

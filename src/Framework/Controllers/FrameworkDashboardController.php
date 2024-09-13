@@ -4,6 +4,8 @@ namespace Framework\Controllers;
 
 use Framework\AbstractController;
 use Framework\Controller as Controller;
+use Framework\HasRoles;
+use Framework\Models\Role;
 use Framework\Path as Path;
 use Framework\Config as Config;
 use Framework\RequireLogin;
@@ -13,6 +15,7 @@ use Framework\Mail as Mail;
 
 #[Path('/FrameworkDashboard')]
 #[RequireLogin]
+#[HasRoles([Role::ROLE_ADMIN])]
 class FrameworkDashboardController extends Controller
 {
     

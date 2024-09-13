@@ -19,7 +19,7 @@ class Auth
         //Prevent session fixation attacks
         session_regenerate_id(true);
 
-        $_SESSION['user_id'] = $user->id;
+        $_SESSION['user'] = $user;
 
         if ($remember_me) {
             //Successfull inserted token hash
@@ -89,11 +89,7 @@ class Auth
      */
     public static function getUser() : AbstractUser | null
     {
-        if (isset($_SESSION['user_id'])) {
-            return User::findByID($_SESSION['user_id']);
-        } else {
-            return static::loginFromRememberCookie();
-        }
+        return $_SESSION['user'] ?? static::loginFromRememberCookie();
     }
 
     /**

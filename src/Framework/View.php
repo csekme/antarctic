@@ -48,7 +48,7 @@ class View
      *
      * @return string
      */
-    public static function getTemplate($template, $args = [])
+    public static function getTemplate(string $template, array $args = []): string
     {
         static $twig = null;
 
@@ -60,17 +60,22 @@ class View
                 $dir = dirname(__DIR__) . '/Framework/Views';
             }
             if ($dir == null) {
-                return;
+                throw new \Exception("Template not found", 500);
             }
             $loader = new \Twig\Loader\FilesystemLoader($dir);
             $twig = new \Twig\Environment($loader, array('debug' => true));
+            $twig->addExtension(new RoleExtension());
             $twig->addGlobal('session', $_SESSION);
             $twig->addGlobal('flash_messages', Flash::getMessages());
             $twig->addGlobal('base_path', "/");
+            if (isset($_SESSION['csrf'])) {
+                $twig->addGlobal('csrf_token', $_SESSION['csrf']->getValue());
+            }
+
         }
         $html = $twig->render($template, $args);
-        if (isset($_SESSION['scrf'])) {
-            $csrfToken = $_SESSION['scrf']->getValue();
+        if (isset($_SESSION['csrf'])) {
+            $csrfToken = $_SESSION['csrf']->getValue();
             $csrfExtension = new CsrfExtension($csrfToken);
             $html = $csrfExtension->addCsrfToForms($html);
         }

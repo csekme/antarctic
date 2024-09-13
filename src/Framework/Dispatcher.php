@@ -4,51 +4,48 @@ declare(strict_types=1);
 
 namespace Framework;
 
+use Exception;
 use Framework\Routing\Router as Router;
-use Framework\Exceptions\PageNotFoundException as PageNotFoundException;
+use ReflectionAttribute;
+use ReflectionClass;
 
-class Dispatcher
+/**
+ * Class Dispatcher, handles the incoming request and dispatches it to the appropriate controller
+ * @package Framework
+ * @version 1.0
+ * @since 1.0
+ * @author Krisztián Csekme
+ * @license GNU GPL v3.0
+ * @see Router
+ * @see Container
+ */
+readonly class Dispatcher
 {
 
     public function __construct(private Router $router, private Container $container) {}
 
 
     /**
-     * Handle the incoming request
-     * @param Request request
+     * Handle the incoming request and dispatch it to the appropriate controller
+     * @param Request $request request
      * @return Response response
-     * @throws \Exception
+     * @throws Exception
      */
-    public function handleRequest(Request $request)
+    public function handleRequest(Request $request) : Response
     {
 
         $params = $this->router->match($request->uri);
 
         if ($params === false) {
-            throw new \Exception(message: "No route matched for '$request->uri' with method '{$request->method}'", code: 404);
+            throw new Exception(message: "No route matched for '$request->uri' with method '{$request->method}'", code: 404);
         }
 
-        // Cross-site request forgery protection token
-        if ($request->method ==  AbstractController::GET) {
-            $token = new Token();
-            $_SESSION['scrf'] = $token;
-        } else {
-            if (isset($_SESSION['scrf'])) {
-                if (!isset($_POST['_scrf'])) {
-                    throw new \Exception(message: "Method not allowed", code: 405);
-                }
-                $token = $_SESSION['scrf'];
-                $value = $_POST['_scrf'];
-                $check = new Token($value);
-                if ($check->getHash() != $token->getHash()) {
-                    throw new \Exception(message: "Method not allowed", code: 405);
-                }
-            }
-        }
+        $this->crossSiteRequestForgeryProtection($request);
 
         $controller = $params['controller'];
         $controller = $this->convertToStudlyCaps($controller);
         $controller = $this->getNamespace($params, "Application\Controllers\\") . $controller;
+
         if (!class_exists($controller)) {
             $controller = $params['controller'];
             $controller = $this->convertToStudlyCaps($controller);
@@ -56,13 +53,10 @@ class Dispatcher
         }
         if (class_exists($controller)) {
             $controller_object = new $controller($params);
-            $reflectionClass = new \ReflectionClass($controller_object::class);
+            $reflectionClass = new ReflectionClass($controller_object::class);
             $attributes = $reflectionClass->getAttributes();
             foreach ($attributes as $attribute) {
-                $attribute = $attribute->newInstance();
-                if ($attribute instanceof RequireLogin) {
-                    $controller_object->requireLogin();
-                }
+                $this->processAnnotation($attribute, $controller_object);
             }
             $controller_object->setRequest($request);
             $controller_object->setResponse($this->container->get(Response::class));
@@ -72,23 +66,79 @@ class Dispatcher
             if (preg_match('/action$/i', $action) == 0) {
                 $attributes = $reflectionClass->getMethod($action.'Action')->getAttributes();
                 foreach ($attributes as $attribute) {
-                    $attribute = $attribute->newInstance();
-                    if ($attribute instanceof RequireLogin) {
-                        $controller_object->requireLogin();
-                    }
+                    $this->processAnnotation($attribute, $controller_object);
                 }
                 $response = $controller_object->$action();
                 $response->send();
             } else {
-                throw new \Exception("Method $action in controller $controller cannot be called directly - remove the Action suffix to call this method");
+                throw new Exception("Method $action in controller $controller cannot be called directly - remove the Action suffix to call this method");
             }
         } else {
-            throw new \Exception("Controller class $controller not found");
+            throw new Exception("Controller class $controller not found");
         }
 
-        
+        return $response;
     }
 
+    /**
+     * Cross-site request forgery protection
+     * @param Request $request
+     * @throws Exception
+     */
+    private function crossSiteRequestForgeryProtection(Request $request): void
+    {
+        if ($request->method ==  AbstractController::GET) {
+            $token = new Token();
+            $_SESSION['csrf'] = $token;
+        } else {
+            if (isset($_SESSION['csrf'])) {
+                if (!isset($_POST['_csrf'])) {
+                    throw new Exception(message: "Method not allowed", code: 405);
+                }
+                $token = $_SESSION['csrf'];
+                $value = $_POST['_csrf'];
+                $check = new Token($value);
+                if ($check->getHash() != $token->getHash()) {
+                    throw new Exception(message: "Method not allowed", code: 405);
+                }
+            }
+        }
+    }
+
+    /**
+     * Process the annotations of classes and methods in controllers.
+     * @param ReflectionAttribute $attribute
+     * @param Controller $controller_object
+     * @return void
+     * @throws Exception
+     */
+    private function processAnnotation(ReflectionAttribute $attribute, Controller $controller_object): void
+    {
+        $attribute = $attribute->newInstance();
+        if ($attribute instanceof HasRoles) {
+            $requestRoles = $attribute->roles;
+            $user = Auth::getUser();
+
+            if ($user == null) {
+                throw new Exception("User is not logged in", 401);
+            }
+
+            $userRoles = $user->getRoles();
+            $allowed = false;
+            foreach ($requestRoles as $roleName) {
+                if (in_array($roleName, $userRoles)) {
+                    $allowed = true;
+                    break;
+                }
+            }
+            if (!$allowed) {
+                throw new Exception("User does not have the required role", 403);
+            }
+        }
+        if ($attribute instanceof RequireLogin) {
+            $controller_object->requireLogin();
+        }
+    }
 
     /**
      * Convert the string with hyphens to StudlyCaps,
@@ -98,7 +148,7 @@ class Dispatcher
      *
      * @return string
      */
-    protected function convertToStudlyCaps($string)
+    protected function convertToStudlyCaps(string $string): string
     {
         return str_replace(' ', '', ucwords(str_replace('-', ' ', $string)));
     }
@@ -111,7 +161,7 @@ class Dispatcher
      *
      * @return string
      */
-    protected function convertToCamelCase($string)
+    protected function convertToCamelCase(string $string): string
     {
         return lcfirst($this->convertToStudlyCaps($string));
     }
@@ -122,7 +172,7 @@ class Dispatcher
      *
      * @return string The request URL
      */
-    protected function getNamespace($params, $namespace)
+    protected function getNamespace($params, $namespace): string
     {
         if (array_key_exists('namespace', $params)) {
             $namespace = $params['namespace'] . '\\';

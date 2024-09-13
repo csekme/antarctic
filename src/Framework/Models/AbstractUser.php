@@ -121,6 +121,19 @@ abstract class AbstractUser extends Dal
     }
 
     /**
+     * @return array|false
+     */
+    public static function findAll()
+    {
+        $sql = 'SELECT * FROM user';
+        $db = static::connection();
+        $stmt = $db->prepare($sql);
+        $stmt->setFetchMode(PDO::FETCH_CLASS, get_called_class());
+        $stmt->execute();
+        return $stmt->fetchAll();
+    }
+
+    /**
      * Find a user model by UUID
      * @param string $uuid The user UUID
      * @return AbstractUser|false Signup object if found, false otherwise
@@ -167,11 +180,28 @@ abstract class AbstractUser extends Dal
 
         if ($user && $user->is_active) {
             if (password_verify($password, $user->password_hash)) {
+                $user->cleanSecurityFields();
                 return $user;
             }
         }
 
         return false;
+    }
+
+    /**
+     * Remove all the security fields from memory objects
+     */
+    private function cleanSecurityFields(): void
+    {
+        unset($this->password);
+        unset($this->password_hash);
+        unset($this->password_confirm);
+        unset($this->activation_token);
+        unset($this->remember_token);
+        unset($this->password_reset_hash);
+        unset($this->password_reset_expires_at);
+        unset($this->activation_hash);
+        unset($this->expiry_timestamp);
     }
 
     /**
@@ -202,4 +232,50 @@ abstract class AbstractUser extends Dal
 
     }
 
+    public function hasRole($role) : bool
+    {
+        $sql = 'SELECT COUNT(*) FROM user_role 
+                LEFT JOIN role ON user_role.role_id = role.id
+                WHERE user_id = :user_id AND role.name = :role';
+        $connection = self::connection();
+        $statement = $connection->prepare($sql);
+        $statement->bindParam(':user_id', $this->id, PDO::PARAM_INT);
+        $statement->bindParam(':role', $role, PDO::PARAM_STR);
+        $statement->execute();
+        return $statement->fetchColumn() > 0;
+    }
+
+    public function addRole(string $role) : bool
+    {
+        $sql = 'INSERT INTO user_role (user_id, role_id)
+                VALUES (:user_id, (SELECT id FROM role WHERE name = :role))';
+        $connection = self::connection();
+        $statement = $connection->prepare($sql);
+        $statement->bindParam(':user_id', $this->id, PDO::PARAM_INT);
+        $statement->bindParam(':role', $role, PDO::PARAM_STR);
+        return $statement->execute();
+    }
+
+    public function removeRole(string $role) : bool
+    {
+        $sql = 'DELETE FROM user_role
+                WHERE user_id = :user_id AND role_id = (SELECT id FROM role WHERE name = :role)';
+        $connection = self::connection();
+        $statement = $connection->prepare($sql);
+        $statement->bindParam(':user_id', $this->id, PDO::PARAM_INT);
+        $statement->bindParam(':role', $role, PDO::PARAM_STR);
+        return $statement->execute();
+    }
+
+    public function getRoles() : array
+    {
+        $sql = 'SELECT role.name FROM user_role 
+                LEFT JOIN role ON user_role.role_id = role.id
+                WHERE user_id = :user_id';
+        $connection = self::connection();
+        $statement = $connection->prepare($sql);
+        $statement->bindParam(':user_id', $this->id, PDO::PARAM_INT);
+        $statement->execute();
+        return $statement->fetchAll(PDO::FETCH_COLUMN);
+    }
 }

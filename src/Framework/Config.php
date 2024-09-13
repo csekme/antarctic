@@ -29,4 +29,16 @@ class Config {
         return $_config['server']['protocol'] ?? Config::HTTP_PROTOCOL;
     }
 
+    /**
+     * Use cache for limit database interaction
+     * @return bool default is false
+     */
+    public static function useCache() : bool {
+        $_config = Config::get_config();
+        if (isset($_config['framework']['cache'])) {
+            return $_config['framework']['cache'];
+        }
+        return false;
+    }
+
 }
