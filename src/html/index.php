@@ -28,7 +28,7 @@ $dotenv->load(ROOT_PATH . "/.env");
 $container = new \Framework\Container();
 $router = new \Framework\Routing\StandardRouterImpl();
 
-
+/*
 // Add the routes
 $router->add('', ['controller' => 'FrameworkDashboardController', 'action' => 'index']);
 $router->add('test-email', ['controller' => 'FrameworkDashboardController', 'action' => 'testEmail']);
@@ -50,6 +50,7 @@ $router->add('logout', ['controller' => 'LogoutController', 'action' => 'logout'
 $router->add('users', ['controller' => 'UserController', 'action' => 'index']);
 $router->add('password/reset/{token:[\da-f]+}', ['controller' => 'Password', 'action' => 'reset']);
 $router->add('{controller}/{action}');
+*/
 
 $dispatcher = new Framework\Dispatcher($router, $container);
 

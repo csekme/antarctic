@@ -17,8 +17,8 @@ use Random\RandomException;
 #[Path('/signup')]
 class SignupController extends Controller {
 
-    #[Path(path: '/new', method: AbstractController::GET)]
-    function newAction() : Response {
+    #[Path(method: AbstractController::GET)]
+    function new() : Response {
         $step = $this->request->get['step'] ?? 'signup';
         return $this->view('Signup/signup.twig',["step" =>  $step]);
     }
@@ -27,26 +27,26 @@ class SignupController extends Controller {
      * @throws RandomException
      * @throws \Exception
      */
-    #[Path(path: '/signup', method: AbstractController::POST)]
-    function signupAction() : Response {
+    #[Path(method: AbstractController::POST)]
+    function signup() : Response {
         $user = new User($this->request->post);
         if ($user->save()) {
             $url = Config::get_server_protocol().'://'. $_SERVER['HTTP_HOST'] . '/signup/activate/' . $user->activation_token;
             $html = View::getTemplate('Signup/activation_email.html', ['url' => $url]);
             $text = View::getTemplate('Signup/activation_email.txt', ['url' => $url]);
             Mail::send($user->email, 'Registration confirmation', $text, $html);
-            $this->redirect('/signup/new?step=activate');
+            $this->redirect('/signup?step=activate');
         } else {
             return $this->view('Signup/signup.twig',[ 'step'=>'signup', 'errors' => $user->getErrors(), 'user' => $user ]);
         }
-        $this->redirect('/signup/new');
+        $this->redirect('/signup');
     }
 
     /**
      * @throws \Exception
      */
-    #[Path(path: '/activate/{activation_token}', method: AbstractController::GET)]
-    function activateAction() : Response {
+    #[Path(path: '/activate/{token:[\da-f]+}', method: AbstractController::GET)]
+    function activate() : Response {
         $token = new Token($this->route_params['token']);
         $hashed_token = $token->getHash();
         if (User::activateByActivationHash($hashed_token)){

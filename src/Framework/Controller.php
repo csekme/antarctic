@@ -34,7 +34,7 @@ abstract class Controller extends AbstractController {
      */
     public function __call($name, $args) : Response
     {
-        $method = $name . 'Action';
+        $method = $name;// . 'Action';
         if ($name == 'requireLogin') {
          $method = $name;
         }

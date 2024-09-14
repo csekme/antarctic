@@ -1,10 +1,14 @@
 <?php
 
 namespace Framework\Routing;
-
+use Framework\ClassExploder;
+use Framework\Path;
+use ReflectionClass;
 use Framework\Request;
 use Framework\Response;
 use Framework\Container;
+use ReflectionException;
+use ReflectionMethod;
 
 /**
  * Router
@@ -12,7 +16,76 @@ use Framework\Container;
  * PHP version 8.0
  */
 class StandardRouterImpl implements Router {
- 
+
+
+    /**
+     * @throws ReflectionException
+     */
+    public function __construct()
+    {
+        $classExploder = new ClassExploder();
+        $mapping = $classExploder->get_controller_mapping();
+        foreach ($mapping as $path => $param) {
+            if (str_starts_with($path, "/")) {
+                $path = substr($path, 1);
+            }
+            $className = $param['className'];
+            $namespace = $param['nameSpace'];
+            $fullQualifiedClass = $namespace . '\\' . $className;
+            if (class_exists($fullQualifiedClass)) {
+                $controllerObj = new $fullQualifiedClass([]);
+                $reflectionClass = new ReflectionClass($controllerObj::class);
+                $methods = $reflectionClass->getMethods(ReflectionMethod::IS_PUBLIC);
+                foreach ($methods as $method) {
+                    $action = $method->name;
+                    if (str_ends_with($action, "Action")) {
+                      //  $action = substr($action, 0, strlen($action) - 6);
+                    }
+                    $attributes = $method->getAttributes(Path::class);
+                    foreach ($attributes as $attribute) {
+                        $attributeObj = $attribute->newInstance();
+                        $pathVariable = $attributeObj->path;
+                        $emptyPath = false;
+                        if ($pathVariable == "") {
+                            $emptyPath = true;
+                        } else {
+                            if ($path!='' && !str_starts_with($pathVariable, "/")) {
+                                $pathVariable = "/" . $pathVariable;
+                            } else if ($path=='' && str_starts_with($pathVariable, "/")) {
+                                $pathVariable = substr($pathVariable, 1);
+                            }
+                        }
+                        if (str_contains($pathVariable, '{')) {
+                            $pathVariable = $this->convertPathPattern($pathVariable);
+                        }
+                        $this->add(
+                            $path . $pathVariable,
+                            [
+                                'controller' => $className,
+                                'namespace' => $param['nameSpace'],
+                                'action' => $pathVariable == '' ? '': $action,
+                                'method' => $attributeObj->method ?? 'GET',
+                                'emptyPath' => $emptyPath
+                            ]
+                        );
+                    }
+                }
+
+            }
+        }
+    }
+
+    protected function convertPathPattern($path)
+    {
+        // Példa a konverzióra a '{id:\d+}' alapján
+        $pattern = preg_replace_callback('/\{(\w+)(?::([^}]+))?\}/', function ($matches) {
+            $varName = $matches[1];
+            $regex = $matches[2] ?? '[^/]+';
+            return '(?P<' . $varName . '>' . $regex . ')';
+        }, $path);
+        return $pattern;
+    }
+
     /**
      * Associative array of routes (the routing table)
      * @var array
@@ -69,9 +142,12 @@ class StandardRouterImpl implements Router {
      */
     public function match($url) : array | bool
     {
+        // actual request method
+        //$requestMethod = $_SERVER['REQUEST_METHOD'];
         $url = $this->removeQueryStringVariables($url);
         foreach ($this->routes as $route => $params) {
-            if (preg_match($route, $url, $matches)) {
+            //$routeMethod = $params['method'] ?? 'GET|POST|PUT|DELETE';
+            if (preg_match($route, $url, $matches) /*&& preg_match("/$routeMethod/", $requestMethod)*/) {
                 // Get named capture group values
                 foreach ($matches as $key => $match) {
                     if (is_string($key)) {

@@ -13,13 +13,13 @@ use Framework\Response;
 use Framework\Flash as Flash;
 use Framework\Mail as Mail;
 
-#[Path('/FrameworkDashboard')]
+#[Path('/')]
 #[RequireLogin]
 #[HasRoles([Role::ROLE_ADMIN])]
 class FrameworkDashboardController extends Controller
 {
     
-    #[Path(path:'', method: AbstractController::GET)]
+    #[Path(method: AbstractController::GET)]
     function indexAction() : Response {
         return $this->view('dashboard.twig',
         [
@@ -29,7 +29,8 @@ class FrameworkDashboardController extends Controller
     }
 
 
-    function testEmailAction() {
+    #[Path(path: '/test-email', method: AbstractController::POST)]
+    function testEmailAction() : Response {
         $res = Mail::sendHtmlMessage($_POST["email"], $_POST["subject"], $_POST["body"]);
         if ($res === true) {
             Flash::addMessage(message: "Üzenet sikeresen elküldve", type: Flash::SUCCESS);

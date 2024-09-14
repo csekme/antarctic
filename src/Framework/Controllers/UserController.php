@@ -15,7 +15,7 @@ use Framework\Response;
 #[Path('/user')]
 class UserController extends Controller
 {
-    #[Path('/getAll', method: AbstractController::GET)]
+    #[Path(method: AbstractController::GET)]
     public function indexAction(): Response
     {
         $users = User::findAll();

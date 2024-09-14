@@ -22,7 +22,9 @@ use ReflectionClass;
 readonly class Dispatcher
 {
 
-    public function __construct(private Router $router, private Container $container) {}
+    public function __construct(private Router $router, private Container $container)
+    {
+    }
 
 
     /**
@@ -31,7 +33,7 @@ readonly class Dispatcher
      * @return Response response
      * @throws Exception
      */
-    public function handleRequest(Request $request) : Response
+    public function handleRequest(Request $request): Response
     {
 
         $params = $this->router->match($request->uri);
@@ -63,16 +65,57 @@ readonly class Dispatcher
             $action = $params['action'];
             $action = $this->convertToCamelCase($action);
 
-            if (preg_match('/action$/i', $action) == 0) {
-                $attributes = $reflectionClass->getMethod($action.'Action')->getAttributes();
-                foreach ($attributes as $attribute) {
-                    $this->processAnnotation($attribute, $controller_object);
+            $request_method = $_SERVER['REQUEST_METHOD'];
+            $found = false;
+            if ($action == '') { //nincs action megpróbáljuk reflection a
+                $methods = $reflectionClass->getMethods(\ReflectionMethod::IS_PUBLIC);
+                foreach ($methods as $method) {
+                       $attributes = $method->getAttributes(Path::class);
+                    foreach ($attributes as $attribute) {
+                        $attr = $attribute->newInstance();
+                        if ($attr->method != null && $attr->path == null) {
+                            if ($request_method == $attr->method) {
+                                $action = $method->getName();
+                                $found = true;
+                                break;
+                            }
+                        }
+                    }
+                    if ($found) {
+                        break;
+                    }
                 }
-                $response = $controller_object->$action();
-                $response->send();
-            } else {
-                throw new Exception("Method $action in controller $controller cannot be called directly - remove the Action suffix to call this method");
             }
+            $method = $reflectionClass->getMethod($action);
+            if (isset($this->params['method'])) {
+                $path_method = $this->params['method'];
+                if ($request_method !== $path_method) {
+                    header("HTTP/1.1 405 Method not allowed.");
+
+                }
+            }
+
+            $attributes = $method->getAttributes();
+            foreach ($attributes as $attribute) {
+                $this->processAnnotation($attribute, $controller_object);
+            }
+
+            if ($request_method !== 'GET') {
+                if ($method->getNumberOfParameters() === 1) {
+                    $response = $controller_object->$action($_POST);
+                } else {
+                    $response = $controller_object->$action();
+                }
+            } else {
+                if ($method->getNumberOfParameters() === 1) {
+                    $methodParameters = $method->getParameters();
+                    $value = $params[$methodParameters[0]->name];
+                    $response = $controller_object->$action($value);
+                } else {
+                    $response = $controller_object->$action();
+                }
+            }
+            $response->send();
         } else {
             throw new Exception("Controller class $controller not found");
         }
@@ -87,7 +130,7 @@ readonly class Dispatcher
      */
     private function crossSiteRequestForgeryProtection(Request $request): void
     {
-        if ($request->method ==  AbstractController::GET) {
+        if ($request->method == AbstractController::GET) {
             $token = new Token();
             $_SESSION['csrf'] = $token;
         } else {

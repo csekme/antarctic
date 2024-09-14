@@ -13,16 +13,16 @@ use Framework\Response;
 #[Path('/login')]
 class LoginController extends Controller {
 
-    #[Path(path: '/login', method: AbstractController::GET)]
-    public function loginAction() : Response {
+    #[Path(method: AbstractController::GET)]
+    public function login() : Response {
         return $this->view('Login/login.twig', []);
     }
 
     /**
      * @throws \Exception
      */
-    #[Path(path: '/enter', method: AbstractController::POST)]
-    public function enterAction() : Response {
+    #[Path(method: AbstractController::POST)]
+    public function enter() : Response {
         $user = User::authenticate($_POST['email'], $_POST['password']);
         $remember_me = isset($_POST['remember_me']);
         if ($user) {
