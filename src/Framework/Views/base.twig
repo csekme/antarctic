@@ -159,12 +159,12 @@
 
     {# Profile menu #}
     <div class="btn-circle btn btn-primary flex-shrink-0 dropdown me-4 d-none d-md-block" data-bs-toggle="dropdown">
-        <a href="#" class="d-block link-body-emphasis text-decoration-none  rounded-circle" data-bs-toggle="dropdown" aria-expanded="false">
+        <a href="#" class="d-block link-body-emphasis text-decoration-none  rounded-circle" aria-expanded="false">
            CK
         </a>
         <ul class="dropdown-menu dropdown-menu-end text-small shadow">
             <li><a class="dropdown-item" href="#">New project...</a></li>
-            <li><a class="dropdown-item" href="#">Settings</a></li>
+            <li><a class="dropdown-item" href="/user">Settings</a></li>
             <li><a class="dropdown-item" href="#">Profile</a></li>
             <li><hr class="dropdown-divider"></li>
             <li><a class="dropdown-item" href="/logout">Sign out</a></li>
@@ -361,6 +361,13 @@
         myModal.show();
     {% endif %}
 
+
+    {# intristing issue solved by this script #}
+    document.querySelectorAll('.dropdown-item').forEach(item => {
+        item.addEventListener('click', (event) => {
+            window.location.href = item.getAttribute('href');
+        });
+    });
 
 </script>
 
