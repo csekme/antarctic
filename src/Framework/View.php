@@ -4,6 +4,8 @@ namespace Framework;
 
 class View
 {
+    public static string $SHOW_MODAL_BY_ID = "showModalById";
+
     /**
      * Render a view file
      *
@@ -68,6 +70,7 @@ class View
             $twig->addGlobal('session', $_SESSION);
             $twig->addGlobal('flash_messages', Flash::getMessages());
             $twig->addGlobal('base_path', "/");
+            $twig->addGlobal('current_user', Auth::getUser());
             if (isset($_SESSION['csrf'])) {
                 $twig->addGlobal('csrf_token', $_SESSION['csrf']->getValue());
             }

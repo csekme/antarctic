@@ -67,10 +67,10 @@ readonly class Dispatcher
 
             $request_method = $_SERVER['REQUEST_METHOD'];
             $found = false;
-            if ($action == '') { //nincs action megpróbáljuk reflection a
+            if ($action == '') { // if no action is specified, try to find the action based on the request method
                 $methods = $reflectionClass->getMethods(\ReflectionMethod::IS_PUBLIC);
                 foreach ($methods as $method) {
-                       $attributes = $method->getAttributes(Path::class);
+                    $attributes = $method->getAttributes(Path::class);
                     foreach ($attributes as $attribute) {
                         $attr = $attribute->newInstance();
                         if ($attr->method != null && $attr->path == null) {

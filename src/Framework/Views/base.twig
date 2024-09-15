@@ -38,6 +38,17 @@
             display: block !important;
         }
 
+        .btn-circle {
+            width: 42px;
+            height: 42px;
+            text-align: center;
+            padding: 10px 0;
+            font-size: 12px;
+            line-height: 1.428571429;
+            border-radius: 30px;
+            border-width: 2px;
+        }
+
     </style>
 </head>
 <body>
@@ -139,10 +150,25 @@
                 </svg>
             </button>
         </li>
+
     </ul>
 
     <div id="navbarSearch" class="navbar-search w-100 collapse">
         <input class="form-control w-100 rounded-0 border-0" type="text" placeholder="Search" aria-label="Search">
+    </div>
+
+    {# Profile menu #}
+    <div class="btn-circle btn btn-primary flex-shrink-0 dropdown me-4 d-none d-md-block" data-bs-toggle="dropdown">
+        <a href="#" class="d-block link-body-emphasis text-decoration-none  rounded-circle" data-bs-toggle="dropdown" aria-expanded="false">
+           CK
+        </a>
+        <ul class="dropdown-menu dropdown-menu-end text-small shadow">
+            <li><a class="dropdown-item" href="#">New project...</a></li>
+            <li><a class="dropdown-item" href="#">Settings</a></li>
+            <li><a class="dropdown-item" href="#">Profile</a></li>
+            <li><hr class="dropdown-divider"></li>
+            <li><a class="dropdown-item" href="/logout">Sign out</a></li>
+        </ul>
     </div>
 {% endif %}
 
@@ -184,7 +210,20 @@
             <div class="offcanvas-md offcanvas-end border-right" tabindex="-1" id="sidebarMenu"
                  aria-labelledby="sidebarMenuLabel">
                 <div class="offcanvas-header">
-                    <h5 class="offcanvas-title" id="sidebarMenuLabel">Company name</h5>
+                    {# Profile menu #}
+                    <div class="btn-circle btn btn-primary flex-shrink-0 dropdown me-4" data-bs-toggle="dropdown">
+                        <a href="#" class="d-block link-body-emphasis text-decoration-none  rounded-circle" data-bs-toggle="dropdown" aria-expanded="false">
+                            CK
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end text-small shadow">
+                            <li><a class="dropdown-item" href="#">New project...</a></li>
+                            <li><a class="dropdown-item" href="#">Settings</a></li>
+                            <li><a class="dropdown-item" href="#">Profile</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="/logout">Sign out</a></li>
+                        </ul>
+                    </div>
+                    <h5 class="offcanvas-title" id="sidebarMenuLabel">{{ current_user.getFullName() }}</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#sidebarMenu"
                             aria-label="Close"></button>
                 </div>
@@ -214,6 +253,7 @@
                                 Users
                             </a>
                         </li>
+                        <hr class="my-3">
                         <li class="nav-item">
                             <a class="nav-link d-flex align-items-center gap-2" href="#">
                                 <svg class="bi">
@@ -285,24 +325,7 @@
 
                     <hr class="my-3">
 
-                    <ul class="nav flex-column mb-auto">
-                        <li class="nav-item">
-                            <a class="nav-link d-flex align-items-center gap-2" href="#">
-                                <svg class="bi">
-                                    <use xlink:href="#gear-wide-connected"/>
-                                </svg>
-                                Settings
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link d-flex align-items-center gap-2" href="/logout">
-                                <svg class="bi">
-                                    <use xlink:href="#door-closed"/>
-                                </svg>
-                                Sign out
-                            </a>
-                        </li>
-                    </ul>
+
                 </div>
             </div>
         </div>
@@ -332,6 +355,12 @@
         return new bootstrap.Toast(toastEl)
     });
     toastList.forEach(toast => toast.show());
+
+    {% if showModalById  %}
+        let myModal = new bootstrap.Modal(document.getElementById('{{ showModalById }}'), {});
+        myModal.show();
+    {% endif %}
+
 
 </script>
 

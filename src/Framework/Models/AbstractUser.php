@@ -33,6 +33,21 @@ abstract class AbstractUser extends Dal
         return false;
     }
 
+    public function getFirstName(): string
+    {
+        return $this->firstname??'';
+    }
+
+    public function getLastName(): string
+    {
+        return $this->firstname??'';
+    }
+
+    public function getFullName() : string
+    {
+        return $this->getFirstName()  .' ' . $this->getLastName();
+    }
+
     /**
      * Save the user model to the database
      * @throws Exception In case the application secret key is not set
