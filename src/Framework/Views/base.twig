@@ -161,8 +161,8 @@
         </a>
         <ul class="dropdown-menu dropdown-menu-end text-small shadow">
             <li><a class="dropdown-item dropdown-item-custom" href="#">New project...</a></li>
-            <li><a class="dropdown-item dropdown-item-custom" href="/user">Settings</a></li>
-            <li><a class="dropdown-item dropdown-item-custom" href="#">Profile</a></li>
+            <li><a class="dropdown-item dropdown-item-custom" href="#">Settings</a></li>
+            <li><a class="dropdown-item dropdown-item-custom" href="/profile">Profile</a></li>
             <li><hr class="dropdown-divider"></li>
             <li><a class="dropdown-item dropdown-item-custom" href="/logout">Sign out</a></li>
         </ul>
@@ -215,7 +215,7 @@
                         <ul class="dropdown-menu dropdown-menu-end text-small shadow">
                             <li><a class="dropdown-item dropdown-item-custom" href="#">New project...</a></li>
                             <li><a class="dropdown-item dropdown-item-custom" href="#">Settings</a></li>
-                            <li><a class="dropdown-item dropdown-item-custom" href="#">Profile</a></li>
+                            <li><a class="dropdown-item dropdown-item-custom" href="/profile">Profile</a></li>
                             <li><hr class="dropdown-divider"></li>
                             <li><a class="dropdown-item dropdown-item-custom" href="/logout">Sign out</a></li>
                         </ul>
@@ -389,6 +389,18 @@
 {# Color Switcher #}
 <script>
     {% include 'Dashboard/colormodes.js' %}
+
+    /**
+     * get the current theme
+     * @returns {string|string} value={dark,light}
+     */
+    const getTheme = function() {
+        let theme = localStorage.getItem('theme');
+        if (theme === 'auto') {
+           return window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';
+        }
+        return theme;
+    };
 </script>
 
 </html>
