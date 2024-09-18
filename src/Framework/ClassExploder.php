@@ -15,7 +15,7 @@ class ClassExploder
     public static $int = 0;
     
     // Regex minta a #[...] attribútum kereséséhez
-    private static string $pattern = '/^\s*\#\s*\[Path\(\'(.*?)\'\)\]/m'; 
+    private static string $pattern = '/^\s*\#\s*\[Path\s*\(\s*(?:path\s*:\s*)?[\'"]([^\'"]+)[\'"]\s*\)\]/m';
     private static string $patternForClass = '/class\s+(\w+)/';
     private static string $patternForNamespace = '/namespace\s+([\w\\\\]+)/';
     private $map;

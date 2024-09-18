@@ -10,7 +10,7 @@ use Framework\Models\User;
 use Framework\Path;
 use Framework\Response;
 
-#[Path('/login')]
+#[Path(path: '/login')]
 class LoginController extends Controller {
 
     #[Path(method: AbstractController::GET)]
