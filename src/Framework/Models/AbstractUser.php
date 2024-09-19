@@ -28,7 +28,7 @@ use PDO;
  */
 abstract class AbstractUser extends Dal
 {
-    public function validate() : bool
+    public function validate(bool $forUpdate) : bool
     {
         return false;
     }
@@ -70,6 +70,31 @@ abstract class AbstractUser extends Dal
             $statement->bindValue(':email', $this->email);
             $statement->bindValue(':password_hash', $password_hash);
             $statement->bindValue(':activation_hash', $hashed_token);
+            return $statement->execute();
+        }
+        return false;
+    }
+
+    public function update() : bool {
+        if ($this->validate(forUpdate: true)) {
+            $sql = 'UPDATE user SET '
+                .'firstname = :firstname '
+                .', lastname =  :lastname ';
+
+            if (!empty($this->old_password)) {
+               $sql .= ', password_hash = :password_hash';
+            }
+            $sql .= ' WHERE uuid = :uuid';
+
+            $connection = self::connection();
+            $statement = $connection->prepare($sql);
+            $statement->bindValue(':uuid', $this->uuid);
+            $statement->bindValue(':firstname', $this->firstname);
+            $statement->bindValue(':lastname', $this->lastname);
+            if (!empty($this->old_password)) {
+                $password_hash = password_hash($this->password, PASSWORD_DEFAULT);
+                $statement->bindValue(':password_hash', $password_hash);
+            }
             return $statement->execute();
         }
         return false;

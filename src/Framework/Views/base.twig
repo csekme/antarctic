@@ -398,6 +398,18 @@
 {# Color Switcher #}
 <script>
     {% include 'Dashboard/colormodes.js' %}
+
+    /**
+     * get the current theme
+     * @returns {string|string} value={dark,light}
+     */
+    const getTheme = function() {
+        let theme = localStorage.getItem('theme');
+        if (theme === 'auto') {
+           return window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';
+        }
+        return theme;
+    };
 </script>
 
 </html>

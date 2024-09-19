@@ -1,0 +1,85 @@
+{% extends "base.twig" %}
+{% block title %}Profile{% endblock %}
+{% block body %}
+
+
+    <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+        <h1 class="h2">My Profile</h1>
+        <div class="btn-toolbar mb-2 mb-md-0">
+            <div class="btn-group me-2">
+                <button type="button" data-bs-toggle="modal" data-bs-target="#userModal"
+                        class="btn btn-sm btn-outline-secondary">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
+                         class="bi bi-person-plus-fill" viewBox="0 0 16 16">
+                        <path d="M1 14s-1 0-1-1 1-4 6-4 6 3 6 4-1 1-1 1zm5-6a3 3 0 1 0 0-6 3 3 0 0 0 0 6"/>
+                        <path fill-rule="evenodd"
+                              d="M13.5 5a.5.5 0 0 1 .5.5V7h1.5a.5.5 0 0 1 0 1H14v1.5a.5.5 0 0 1-1 0V8h-1.5a.5.5 0 0 1 0-1H13V5.5a.5.5 0 0 1 .5-.5"/>
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </div>
+
+
+
+    <form action="/profile" method="post">
+        <input type="hidden" name="uuid" value="{{ user.uuid }}">
+        <div class="mb-3">
+            <label for="username" class="form-label">Username</label>
+            <input readonly id="username" name="username" type="text" class="form-control"
+                   value="{{ user.username }}">
+            <div id="err-username" class="invalid-feedback"></div>
+        </div>
+        <div class="row">
+            <div class="col-12 col-sm-6">
+                <label for="firstname" class="form-label">Firstname</label>
+                <input id="firstname" name="firstname" type="text" class="form-control"
+                       value="{{ user.firstname }}">
+                <div id="err-firstname" class="invalid-feedback"></div>
+            </div>
+            <div class="col-12 col-sm-6">
+                <label for="lastname" class="form-label">Lastname</label>
+                <input id="lastname" name="lastname" type="text" class="form-control"
+                       value="{{ user.lastname }}">
+                <div id="err-lastname" class="invalid-feedback"></div>
+            </div>
+        </div>
+        <div class="mb-3">
+            <label for="email" class="form-label">Email</label>
+            <input readonly id="email" name="email" type="email" class="form-control"
+                   value="{{ user.email }}">
+            <div id="err-email" class="invalid-feedback"></div>
+        </div>
+        <div class="mb-3">
+            <label for="old_password" class="form-label">Old password</label>
+            <input id="old_password" name="old_password" type="password" class="form-control">
+            <div id="err-old_password" class="invalid-feedback"></div>
+        </div>
+        <div class="mb-3">
+            <label for="password" class="form-label">Password</label>
+            <input id="password" name="password" type="password" class="form-control border-warning">
+            <div id="err-password" class="invalid-feedback"></div>
+        </div>
+        <div class="mb-3">
+            <label for="password_confirm" class="form-label">Password retry</label>
+            <input id="password_confirm" name="password_confirm" type="password" class="form-control border-warning">
+            <div id="err-password_confirm" class="invalid-feedback"></div>
+        </div>
+        <button class="btn btn-primary  py-2" data-bs-dismiss="modal" type="submit">Save</button>
+    </form>
+
+
+
+
+{% endblock %}
+
+{% block script %}
+    <script>
+
+        {% if showModalById %}
+        let myModal = new bootstrap.Modal(document.getElementById('{{ showModalById }}'), {});
+        myModal.show();
+        {% endif %}
+
+    </script>
+{% endblock %}
