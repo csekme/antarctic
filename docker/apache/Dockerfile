@@ -1,5 +1,5 @@
 # syntax=docker/dockerfile:1
-FROM php:8.3.9-apache
+FROM php:8.2-apache-bullseye
 
 # install xdebug
 RUN pecl install xdebug
@@ -9,6 +9,12 @@ RUN apt-get install -y libpq-dev \
     && docker-php-ext-configure pgsql -with-pgsql=/usr/local/pgsql \
     && docker-php-ext-install pdo pdo_pgsql pgsql \
     && docker-php-ext-install mysqli pdo pdo_mysql
+
+RUN apt-get update; \
+    apt-get install -y libmagickwand-dev; \
+    pecl install imagick; \
+    docker-php-ext-enable imagick;
+
 
 # copy over the config files
 COPY xdebug.ini /usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini

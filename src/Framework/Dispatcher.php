@@ -12,6 +12,7 @@ use ReflectionClass;
 /**
  * Class Dispatcher, handles the incoming request and dispatches it to the appropriate controller
  * @package Framework
+ * @category Framework
  * @version 1.0
  * @since 1.0
  * @author Krisztián Csekme

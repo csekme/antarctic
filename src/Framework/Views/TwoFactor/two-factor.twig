@@ -1,0 +1,192 @@
+{% extends "base.twig" %}
+{% block title %}Two Factor Settings{% endblock %}
+{%  block header %}
+    <style>
+        .otp-field {
+            flex-direction: row;
+            column-gap: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .otp-field input {
+            height: 45px;
+            width: 42px;
+            border-radius: 6px;
+            outline: none;
+            font-size: 1.125rem;
+            text-align: center;
+            border: 1px solid #ddd;
+        }
+        .otp-field input:focus {
+            box-shadow: 0 1px 0 rgba(0, 0, 0, 0.1);
+        }
+        .otp-field input::-webkit-inner-spin-button,
+        .otp-field input::-webkit-outer-spin-button {
+            display: none;
+        }
+
+        .resend {
+            font-size: 12px;
+        }
+
+        .footer {
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+            color: black;
+            font-size: 12px;
+            text-align: right;
+            font-family: monospace;
+        }
+
+        .footer a {
+            color: black;
+            text-decoration: none;
+        }
+    </style>
+{% endblock %}
+{% block body %}
+
+
+    <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+        <h1 class="h2">Two factor</h1>
+        <div class="btn-toolbar mb-2 mb-md-0">
+            <div class="btn-group me-2">
+                <button type="button" data-bs-toggle="modal" data-bs-target="#userModal"
+                        class="btn btn-sm btn-outline-secondary">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
+                         class="bi bi-person-plus-fill" viewBox="0 0 16 16">
+                        <path d="M1 14s-1 0-1-1 1-4 6-4 6 3 6 4-1 1-1 1zm5-6a3 3 0 1 0 0-6 3 3 0 0 0 0 6"/>
+                        <path fill-rule="evenodd"
+                              d="M13.5 5a.5.5 0 0 1 .5.5V7h1.5a.5.5 0 0 1 0 1H14v1.5a.5.5 0 0 1-1 0V8h-1.5a.5.5 0 0 1 0-1H13V5.5a.5.5 0 0 1 .5-.5"/>
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </div>
+
+
+    <div class="col-12 col-md-6 col-lg-4"   >
+        <div class="card bg-white mb-5 mt-5 border-0" style="box-shadow: 0 12px 15px rgba(0, 0, 0, 0.02);">
+            <div class="card-body p-5 text-center">
+                <div class="otp-field mb-4">
+                    <input type="number" />
+                    <input type="number" disabled />
+                    <input type="number" disabled />
+                    <input type="number" disabled />
+                    <input type="number" disabled />
+                    <input type="number" disabled />
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card" style="width: 18rem; margin: auto;" >
+
+        <div class="card-body">
+            <h5 class="card-title">Scan QR code</h5>
+            <div style="text-align: center; padding: 16px;">
+                <img  alt="qr" src="{{ qrCode }}"/>
+            </div>
+
+            <section class="container-fluid bg-body-tertiary d-block">
+                <div class="row justify-content-center">
+                    <div class="col-12 col-md-6 col-lg-4"   >
+                        <div class="card bg-white mb-5 mt-5 border-0" style="box-shadow: 0 12px 15px rgba(0, 0, 0, 0.02);">
+                            <div class="card-body p-5 text-center">
+                                <div class="otp-field mb-4">
+                                    <input type="number" />
+                                    <input type="number" disabled />
+                                    <input type="number" disabled />
+                                    <input type="number" disabled />
+                                    <input type="number" disabled />
+                                    <input type="number" disabled />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            <p class="card-text">Some quick example text to build on the card title and make up the bulk of the card's content.</p>
+            <p class="resend text-muted mb-0">
+                Didn't receive code? <a href="">Request again</a>
+            </p>
+
+            <a href="#" class="btn btn-primary">Go somewhere</a>
+        </div>
+    </div>
+
+    <script>
+        const inputs = document.querySelectorAll(".otp-field > input");
+        const button = document.querySelector(".btn");
+
+        window.addEventListener("load", () => inputs[0].focus());
+        button.setAttribute("disabled", "disabled");
+
+        inputs[0].addEventListener("paste", function (event) {
+            event.preventDefault();
+
+            const pastedValue = (event.clipboardData || window.clipboardData).getData(
+                "text"
+            );
+            const otpLength = inputs.length;
+
+            for (let i = 0; i < otpLength; i++) {
+                if (i < pastedValue.length) {
+                    inputs[i].value = pastedValue[i];
+                    inputs[i].removeAttribute("disabled");
+                    inputs[i].focus;
+                } else {
+                    inputs[i].value = ""; // Clear any remaining inputs
+                    inputs[i].focus;
+                }
+            }
+        });
+
+        inputs.forEach((input, index1) => {
+            input.addEventListener("keyup", (e) => {
+                const currentInput = input;
+                const nextInput = input.nextElementSibling;
+                const prevInput = input.previousElementSibling;
+
+                if (currentInput.value.length > 1) {
+                    currentInput.value = "";
+                    return;
+                }
+
+                if (
+                    nextInput &&
+                    nextInput.hasAttribute("disabled") &&
+                    currentInput.value !== ""
+                ) {
+                    nextInput.removeAttribute("disabled");
+                    nextInput.focus();
+                }
+
+                if (e.key === "Backspace") {
+                    inputs.forEach((input, index2) => {
+                        if (index1 <= index2 && prevInput) {
+                            input.setAttribute("disabled", true);
+                            input.value = "";
+                            prevInput.focus();
+                        }
+                    });
+                }
+
+                button.classList.remove("active");
+                button.setAttribute("disabled", "disabled");
+
+                const inputsNo = inputs.length;
+                if (!inputs[inputsNo - 1].disabled && inputs[inputsNo - 1].value !== "") {
+                    button.classList.add("active");
+                    button.removeAttribute("disabled");
+
+                    return;
+                }
+            });
+        });
+    </script>
+{% endblock %}
+

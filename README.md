@@ -1,10 +1,10 @@
 # Antarctic PHP Lightweight Web Framework
 
-This repository contains a lightweight PHP web framework optimized for PHP 8. It is designed to provide a simple and efficient foundation for developing modern web applications with an object-oriented approach.
+This repository contains a lightweight PHP web framework optimized for PHP 8.2. It is designed to provide a simple and efficient foundation for developing modern web applications with an object-oriented approach.
 
 ## Key Features
 
-- **PHP 8 Optimized**: This framework leverages the latest features of PHP 8, ensuring optimal performance and compatibility.
+- **PHP 8.2 Optimized**: This framework leverages the latest features of PHP 8.2, ensuring optimal performance and compatibility.
 - **Twig 3.0 Templating**: Utilizes Twig 3.0 for fast and secure template rendering.
 - **Lightweight Structure**: Focused on simplicity and minimalism, providing only the core features needed for most web applications.
 - **MVC Architecture**: Built-in support for MVC (Model-View-Controller) architecture, allowing for organized and maintainable code.
@@ -18,7 +18,7 @@ This repository contains a lightweight PHP web framework optimized for PHP 8. It
 
 ### Prerequisites
 
-- **PHP 8.0 or higher** is required to run this framework.
+- **PHP 8.2 or higher** is required to run this framework.
 - **Composer** should be installed to manage dependencies.
 - **Docker** and **Docker Compose** are needed for the development environment setup.
 
