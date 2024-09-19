@@ -9,6 +9,8 @@
         "twig/twig": "^3.0",
         "phpmailer/phpmailer": "^6.9",
         "ext-pdo": "*",
-        "robthree/twofactorauth": "^3.0"
+        "robthree/twofactorauth": "^3.0",
+        "symfony/polyfill-iconv": "^1.31",
+        "bacon/bacon-qr-code": "^3.0"
     }
 }

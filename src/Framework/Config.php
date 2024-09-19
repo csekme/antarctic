@@ -7,8 +7,8 @@ use Exception;
 class Config {
 
     private static mixed $_config = null;
-    private const string HTTP_PROTOCOL = 'http';
-    public const string APPLICATION_CONFIG_FILE = '/Application/application.json';
+    private const  HTTP_PROTOCOL = 'http';
+    public const  APPLICATION_CONFIG_FILE = '/Application/application.json';
 
     private static function set_config($path) {
         $jsonData = file_get_contents($path);
