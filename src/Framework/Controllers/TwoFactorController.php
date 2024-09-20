@@ -7,7 +7,7 @@ use Framework\Response;
 use Framework\Controller;
 use Framework\TwoFactor;
 #[Path('/two-factor')]
-//#[RequireLogin]
+#[RequireLogin]
 class TwoFactorController extends Controller
 {
     #[Path(method: AbstractController::GET)]
