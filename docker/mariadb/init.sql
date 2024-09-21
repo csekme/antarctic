@@ -45,6 +45,7 @@ ALTER TABLE `remembered_logins`
 -- create role table
 CREATE TABLE `role` (
      `id` int(11) AUTO_INCREMENT PRIMARY KEY,
+     `uuid` UUID NOT NULL,
      `name` varchar(45) DEFAULT NULL,
      `description` varchar(255) DEFAULT NULL
 );

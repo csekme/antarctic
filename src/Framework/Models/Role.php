@@ -2,9 +2,26 @@
 
 namespace Framework\Models;
 
+use Cassandra\Uuid;
 use Framework\Dal;
 use PDO;
 
+/**
+ * Class Role
+ * @package Framework\Models
+ * @since 1.0
+ * @license GPL-3.0-or-later
+ * @author Krisztián Csekme
+ * @category Framework
+ * @version 1.0
+ * @Path(path: '/Framework/Models/Role.php')
+ * @Entity
+ * @Table(name="role")
+ * @property int $id
+ * @property string $uuid
+ * @property string $name
+ * @property string $description
+ */
 class Role extends Dal
 {
     public const ROLE_USER = 'ROLE_USER';

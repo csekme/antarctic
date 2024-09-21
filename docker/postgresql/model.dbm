@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+CAUTION: Do not modify this file unless you know what you are doing.
+ Unexpected results may occur if the code is changed deliberately.
+-->
+<dbmodel pgmodeler-ver="1.1.4" use-changelog="false" max-obj-count="4"
+	 last-position="0,0" last-zoom="1"
+	 default-schema="public" default-owner="postgres"
+	 layers="Default layer"
+	 active-layers="0"
+	 layer-name-colors="#000000"
+	 layer-rect-colors="#b4b4b4"
+	 show-layer-names="false" show-layer-rects="false">
+<database name="new_database" is-template="false" allow-conns="true">
+</database>
+
+<schema name="public" layers="0" fill-color="#e1e1e1" name-color="#000000" sql-disabled="true">
+</schema>
+
+<sequence name="seq_user" cycle="false" start="1" increment="1" min-value="0" max-value="2147483647" cache="1">
+	<schema name="public"/>
+	<role name="postgres"/>
+</sequence>
+
+<table name="user" layers="0" collapse-mode="2" max-obj-count="19" z-value="0">
+	<schema name="public"/>
+	<role name="postgres"/>
+	<position x="120" y="80"/>
+	<column name="id" not-null="true" sequence="public.seq_user">
+		<type name="integer" length="0"/>
+	</column>
+	<column name="uuid" not-null="true">
+		<type name="uuid" length="0"/>
+	</column>
+	<column name="username" not-null="true">
+		<type name="varchar" length="45"/>
+	</column>
+	<column name="firstname">
+		<type name="varchar" length="45"/>
+	</column>
+	<column name="lastname">
+		<type name="varchar" length="45"/>
+	</column>
+	<column name="email" not-null="true">
+		<type name="varchar" length="255"/>
+	</column>
+	<column name="password_hash" not-null="true">
+		<type name="varchar" length="255"/>
+	</column>
+	<column name="activation_hash">
+		<type name="varchar" length="64"/>
+	</column>
+	<column name="is_active" default-value="0">
+		<type name="smallint" length="0"/>
+	</column>
+	<column name="password_reset_hash">
+		<type name="varchar" length="64"/>
+	</column>
+	<column name="password_reset_expires_at">
+		<type name="timestamp" length="0"/>
+	</column>
+	<column name="created_at" not-null="true" default-value="now()">
+		<type name="timestamp" length="0"/>
+	</column>
+	<column name="updated_at">
+		<type name="timestamp" length="0"/>
+	</column>
+	<column name="allowed" default-value="1">
+		<type name="smallint" length="0"/>
+	</column>
+	<column name="two_factor" not-null="true" default-value="0">
+		<type name="smallint" length="0"/>
+	</column>
+	<column name="two_factor_secret_key">
+		<type name="varchar" length="255"/>
+	</column>
+	<constraint name="pk_user_id" type="pk-constr" table="public.&quot;user&quot;">
+		<columns names="id" ref-type="src-columns"/>
+	</constraint>
+	<constraint name="uq_user_uuid" type="uq-constr" table="public.&quot;user&quot;">
+		<columns names="uuid" ref-type="src-columns"/>
+	</constraint>
+	<constraint name="uk_user_username" type="uq-constr" table="public.&quot;user&quot;">
+		<columns names="username" ref-type="src-columns"/>
+	</constraint>
+	<constraint name="uk_user_email" type="uq-constr" table="public.&quot;user&quot;">
+		<columns names="email" ref-type="src-columns"/>
+	</constraint>
+	<constraint name="uq_user_activation" type="uq-constr" table="public.&quot;user&quot;">
+		<columns names="activation_hash" ref-type="src-columns"/>
+	</constraint>
+	<constraint name="uq_password_reset" type="uq-constr" table="public.&quot;user&quot;">
+		<columns names="password_reset_hash" ref-type="src-columns"/>
+	</constraint>
+</table>
+
+<sequence name="seq_role" cycle="false" start="1" increment="1" min-value="0" max-value="2147483647" cache="1">
+	<schema name="public"/>
+	<role name="postgres"/>
+</sequence>
+
+<table name="role" layers="0" collapse-mode="2" max-obj-count="4" z-value="0">
+	<schema name="public"/>
+	<role name="postgres"/>
+	<position x="620" y="180"/>
+	<column name="id" not-null="true" sequence="public.seq_role">
+		<type name="smallint" length="0"/>
+	</column>
+	<column name="uuid" not-null="true">
+		<type name="uuid" length="0"/>
+	</column>
+	<column name="name" not-null="true">
+		<type name="varchar" length="45"/>
+	</column>
+	<column name="description">
+		<type name="varchar" length="255"/>
+	</column>
+	<constraint name="pk_role_id" type="pk-constr" table="public.role">
+		<columns names="id" ref-type="src-columns"/>
+	</constraint>
+	<constraint name="uq_role_uuid" type="uq-constr" table="public.role">
+		<columns names="uuid" ref-type="src-columns"/>
+	</constraint>
+	<constraint name="uq_role_name" type="uq-constr" table="public.role">
+		<columns names="name" ref-type="src-columns"/>
+	</constraint>
+</table>
+
+</dbmodel>

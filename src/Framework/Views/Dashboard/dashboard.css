@@ -12,6 +12,18 @@
 /*
  * Sidebar
  */
+@media (min-width: 768px) {
+    .sidebar {
+        position: fixed;
+        top: 73px;
+        left: 0; /* Esetleg jobbra is igazíthatod, ha szükséges */
+        height: 100vh;
+        overflow-y: auto;
+
+
+    }
+}
+
 
 @media (min-width: 768px) {
     .sidebar .offcanvas-lg {
