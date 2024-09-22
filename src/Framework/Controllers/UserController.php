@@ -19,7 +19,17 @@ class UserController extends Controller
     #[Path(method: AbstractController::GET)]
     public function indexAction(): Response
     {
+        $uuid = $this->request->get['uuid'] ?? null;
         $users = User::findAll();
+        $user = null;
+        if ($uuid) {
+            foreach ($users as $u) {
+                if ($u->uuid === $uuid) {
+                    $user = $u;
+                  break;
+                }
+            }
+        }
         return $this->view('User/users.twig', [ "users" => $users ]);
     }
 
