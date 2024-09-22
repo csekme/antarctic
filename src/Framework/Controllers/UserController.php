@@ -22,15 +22,17 @@ class UserController extends Controller
         $uuid = $this->request->get['uuid'] ?? null;
         $users = User::findAll();
         $user = null;
+        $sowModal = false;
         if ($uuid) {
             foreach ($users as $u) {
                 if ($u->uuid === $uuid) {
                     $user = $u;
+                    $showModal = true;
                   break;
                 }
             }
         }
-        return $this->view('User/users.twig', [ "users" => $users ]);
+        return $this->view('User/users.twig', [ "users" => $users, "user" => $user ]);
     }
 
     #[Path(method: AbstractController::POST)]
