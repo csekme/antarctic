@@ -5,7 +5,8 @@ use Random\RandomException;
 
 #[\AllowDynamicProperties]
 abstract class Dal {
-
+    const TRUE = 1;
+    const FALSE = 0;
     /**
      * Error messages
      * @var array error messages

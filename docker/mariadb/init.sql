@@ -15,7 +15,8 @@ CREATE TABLE `user` (
      `password_reset_expires_at` datetime DEFAULT NULL,
      `created_at` datetime DEFAULT current_timestamp(),
      `updated_at` datetime DEFAULT null,
-     `allowed`  tinyint(4) DEFAULT 0
+     `two_factor` tinyint(4) DEFAULT 0,
+     `two_factor_secret_key` varchar(255) DEFAULT NULL
 );
 
 -- add unique constraints

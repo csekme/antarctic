@@ -37,25 +37,26 @@
                 <img  alt="qr" src="{{ qrCode }}"/>
             </div>
 
-            <form id="two-factor">
+            <form action="/two-factor" id="two-factor" method="post">
+                <input type="hidden" name="secret" value="{{ secret }}">
                 <div class="row mb-4">
                     <div class="col-lg-2 col-md-2 col-2 ps-0 ps-md-2">
-                        <input type="text" class="form-control text-lg text-center" maxlength="1" placeholder="_" aria-label="2fa">
+                        <input name="field-1" type="text" class="form-control text-lg text-center" maxlength="1" placeholder="_" aria-label="2fa">
                     </div>
                     <div class="col-lg-2 col-md-2 col-2 ps-0 ps-md-2">
-                        <input type="text" class="form-control text-lg text-center" maxlength="1" placeholder="_" aria-label="2fa">
+                        <input name="field-2" type="text" class="form-control text-lg text-center" maxlength="1" placeholder="_" aria-label="2fa">
                     </div>
                     <div class="col-lg-2 col-md-2 col-2 ps-0 ps-md-2">
-                        <input type="text" class="form-control text-lg text-center" maxlength="1" placeholder="_" aria-label="2fa">
+                        <input name="field-3" type="text" class="form-control text-lg text-center" maxlength="1" placeholder="_" aria-label="2fa">
                     </div>
                     <div class="col-lg-2 col-md-2 col-2 pe-0 pe-md-2">
-                        <input type="text" class="form-control text-lg text-center" maxlength="1" placeholder="_" aria-label="2fa">
+                        <input name="field-4" type="text" class="form-control text-lg text-center" maxlength="1" placeholder="_" aria-label="2fa">
                     </div>
                     <div class="col-lg-2 col-md-2 col-2 pe-0 pe-md-2">
-                        <input type="text" class="form-control text-lg text-center" maxlength="1" placeholder="_" aria-label="2fa">
+                        <input name="field-5" type="text" class="form-control text-lg text-center" maxlength="1" placeholder="_" aria-label="2fa">
                     </div>
                     <div class="col-lg-2 col-md-2 col-2 pe-0 pe-md-2">
-                        <input type="text" class="form-control text-lg text-center" maxlength="1" placeholder="_" aria-label="2fa">
+                        <input name="field-6" type="text" class="form-control text-lg text-center" maxlength="1" placeholder="_" aria-label="2fa">
                     </div>
                 </div>
                 <script>
@@ -78,12 +79,12 @@
 
 
                 </script>
+                <p class="card-text">Scan the QR code with your authenticator app to enable two-factor authentication.</p>
+                <div style="text-align: center;">
+                    <button class="btn btn-danger">Validate</button>
+                </div>
             </form>
 
-            <p class="card-text">Scan the QR code with your authenticator app to enable two-factor authentication.</p>
-            <div style="text-align: center;">
-            <a href="#" class="btn btn-danger">Validate</a>
-            </div>
             </div>
     </div>
 

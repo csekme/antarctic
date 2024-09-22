@@ -29,7 +29,6 @@ class LoginController extends Controller {
             Auth::login($user, $remember_me);
             $this->redirect(Auth::getReturnToPage());
         } else {
-
             Flash::addMessage(message: 'The login was unsuccessful. Please try again.',title: 'Attention',type: Flash::WARNING);
             $this->redirect('/');
         }

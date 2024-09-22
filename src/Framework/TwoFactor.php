@@ -33,8 +33,12 @@ class TwoFactor
 
     public function getQRCodeImageAsDataUri(String $secret): String
     {
-        return $this->tfa->getQRCodeImageAsDataUri('hello', $secret);
+        return $this->tfa->getQRCodeImageAsDataUri('Antarctic Framework', $secret);
     }
 
+    public function verifyCode(String $secret, String $code): Bool
+    {
+        return $this->tfa->verifyCode($secret, $code);
+    }
 
 }

@@ -21,7 +21,10 @@ use PDO;
  * @property $is_active
  * @property $password_reset_hash
  * @property $password_reset_expires_at
- * @property $created
+ * @property $created_at
+ * @property $updated_at
+ * @property $two_factor
+ * @property $two_factor_secret_key
  *
  * @property $remember_token not persist
  * @property $expiry_timestamp not persist
@@ -100,6 +103,16 @@ abstract class AbstractUser extends Dal
         return false;
     }
 
+    public function updateTwoFactorFields(): bool
+    {
+        $sql = 'UPDATE user SET two_factor = :two_factor, two_factor_secret_key = :two_factor_secret_key WHERE uuid = :uuid';
+        $connection = self::connection();
+        $statement = $connection->prepare($sql);
+        $statement->bindValue(':uuid', $this->uuid);
+        $statement->bindValue(':two_factor', $this->two_factor);
+        $statement->bindValue(':two_factor_secret_key', $this->two_factor_secret_key);
+        return $statement->execute();
+    }
 
     /**
      * Find a user model by email address

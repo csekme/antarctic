@@ -3,8 +3,6 @@
 namespace Framework\Models;
 class User extends AbstractUser
 {
-
-
     #[\Override]
     public function validate(bool $forUpdate = false): bool
     {
