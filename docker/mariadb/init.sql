@@ -71,5 +71,6 @@ ALTER TABLE `user_role`
     ADD CONSTRAINT `fk_ur_rid` FOREIGN KEY (`role_id`) REFERENCES `role` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- add basic roles
-insert into role (name, description) values ('ROLE_USER', 'User Role');
-insert into role (name, description) values ('ROLE_ADMIN', 'Admin Role');
+insert into role (name, uuid, description) values ('ROLE_USER', '52f4e8b1-af53-4057-b28f-70b48746eba6','User Role');
+insert into role (name, uuid,  description) values ('ROLE_ADMIN','10a4358f-57fa-4313-869f-5da4576a604e', 'Admin Role');
+commit ;

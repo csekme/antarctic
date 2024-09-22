@@ -15,7 +15,6 @@ use Framework\Mail as Mail;
 
 #[Path('/')]
 #[RequireLogin]
-#[HasRoles([Role::ROLE_ADMIN])]
 class FrameworkDashboardController extends Controller
 {
     
