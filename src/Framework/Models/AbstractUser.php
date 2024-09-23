@@ -24,7 +24,7 @@ use PDO;
  * @property $created_at
  * @property $updated_at
  * @property $two_factor
- * @property $two_factor_secret_key
+ * @property string $two_factor_secret_key
  *
  * @property $remember_token not persist
  * @property $expiry_timestamp not persist

@@ -28,6 +28,14 @@ class TwoFactorController extends Controller
         return $this->view('TwoFactor/two-factor.twig', [ 'qrCode' => $qrCode, 'secret' => $secret ]);
     }
 
+    #[Path(path: "/set", method: AbstractController::POST)]
+    public function set() : Response {
+        $user = User::findByID(Auth::getUser()->id);
+        $user->two_factor = $this->request->json['twoFactor']?Dal::TRUE:Dal::FALSE;
+        $user->updateTwoFactorFields();
+        return Response::json(['success' => true]);
+    }
+
     /**
      * @throws \Exception
      */

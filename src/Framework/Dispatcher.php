@@ -136,15 +136,26 @@ readonly class Dispatcher
             $_SESSION['csrf'] = $token;
         } else {
             if (isset($_SESSION['csrf'])) {
-                if (!isset($_POST['_csrf'])) {
-                    throw new Exception(message: "Method not allowed", code: 405);
+                $value = null;
+                if ($request->isContentTypeJson()) {
+                    $CSRF = $request->getCSRFFromHeader();
+                    if (!isset($CSRF)) {
+                        throw new Exception(message: "Method not allowed", code: 405);
+                    }
+                    $value = $CSRF;
+                } else {
+                    if (!isset($_POST['_csrf'])) {
+                        throw new Exception(message: "Method not allowed", code: 405);
+                    }
+                    $value = $_POST['_csrf'];
                 }
+
                 $token = $_SESSION['csrf'];
-                $value = $_POST['_csrf'];
                 $check = new Token($value);
                 if ($check->getHash() != $token->getHash()) {
                     throw new Exception(message: "Method not allowed", code: 405);
                 }
+
             }
         }
     }
