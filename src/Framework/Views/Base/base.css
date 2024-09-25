@@ -1,3 +1,60 @@
+.mini-button {
+    width: 28px;
+    height: 28px;
+    padding: 2px
+}
+
+.square-16 {
+    width: 16px;
+    height: 16px;
+}
+
+.square-22 {
+    width: 22px;
+    height: 22px;
+}
+
+.square-24 {
+    width: 24px;
+    height: 24px;
+}
+
+.square-32 {
+    width: 32px;
+    height: 32px;
+}
+
+.currentColor {
+    fill: currentColor;
+}
+
+.strokeCurrent {
+    stroke: currentColor;
+}
+.bi {
+    vertical-align: -.125em;
+    fill: currentColor;
+}
+
+.bd-mode-toggle {
+    z-index: 1500;
+}
+
+.bd-mode-toggle .dropdown-menu .active .bi {
+    display: block !important;
+}
+
+.btn-circle {
+    width: 42px;
+    height: 42px;
+    text-align: center;
+    padding: 10px 0;
+    font-size: 12px;
+    line-height: 1.428571429;
+    border-radius: 30px;
+    border-width: 2px;
+}
+
 
 .h-filler {
     height: 80vh; /* Az oldal teljes magasságát kitölti */

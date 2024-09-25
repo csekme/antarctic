@@ -37,7 +37,7 @@ class SignupController extends Controller {
             Mail::send($user->email, 'Registration confirmation', $text, $html);
             $this->redirect('/signup?step=activate');
         } else {
-            return $this->view('Signup/signup.twig',[ 'step'=>'signup', 'errors' => $user->getErrors(), 'user' => $user ]);
+            return $this->view('Signup/signup.twig',[ 'step'=>'signup', 'errors' => $user->getErrorsAsJson(), 'user' => $user ]);
         }
         $this->redirect('/signup');
     }

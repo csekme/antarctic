@@ -19,65 +19,7 @@
     {% block header %}{% endblock %}
 
     <style>
-        {% include 'Dashboard/dashboard.css' %}
-
-        .mini-button {
-            width: 28px;
-            height: 28px;
-            padding: 2px
-        }
-
-        .square-16 {
-            width: 16px;
-            height: 16px;
-        }
-
-        .square-22 {
-            width: 22px;
-            height: 22px;
-        }
-
-        .square-24 {
-            width: 24px;
-            height: 24px;
-        }
-
-        .square-32 {
-            width: 32px;
-            height: 32px;
-        }
-
-        .currentColor {
-            fill: currentColor;
-        }
-
-        .strokeCurrent {
-            stroke: currentColor;
-        }
-        .bi {
-            vertical-align: -.125em;
-            fill: currentColor;
-        }
-
-        .bd-mode-toggle {
-            z-index: 1500;
-        }
-
-        .bd-mode-toggle .dropdown-menu .active .bi {
-            display: block !important;
-        }
-
-        .btn-circle {
-            width: 42px;
-            height: 42px;
-            text-align: center;
-            padding: 10px 0;
-            font-size: 12px;
-            line-height: 1.428571429;
-            border-radius: 30px;
-            border-width: 2px;
-        }
-
+        {% include 'Base/base.css' %}
     </style>
 </head>
 <body>
@@ -85,7 +27,7 @@
 {% include 'Dashboard/simbols.svg.twig' %}
 
 <div class="dropdown position-fixed bottom-0 end-0 mb-3 me-3 bd-mode-toggle">
-    <button class="btn btn-primary py-2 dropdown-toggle d-flex align-items-center"
+    <button class="btn btn-primary py-2 dropdown-toggle d-flex align-items-center shadow"
             id="bd-theme"
             type="button"
             aria-expanded="false"
@@ -175,21 +117,8 @@
 
         </ul>
 
-
-
         {# Profile menu #}
-        <div class="btn-circle btn btn-primary flex-shrink-0 dropdown me-4 d-none d-md-block" data-bs-toggle="dropdown">
-            CK
-            <ul class="dropdown-menu dropdown-menu-end text-small shadow dropdown-menu-fix">
-                <li><a class="dropdown-item" href="#">New project...</a></li>
-                <li><a class="dropdown-item" href="#">Settings</a></li>
-                <li><a class="dropdown-item" href="/profile">Profile</a></li>
-                <li>
-                    <hr class="dropdown-divider">
-                </li>
-                <li><a class="dropdown-item" href="/logout">Sign out</a></li>
-            </ul>
-        </div>
+        {% include 'Base/profile-menu.twig' %}
     {% endif %}
 
 </header>
@@ -264,6 +193,7 @@
                                     Users
                                 </a>
                             </li>
+                            <!--
                             <li class="nav-item">
                                 <a class="nav-link d-flex align-items-center gap-2" href="#">
                                     <svg class="bi square-24">
@@ -272,13 +202,14 @@
                                     Roles
                                 </a>
                             </li>
+                            -->
                         </ul>
                     </div>
                 </div>
             </div>
         {% endif %}
         <main {% if isLogged() %} class="col-md-9 ms-sm-auto col-lg-10 px-md-4" style="padding-top: 1rem;" {% endif %}>
-            <!-- START HERE -->
+            {# start here #}
             {% block body %}
             {% endblock %}
             <div class="h-filler"></div>
@@ -287,28 +218,25 @@
     </div>
 </div>
 
-
 </body>
-<!-- FOOTER -->
+
+{# footer #}
 {% block footer %}
 {% endblock %}
-
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
         integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
         crossorigin="anonymous"></script>
 
 <script>
+
     var toastElList = [].slice.call(document.querySelectorAll('.toast'))
     var toastList = toastElList.map(function (toastEl) {
         return new bootstrap.Toast(toastEl)
     });
     toastList.forEach(toast => toast.show());
 
-    {% if showModalById %}
-    let myModal = new bootstrap.Modal(document.getElementById('{{ showModalById }}'), {});
-    myModal.show();
-    {% endif %}
+
 
     {# dropdown-menu-fix #}
     document.querySelectorAll('.dropdown-menu-fix').forEach(item => {
@@ -320,13 +248,7 @@
         });
     });
 
-    {# dropdown-item-custom #}
-
-
-</script>
-
-{% if errors %}
-    <script>
+    {% if errors %}
         let error = JSON.parse('{{ errors|e('js') }}');
         for (let err of error) {
             let item = document.getElementById('err-' + err.name)
@@ -336,18 +258,18 @@
             }
 
         }
-    </script>
-{% endif %}
+    {% endif %}
 
 
-{# YOUR SCRIPTS #}
-{% block script %}
-{% endblock %}
 
-{# Color Switcher #}
-<script>
-    {% include 'Dashboard/colormodes.js' %}
+    {# Show modal #}
+    {% if showModalById %}
+        let myModal = new bootstrap.Modal(document.getElementById('{{ showModalById }}'), {});
+        myModal.show();
+    {% endif %}
 
+    {# Color Switcher #}
+    {% include 'Base/colormodes.js' %}
     /**
      * get the current theme
      * @returns {string|string} value={dark,light}
@@ -360,14 +282,11 @@
         return theme;
     };
 
-
-
-    {% if showModalById %}
-    let myModal = new bootstrap.Modal(document.getElementById('{{ showModalById }}'), {});
-    myModal.show();
-    {% endif %}
-
-
 </script>
+
+
+{# Your scripts #}
+{% block script %}
+{% endblock %}
 
 </html>

@@ -23,8 +23,6 @@ use PDO;
  * @property $password_reset_expires_at
  * @property $created_at
  * @property $updated_at
- * @property $two_factor
- * @property string $two_factor_secret_key
  *
  * @property $remember_token not persist
  * @property $expiry_timestamp not persist
@@ -32,6 +30,16 @@ use PDO;
 abstract class AbstractUser extends Dal
 {
     public function validate(bool $forUpdate) : bool
+    {
+        return false;
+    }
+
+    public function validateProfileData() : bool
+    {
+        return false;
+    }
+
+    public function validatePasswordChanging() : bool
     {
         return false;
     }
@@ -78,41 +86,19 @@ abstract class AbstractUser extends Dal
         return false;
     }
 
-    public function update() : bool {
-        if ($this->validate(forUpdate: true)) {
-            $sql = 'UPDATE user SET '
-                .'firstname = :firstname '
-                .', lastname =  :lastname ';
-
-            if (!empty($this->old_password)) {
-               $sql .= ', password_hash = :password_hash';
-            }
-            $sql .= ' WHERE uuid = :uuid';
-
+    public function updateProfile() : bool {
+        if ($this->validateProfileData()) {
+            $sql = 'UPDATE user SET firstname = :firstname, lastname = :lastname WHERE uuid = :uuid';
             $connection = self::connection();
             $statement = $connection->prepare($sql);
             $statement->bindValue(':uuid', $this->uuid);
             $statement->bindValue(':firstname', $this->firstname);
             $statement->bindValue(':lastname', $this->lastname);
-            if (!empty($this->old_password)) {
-                $password_hash = password_hash($this->password, PASSWORD_DEFAULT);
-                $statement->bindValue(':password_hash', $password_hash);
-            }
             return $statement->execute();
         }
         return false;
     }
 
-    public function updateTwoFactorFields(): bool
-    {
-        $sql = 'UPDATE user SET two_factor = :two_factor, two_factor_secret_key = :two_factor_secret_key WHERE uuid = :uuid';
-        $connection = self::connection();
-        $statement = $connection->prepare($sql);
-        $statement->bindValue(':uuid', $this->uuid);
-        $statement->bindValue(':two_factor', $this->two_factor);
-        $statement->bindValue(':two_factor_secret_key', $this->two_factor_secret_key);
-        return $statement->execute();
-    }
 
     /**
      * Find a user model by email address

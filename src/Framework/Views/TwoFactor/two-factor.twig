@@ -28,18 +28,17 @@
     </div>
 
 
-
-    <div class="card" style="width: 20rem; margin: auto;" >
+    <div class="card shadow rounded" style="width: 20rem; margin: auto;" >
 
         <div class="card-body">
             <h5 class="card-title">Scan QR code</h5>
             <div style="text-align: center; padding: 16px;">
-                <img  alt="qr" src="{{ qrCode }}"/>
+                <img width="126x;" alt="qr" src="{{ qrCode }}"/>
             </div>
 
             <form action="/two-factor" id="two-factor" method="post">
                 <input type="hidden" name="secret" value="{{ secret }}">
-                <div class="row mb-4">
+                <div class="row mb-4 ms-1 me-1">
                     <div class="col-lg-2 col-md-2 col-2 ps-0 ps-md-2">
                         <input name="field-1" type="text" class="form-control text-lg text-center" maxlength="1" placeholder="_" aria-label="2fa">
                     </div>
@@ -81,7 +80,7 @@
                 </script>
                 <p class="card-text">Scan the QR code with your authenticator app to enable two-factor authentication.</p>
                 <div style="text-align: center;">
-                    <button class="btn btn-danger">Validate</button>
+                    <button class="btn btn-danger shadow">Validate</button>
                 </div>
             </form>
 

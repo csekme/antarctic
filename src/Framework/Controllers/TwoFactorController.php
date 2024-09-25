@@ -4,12 +4,14 @@ use Framework\AbstractController;
 use Framework\Auth;
 use Framework\Dal;
 use Framework\Flash;
+use Framework\Models\TwoFactorModel;
 use Framework\Models\User;
 use Framework\Path;
 use Framework\RequireLogin;
 use Framework\Response;
 use Framework\Controller;
 use Framework\TwoFactor;
+
 #[Path('/two-factor')]
 #[RequireLogin]
 class TwoFactorController extends Controller
@@ -18,11 +20,12 @@ class TwoFactorController extends Controller
     public function get() : Response
     {
         $user = User::findByID(Auth::getUser()->id);
-        if ($user->two_factor_secret_key != null) {
+        $twoFactorModel = TwoFactorModel::findByUserIdAndMethod($user->id, TwoFactorModel::METHOD_APP);
+        if ($twoFactorModel!=null && $twoFactorModel->secret_key != null) {
             Flash::addMessage('Two factor is already set', 'Two factor', type:  Flash::WARNING);
             $this->redirect('/profile');
         }
-        $twoFactor = new TwoFactor();
+        $twoFactor = new    TwoFactor();
         $secret = $twoFactor->generateSecretKey();
         $qrCode = $twoFactor->getQRCodeImageAsDataUri($secret);
         return $this->view('TwoFactor/two-factor.twig', [ 'qrCode' => $qrCode, 'secret' => $secret ]);
@@ -31,8 +34,12 @@ class TwoFactorController extends Controller
     #[Path(path: "/set", method: AbstractController::POST)]
     public function set() : Response {
         $user = User::findByID(Auth::getUser()->id);
-        $user->two_factor = $this->request->json['twoFactor']?Dal::TRUE:Dal::FALSE;
-        $user->updateTwoFactorFields();
+        $payload = $this->request->json;
+        $twoFactorModel = TwoFactorModel::findByUserIdAndMethod($user->id, $payload['method']);
+        if ($twoFactorModel) {
+            $twoFactorModel->enabled = $payload['twoFactor']?Dal::TRUE:Dal::FALSE;
+            $twoFactorModel->update();
+        }
         return Response::json(['success' => true]);
     }
 
@@ -48,9 +55,19 @@ class TwoFactorController extends Controller
         $secret = $this->request->post['secret'];
         $qrCode = $twoFactor->getQRCodeImageAsDataUri($secret);
         if ($twoFactor->verifyCode($secret, $passCode)) {
-            $user->two_factor = Dal::TRUE;
-            $user->two_factor_secret_key = $secret;
-            $user->updateTwoFactorFields();
+            $twoFactorModel = TwoFactorModel::findByUserIdAndMethod($user->id, TwoFactorModel::METHOD_APP);
+            if ($twoFactorModel == null) {
+                $twoFactorModel = new TwoFactorModel();
+                $twoFactorModel->user_id = $user->id;
+                $twoFactorModel->method = TwoFactorModel::METHOD_APP;
+                $twoFactorModel->secret_key = $secret;
+                $twoFactorModel->enabled = Dal::TRUE;
+                $twoFactorModel->save();
+            } else {
+                $twoFactorModel->secret_key = $secret;
+                $twoFactorModel->enabled = Dal::TRUE;
+                $twoFactorModel->update();
+            }
             Flash::addMessage('Success validation', 'Two factor validation', type:  Flash::INFO);
             $this->redirect('/profile');
         } else {

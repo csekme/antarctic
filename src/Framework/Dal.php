@@ -71,10 +71,14 @@ abstract class Dal {
         return $db;
     }
 
-    public function getErrors(): false|string
+    public function getErrorsAsJson(): false|string
     {
-        return json_encode($this->errors, JSON_UNESCAPED_UNICODE);
+        return json_encode($this->getErrors(), JSON_UNESCAPED_UNICODE);
     }
 
+    public function getErrors(): array
+    {
+        return $this->errors;
+    }
 
 }

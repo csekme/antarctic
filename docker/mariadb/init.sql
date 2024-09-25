@@ -14,9 +14,7 @@ CREATE TABLE `user` (
      `password_reset_hash` varchar(64) DEFAULT NULL,
      `password_reset_expires_at` datetime DEFAULT NULL,
      `created_at` datetime DEFAULT current_timestamp(),
-     `updated_at` datetime DEFAULT null,
-     `two_factor` tinyint(4) DEFAULT 0,
-     `two_factor_secret_key` varchar(255) DEFAULT NULL
+     `updated_at` datetime DEFAULT null
 );
 
 -- add unique constraints
@@ -57,8 +55,8 @@ ALTER TABLE `role`
 
 -- create user_role table
 CREATE TABLE `user_role` (
-     `user_id` int(11) DEFAULT NULL,
-     `role_id` int(11) DEFAULT NULL
+     `user_id` int(11) NOT NULL,
+     `role_id` int(11) NOT NULL
 );
 
 -- add foreign key constraints
@@ -75,3 +73,24 @@ ALTER TABLE `user_role`
 insert into role (name, uuid, description) values ('ROLE_USER', '52f4e8b1-af53-4057-b28f-70b48746eba6','User Role');
 insert into role (name, uuid,  description) values ('ROLE_ADMIN','10a4358f-57fa-4313-869f-5da4576a604e', 'Admin Role');
 commit ;
+
+
+CREATE TABLE `two_factor`
+(
+    `id`      int(11) AUTO_INCREMENT PRIMARY KEY,
+    `user_id` int(11) NOT NULL,
+    `method`    varchar(15) DEFAULT NULL,
+    `secret_key` varchar(255) DEFAULT NULL,
+    `passcode`   varchar(6) DEFAULT NULL,
+    `enabled` tinyint(4) DEFAULT 0,
+    `passcode_expired_at` datetime DEFAULT NULL
+);
+
+ALTER TABLE `two_factor`
+    ADD UNIQUE KEY `UQ_TWO_FACTOR_USER_NAME` (`user_id`, `method`);
+
+-- add foreign key constraints
+ALTER TABLE `two_factor`
+    ADD CONSTRAINT `fk_two_factor_user_id` FOREIGN KEY (`user_id`) REFERENCES `user` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+

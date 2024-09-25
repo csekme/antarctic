@@ -43,7 +43,7 @@ class UserController extends Controller
             $this->redirect('/user');
         } else {
             $users = User::findAll();
-            return $this->view('User/users.twig',[ 'errors' => $user->getErrors(), 'user' => $user, "users" => $users, View::$SHOW_MODAL_BY_ID => 'userModal' ]);
+            return $this->view('User/users.twig',[ 'errors' => $user->getErrorsAsJson(), 'user' => $user, "users" => $users, View::$SHOW_MODAL_BY_ID => 'userModal' ]);
         }
     }
 

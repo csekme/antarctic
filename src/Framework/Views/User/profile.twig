@@ -6,12 +6,10 @@
     <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3">
         <h1 class="h2">My Profile page</h1>
         <div class="btn-toolbar mb-2 mb-md-0">
-
         </div>
     </div>
 
-
-    <div class="accordion">
+    <div class="accordion bg-body-tertiary rounded shadow">
         <div class="accordion-item">
             <h2 class="accordion-header">
                 <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#panelsStayOpen-collapseOne" aria-expanded="true" aria-controls="panelsStayOpen-collapseOne">
@@ -23,11 +21,11 @@
             </h2>
             <div id="panelsStayOpen-collapseOne" class="accordion-collapse collapse show">
                 <div class="accordion-body">
-                    <form action="/profile" method="post">
+                    <form id="formProfile">
                         <input type="hidden" name="uuid" value="{{ user.uuid }}">
                         <div>
                             <label for="username" class="form-label">Username</label>
-                            <input readonly id="username" name="username" type="text" class="form-control"
+                            <input readonly id="username" name="username" type="text" class="form-control bg-body-secondary"
                                    value="{{ user.username }}">
                             <div id="err-username" class="invalid-feedback"></div>
                         </div>
@@ -47,11 +45,11 @@
                         </div>
                         <div class="mt-3">
                             <label for="email" class="form-label">Email</label>
-                            <input readonly id="email" name="email" type="email" class="form-control"
+                            <input readonly id="email" name="email" type="email" class="form-control bg-body-secondary"
                                    value="{{ user.email }}">
                             <div id="err-email" class="invalid-feedback"></div>
                         </div>
-                        <button class="btn btn-success  py-2 mt-3" data-bs-dismiss="modal" type="submit">Update profile</button>
+                        <button class="btn btn-success  py-2 mt-3 shadow" type="submit">Update profile</button>
                     </form>
                 </div>
             </div>
@@ -69,59 +67,76 @@
             </h2>
             <div id="panelsStayOpen-collapseTwo" class="accordion-collapse collapse">
                 <div class="accordion-body">
+
                     {# Two-factor methods #}
-                    <div class="card">
-                        <div class="card-header">
-                            Two-factor methods
-                        </div>
-                        <div class="card-body">
-                            <div class="list-group">
-                                <div class="list-group-item list-group-item-action" aria-current="true">
-                                    <div class="d-flex w-100 justify-content-between">
-                                        <div class="d-flex align-items-center">
-                                            <svg class="strokeCurrent" width="24px" height="24px" fill="none" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                                <path d="M12 18H12.01M11 6H13M9.2 21H14.8C15.9201 21 16.4802 21 16.908 20.782C17.2843 20.5903 17.5903 20.2843 17.782 19.908C18 19.4802 18 18.9201 18 17.8V6.2C18 5.0799 18 4.51984 17.782 4.09202C17.5903 3.71569 17.2843 3.40973 16.908 3.21799C16.4802 3 15.9201 3 14.8 3H9.2C8.0799 3 7.51984 3 7.09202 3.21799C6.71569 3.40973 6.40973 3.71569 6.21799 4.09202C6 4.51984 6 5.07989 6 6.2V17.8C6 18.9201 6 19.4802 6.21799 19.908C6.40973 20.2843 6.71569 20.5903 7.09202 20.782C7.51984 21 8.07989 21 9.2 21Z" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                                            </svg>
-                                            {% if twoFactor.hasKey %}
-                                                <h5 class="mb-1 ms-2">Authenticator app</h5><span class="badge rounded-pill border border-success text-success ms-2">Configured</span>
-                                            {% else %}
-                                                <h5 class="mb-1 ms-2">Authenticator app</h5><span class="badge rounded-pill border border-danger text-danger ms-2">Not configured</span>
-                                            {% endif %}
-                                        </div>
-                                        {% if twoFactor.hasKey %}
-                                            <div class="form-check form-switch">
-                                                <input onchange="setTwoFactor()" class="form-check-input" type="checkbox" role="switch" id="flexSwitchCheckDefault" {% if twoFactor.enabled %}checked{% endif %} />
-                                            </div>
-                                        {% else %}
-                                            <a href="/two-factor" class="btn btn-sm btn-outline-primary">Add</a>
-                                        {% endif %}
-                                    </div>
-                                    <p class="mb-1">Use an authentication app or browser extension to get two-factor authentication codes when prompted.</p>
+                    <h4 class="h4">Two-factor methods</h4>
+                    <div class="list-group mt-3">
+                        {# Authenticator app #}
+                        <div class="list-group-item list-group-item-action" aria-current="true">
+                            <div class="d-flex w-100 justify-content-between mt-2">
+                                <div class="d-flex align-items-center">
+                                    <svg class="strokeCurrent" width="24px" height="24px" fill="none" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                        <path d="M12 18H12.01M11 6H13M9.2 21H14.8C15.9201 21 16.4802 21 16.908 20.782C17.2843 20.5903 17.5903 20.2843 17.782 19.908C18 19.4802 18 18.9201 18 17.8V6.2C18 5.0799 18 4.51984 17.782 4.09202C17.5903 3.71569 17.2843 3.40973 16.908 3.21799C16.4802 3 15.9201 3 14.8 3H9.2C8.0799 3 7.51984 3 7.09202 3.21799C6.71569 3.40973 6.40973 3.71569 6.21799 4.09202C6 4.51984 6 5.07989 6 6.2V17.8C6 18.9201 6 19.4802 6.21799 19.908C6.40973 20.2843 6.71569 20.5903 7.09202 20.782C7.51984 21 8.07989 21 9.2 21Z" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                    </svg>
+                                    <h6 class="mb-1 mt-1 ms-1">Authenticator app</h6>
                                 </div>
-                                <div class="list-group-item list-group-item-action">
-                                    <div class="d-flex w-100 justify-content-between">
-                                        <div class="d-flex align-items-center">
-                                            <svg class="strokeCurrent" width="24px" height="24px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                <path d="M4 7.00005L10.2 11.65C11.2667 12.45 12.7333 12.45 13.8 11.65L20 7"  stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                                                <rect x="3" y="5" width="18" height="14" rx="2"  stroke-width="2" stroke-linecap="round"/>
-                                            </svg>
-                                            <h5 class="mb-1 ms-2">Email</h5><span class="badge rounded-pill border border-success text-success ms-2">Configured</span>
-                                        </div>
-                                        <div class="form-check form-switch">
-                                            <input class="form-check-input" type="checkbox" role="switch" id="flexSwitchCheckDefault" />
-                                        </div>
+                                {% if twoFactor.app and twoFactor.app.secret_key %}
+                                    <span class="mt-1 badge rounded-pill border border-success text-success">Configured</span>
+                                {% else %}
+                                    <span class="mt-1 badge rounded-pill border border-danger text-danger">Not configured</span>
+                                {% endif %}
+                            </div>
+                            <p class="mt-2">Use an authentication app or browser extension to get two-factor authentication codes when prompted.</p>
+                            <div class="d-flex w-100 justify-content-between mt-4">
+                                {% if twoFactor.app and twoFactor.app.secret_key %}
+                                    <small>Switch it on or off.</small>
+                                    <div class="form-check form-switch">
+                                        <input onchange="setTwoFactor(this, 'app')" class="form-check-input" type="checkbox" role="switch" id="flexSwitchCheckDefault" {% if twoFactor.app.enabled == 1 %}checked{% endif %} />
                                     </div>
-                                    <p class="mb-1">Use email for two-factor authentication.</p>
-                                    <small class="text-body-secondary">After logging in, the system sends an email for two-factor authentication.</small>
-                                </div>
+                                {% else %}
+                                    <small>Setup your mobile auth.</small>
+                                    <a href="/two-factor" class="btn btn-sm btn-secondary shadow">Setup</a>
+                                {% endif %}
                             </div>
                         </div>
-                    </div>
-                    {# Password settings #}
-                    <div class="card mt-4">
-                        <div class="card-header">
-                            Password settings
+
+                        {# Email app #}
+                        <div class="list-group-item list-group-item-action" aria-current="true">
+                            <div class="d-flex w-100 justify-content-between mt-2">
+                                <div class="d-flex align-items-center">
+                                    <svg class="strokeCurrent" width="24px" height="24px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                        <path d="M4 7.00005L10.2 11.65C11.2667 12.45 12.7333 12.45 13.8 11.65L20 7"  stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                        <rect x="3" y="5" width="18" height="14" rx="2"  stroke-width="2" stroke-linecap="round"/>
+                                    </svg>
+                                    <h6 class="mb-1 mt-1 ms-1">Email</h6>
+                                </div>
+                                {% if twoFactor.email %}
+                                    <span class="mt-1 badge rounded-pill border border-success text-success">Configured</span>
+                                {% else %}
+                                    <span class="mt-1 badge rounded-pill border border-danger text-danger">Not configured</span>
+                                {% endif %}
+                            </div>
+                            <p class="mt-2">Use email for two-factor authentication.</p>
+
+                            <div class="d-flex w-100 justify-content-between mt-4">
+                                {% if twoFactor.email  %}
+                                    <small>Switch it on or off.</small>
+                                    <div class="form-check form-switch">
+                                        <input onchange="setTwoFactor(this, 'email')" class="form-check-input" type="checkbox" role="switch" id="flexSwitchCheckDefault" {% if twoFactor.email.enabled == 1 %}checked{% endif %} />
+                                    </div>
+                                {% else %}
+                                    <small>Set your email address</small>
+                                    <button disabled="disabled" href="/two-factor" class="btn btn-sm btn-secondary shadow">Setup</button>
+                                {% endif %}
+                            </div>
                         </div>
+
+                    </div>
+
+                    {# Password settings #}
+                    <h4 class="h4 mt-4">Password settings</h4>
+                    <div class="card mt-3">
+
                         <div class="card-body">
                             <form action="/change-password" method="post">
                                 <input type="hidden" name="uuid" value="{{ user.uuid }}">
@@ -140,7 +155,7 @@
                                     <input id="password_confirm" name="password_confirm" type="password" class="form-control border-warning">
                                     <div id="err-password_confirm" class="invalid-feedback"></div>
                                 </div>
-                                <button class="btn btn-danger  py-2" data-bs-dismiss="modal" type="submit">Update password</button>
+                                <button class="btn btn-danger py-2 shadow" data-bs-dismiss="modal" type="submit">Update password</button>
                             </form>
                         </div>
                     </div>
@@ -165,21 +180,69 @@
         </div>
     </div>
 
-
-
-
-
-
-
-
-
-
 {% endblock %}
 
 {% block script %}
     <script>
-        function setTwoFactor() {
-            const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+        const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+
+
+        async function submitForm(formId, endpoint) {
+            const form = document.getElementById(formId);
+
+            const jsonData = {};
+            // A form elemein végigiterálunk és kiszűrjük a readonly és disabled mezőket
+            Array.from(form.elements).forEach((element) => {
+                if (!element.disabled && !element.readOnly && element.name) {
+                    jsonData[element.name] = element.value;
+                }
+            });
+
+            try {
+                // Fetch POST kérés
+                const response = await fetch(endpoint, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        "X-CSRF-Token": csrfToken
+                    },
+                    body: JSON.stringify(jsonData)
+                });
+
+                if (!response.ok) {
+                //    throw new Error('Hálózati hiba történt');
+                }
+
+                return await response.json(); // Eredmény visszaadása JSON-ként
+            } catch (error) {
+                return { error: error.message }; // Hiba visszaadása
+            }
+        }
+
+        document.getElementById('formProfile').addEventListener('submit', async function(event) {
+            event.preventDefault();
+
+            // Form elküldése és eredmény feldolgozása egyszerűen
+            const result = await submitForm('formProfile', '/profile/updateProfile');
+
+            if (result.success) {
+                console.log('Sikeres válasz:', result);
+            } else {
+                console.error('Hiba történt:', result);
+                for (let err of result.errors) {
+                    let item = document.getElementById('err-' + err.name)
+                    if (item) {
+                        item.innerHTML = err.text;
+                        item.style.display = 'block';
+                    }
+
+                }
+                // Itt lehet további feldolgozást végezni az eredménnyel
+            }
+        });
+
+
+        function setTwoFactor(element, method) {
 
             fetch("/two-factor/set", {
                 method: "POST",
@@ -188,7 +251,8 @@
                     "X-CSRF-Token": csrfToken
                 },
                 body: JSON.stringify({
-                    twoFactor: document.getElementById("flexSwitchCheckDefault").checked,
+                    twoFactor: element.checked,
+                    method: method
                 }),
             })
                 .then((response) => response.json())
