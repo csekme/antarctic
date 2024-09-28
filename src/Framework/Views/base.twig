@@ -17,15 +17,16 @@
 
     {# Header injection block #}
     {% block header %}{% endblock %}
-
     <style>
         {% include 'Base/base.css' %}
     </style>
 </head>
 <body>
 
+{# SVG symbols #}
 {% include 'Dashboard/simbols.svg.twig' %}
 
+{#  Theme switcher button #}
 <div class="dropdown position-fixed bottom-0 end-0 mb-3 me-3 bd-mode-toggle">
     <button class="btn btn-primary py-2 dropdown-toggle d-flex align-items-center shadow"
             id="bd-theme"
@@ -118,7 +119,9 @@
         </ul>
 
         {# Profile menu #}
-        {% include 'Base/profile-menu.twig' %}
+        <div class="btn-circle btn btn-primary flex-shrink-0 dropdown me-4 d-none d-md-block" data-bs-toggle="dropdown">
+            {% include 'Base/profile-menu.twig' %}
+        </div>
     {% endif %}
 
 </header>
@@ -161,14 +164,7 @@
                     <div class="offcanvas-header">
                         {# Profile menu #}
                         <div class="btn-circle btn btn-primary flex-shrink-0 dropdown me-4" data-bs-toggle="dropdown">
-                            CK
-                            <ul class="dropdown-menu dropdown-menu-end text-small shadow dropdown-menu-fix">
-                                <li><a class="dropdown-item" href="/profile">Profile</a></li>
-                                <li>
-                                    <hr class="dropdown-divider">
-                                </li>
-                                <li><a class="dropdown-item" href="/logout">Sign out</a></li>
-                            </ul>
+                            {% include 'Base/profile-menu.twig' %}
                         </div>
                         <h5 class="offcanvas-title" id="sidebarMenuLabel">{{ current_user.getFullName() }}</h5>
                         <button type="button" class="btn-close" data-bs-dismiss="offcanvas"
