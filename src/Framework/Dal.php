@@ -28,6 +28,17 @@ abstract class Dal {
     }
 
     /**
+     * Add an error message
+     * @param string $name the name of the field
+     * @param string $text the error message
+     * @return void
+     */
+    public function addError(string $name, string $text): void
+    {
+        $this->errors[] = ['name' => $name, 'text' => $text];
+    }
+
+    /**
      * Generate RFC 4122 compliant Version 4 UUID
      * @return string
      * @throws RandomException

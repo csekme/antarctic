@@ -8,8 +8,8 @@ class ClassExploder
 
    public function __construct()
    {
-       $this->scanNamespaces('/Application');
        $this->scanNamespaces('/Framework');
+       $this->scanNamespaces('/Application');
    }
 
     public static $int = 0;
