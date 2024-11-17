@@ -3,6 +3,7 @@
 namespace Framework;
 
 use Exception;
+use Framework\TwigExtensions\ResetFormExtension;
 use Twig\Error\LoaderError;
 use Twig\Error\RuntimeError;
 use Twig\Error\SyntaxError;
@@ -99,11 +100,15 @@ class View
 
         }
         $html = $twig->render($template, $args);
+
         if (isset($_SESSION['csrf'])) {
             $csrfToken = $_SESSION['csrf']->getValue();
             $csrfExtension = new CsrfExtension($csrfToken);
             $html = $csrfExtension->addCsrfToForms($html);
         }
+
+        $resetFormExtension = new ResetFormExtension();
+        $html = $resetFormExtension->insertResetFormScript($html);
         return $html;
     }
 }
