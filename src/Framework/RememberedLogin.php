@@ -10,6 +10,7 @@ use PDO;
  * @property $user_id
  * @property $token_hash
  * @property $expires_at
+ * @property $options
  */
 class RememberedLogin extends Dal
 {
@@ -47,7 +48,9 @@ class RememberedLogin extends Dal
      */
     public function getUser(): User
     {
-        return User::findByID($this->user_id);
+        $user = User::findByID($this->user_id);
+        $user->options = $this->options;
+        return $user;
     }
 
     /**

@@ -4,6 +4,7 @@ use Exception;
 use Framework\Dal as Dal;
 use Framework\Token;
 use PDO;
+use PDOException;
 
 /**
  * Default Signup Model
@@ -23,7 +24,7 @@ use PDO;
  * @property $password_reset_expires_at
  * @property $created_at
  * @property $updated_at
- *
+ * @property $options not persist
  * @property $remember_token not persist
  * @property $expiry_timestamp not persist
  */
@@ -51,12 +52,17 @@ abstract class AbstractUser extends Dal
 
     public function getLastName(): string
     {
-        return $this->firstname??'';
+        return $this->lastname??'';
     }
 
     public function getFullName() : string
     {
-        return $this->getFirstName()  .' ' . $this->getLastName();
+        return trim(($this->getFirstName() ?? '') . ' ' . ($this->getLastName() ?? ''));
+    }
+
+    public function getMonogram() : string
+    {
+        return strtoupper(substr($this->getFirstName() ?? '', 0, 1) . substr($this->getLastName() ?? '', 0, 1));
     }
 
     /**
@@ -121,6 +127,27 @@ abstract class AbstractUser extends Dal
     }
 
     /**
+     * Find a user model by email address
+     * @param string $entry email address to search for or username
+     * @return AbstractUser|false Signup object if found, false otherwise
+     */
+    public static function findByUsernameOrEmail(string $entry): AbstractUser|false
+    {
+        $sql = 'SELECT * FROM user WHERE email = :entry_e OR username = :entry_u';
+        $db = static::connection();
+        $stmt = $db->prepare($sql);
+        $stmt->bindParam(':entry_e', $entry, PDO::PARAM_STR);
+        $stmt->bindParam(':entry_u', $entry, PDO::PARAM_STR);
+
+        //Az adatbázis record egy entity osztályként jön létre
+        $stmt->setFetchMode(PDO::FETCH_CLASS, get_called_class());
+
+        $stmt->execute();
+
+        return $stmt->fetch();
+    }
+
+    /**
      * Find a user model by username
      * @param string $username The username
      * @return AbstractUser|false Signup object if found, false otherwise
@@ -172,6 +199,21 @@ abstract class AbstractUser extends Dal
         return $stmt->fetchAll();
     }
 
+    public static function getMaxUserId(): int
+    {
+        $sql = 'SELECT MAX(id) as max_id FROM user';
+        $db = static::connection();
+        try {
+            $stmt = $db->prepare($sql);
+            $stmt->execute();
+            $result = $stmt->fetch(PDO::FETCH_ASSOC);
+            return $result['max_id'] !== null ? (int) $result['max_id'] : 0;
+        } catch (PDOException $e) {
+            error_log('Database error: ' . $e->getMessage());
+            return 0;
+        }
+    }
+
     /**
      * Find a user model by UUID
      * @param string $uuid The user UUID
@@ -215,7 +257,7 @@ abstract class AbstractUser extends Dal
      */
     public static function authenticate(string $email, string $password) : User | false
     {
-        $user = static::findByEmail($email);
+        $user = static::findByUsernameOrEmail($email);
 
         if ($user && $user->is_active) {
             if (password_verify($password, $user->password_hash)) {
@@ -258,14 +300,15 @@ abstract class AbstractUser extends Dal
 
         $this->expiry_timestamp = time() + 60 * 60 * 24 * 30; //30 days from now
 
-        $sql = 'INSERT INTO remembered_logins (token_hash, user_id, expires_at)
-                VALUES (:token_hash, :user_id, :expires_at)';
+        $sql = 'INSERT INTO remembered_logins (token_hash, user_id, expires_at, options)
+                VALUES (:token_hash, :user_id, :expires_at, :options)';
         $db = static::connection();
         $stmt = $db->prepare($sql);
 
         $stmt->bindValue(':token_hash', $hashed_token, PDO::PARAM_STR);
         $stmt->bindValue(':user_id', $this->id, PDO::PARAM_INT);
         $stmt->bindValue(':expires_at', date('Y-m-d H:i:s', $this->expiry_timestamp), PDO::PARAM_STR);
+        $stmt->bindValue(':options', $this->options, PDO::PARAM_STR);
 
         return $stmt->execute();
 

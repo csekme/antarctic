@@ -13,12 +13,30 @@ abstract class Dal {
      */
     protected array $errors = [];
 
+    protected mixed $data = [];
+
+    public function jsonSerialize(): string
+    {
+        return json_encode($this);
+    }
+
+    /**
+     * Get associative array from JSON
+     * @param $json
+     * @return mixed
+     */
+    public static function jsonToAssociative($json): mixed
+    {
+        return json_decode($json, true);
+    }
 
     /**
      * @throws RandomException
      */
     public function __construct($data = [])
     {
+        $this->data = $data;
+
         if (!isset($this->uuid)) {
             $this->uuid = $this->UUID();
         }

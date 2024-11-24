@@ -1,9 +1,7 @@
 <?php
 
 namespace Framework;
-
 use Framework\Models\AbstractUser;
-use Framework\Models\User;
 
 class Auth
 {
@@ -105,14 +103,11 @@ class Auth
             $remembered_login = RememberedLogin::findByToken($cookie);
 
             if ($remembered_login && !$remembered_login->hasExpired()) {
-
                 $user = $remembered_login->getUser();
-
                 static::login($user);
-
+                $user->options = $remembered_login->options;
                 return $user;
             }
-
         }
         return null;
     }

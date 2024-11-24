@@ -22,6 +22,7 @@ class View
 {
     // We need this constant to show a modal window by id
     public static string $SHOW_MODAL_BY_ID = "showModalById";
+    public static string $TWIG_GLOBAL_ARRAY = "twig_global_array";
 
     /**
      * Render a view file
@@ -90,6 +91,18 @@ class View
             $loader = new \Twig\Loader\FilesystemLoader($dir);
             $twig = new \Twig\Environment($loader, array('debug' => true));
             $twig->addExtension(new RoleExtension());
+
+            //load external extensions
+            $externalExtensions = dirname(__DIR__) . '/Application/TwigExtensions';
+            if (is_dir($externalExtensions)) {
+                $files = scandir($externalExtensions);
+                foreach ($files as $file) {
+                    if (is_file($externalExtensions . '/' . $file)) {
+                        $extension = 'Application\\TwigExtensions\\' . pathinfo($file, PATHINFO_FILENAME);
+                        $twig->addExtension(new $extension());
+                    }
+                }
+            }
             $twig->addGlobal('session', $_SESSION);
             $twig->addGlobal('flash_messages', Flash::getMessages());
             $twig->addGlobal('base_path', "/");
@@ -97,7 +110,11 @@ class View
             if (isset($_SESSION['csrf'])) {
                 $twig->addGlobal('csrf_token', $_SESSION['csrf']->getValue());
             }
-
+            if (isset($_SESSION[static::$TWIG_GLOBAL_ARRAY])) {
+                foreach ($_SESSION[static::$TWIG_GLOBAL_ARRAY] as $key => $value) {
+                    $twig->addGlobal($key, $value);
+                }
+            }
         }
         $html = $twig->render($template, $args);
 
