@@ -3,6 +3,7 @@
 namespace Framework;
 
 use Exception;
+use Framework\TwigExtensions\BasePathExtension;
 use Framework\TwigExtensions\ResetFormExtension;
 use Twig\Error\LoaderError;
 use Twig\Error\RuntimeError;
@@ -103,6 +104,7 @@ class View
                     }
                 }
             }
+            $twig->addExtension(new BasePathExtension());
             $twig->addGlobal('session', $_SESSION);
             $twig->addGlobal('flash_messages', Flash::getMessages());
             $twig->addGlobal('base_path', "/");

@@ -1,17 +1,17 @@
 <?php
-
 namespace Application\Controllers;
-
+use Framework\AbstractController;
 use Framework\Controller as Controller;
 use Framework\Path as Path;
-
-#[Path('/test')]
+use Framework\Response;
+#[Path("/")]
 class TestController extends Controller
 {
-    #[Path(path:'/test', method:Controller::GET)]
-    function testAction() : void {
-        
-        print "Hello, World!";
+    #[Path(method: AbstractController::GET)]
+    function testAction() : Response {
+        $response = new Response();
+        $response->setBody("Hello, World!");
+        return $response;
     }
 
 

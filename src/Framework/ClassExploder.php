@@ -8,7 +8,9 @@ class ClassExploder
 
    public function __construct()
    {
-       $this->scanNamespaces('/Framework');
+       if (Config::useCoreController()) {
+           $this->scanNamespaces('/Framework');
+       }
        $this->scanNamespaces('/Application');
    }
 

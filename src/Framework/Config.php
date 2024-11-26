@@ -41,4 +41,11 @@ class Config {
         return false;
     }
 
+    public static function useCoreController() : bool {
+        $_config = Config::get_config();
+        if (isset($_config['framework']['useCoreControllers'])) {
+            return $_config['framework']['useCoreControllers'];
+        }
+        return false;
+    }
 }

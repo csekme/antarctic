@@ -100,6 +100,11 @@ Application configuration file
       "description": "This is my application based on Antrarctic Web Framework",
       "secretKey": "MY-SECRET-KEY"
     },
+   "framework": {
+      "cache": true,
+      "showErrors": false,
+      "useCoreControllers": false
+   },
     "smtp": {
         "debug": 0,
         "host": "smtp.mail.com",
