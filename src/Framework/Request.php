@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace Framework;
 
 class Request {
+
     public array $json = []; // Új tulajdonság a JSON adatok tárolására
+    private AbstractController $controller;
 
     public function __construct(public string $uri,
                                 public string $method,
@@ -57,4 +59,16 @@ class Request {
     public function getJson(): array {
         return $this->json;
     }
+
+    public function getController(): AbstractController
+    {
+        return $this->controller;
+    }
+
+    public function setController(AbstractController $controller): void
+    {
+        $this->controller = $controller;
+    }
+
+
 }

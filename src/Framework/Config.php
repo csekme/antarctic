@@ -48,4 +48,9 @@ class Config {
         }
         return false;
     }
+    public static function get_interceptors(): array {
+        $config = Config::get_config();
+        return $config['application']['interceptors'] ?? [];
+    }
+
 }

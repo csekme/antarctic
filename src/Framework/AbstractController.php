@@ -36,6 +36,7 @@ abstract class AbstractController {
     public function setRequest(Request $request): void
     {
         $this->request = $request;
+        $this->request->setController($this);
     }
 
     /**
@@ -55,5 +56,7 @@ abstract class AbstractController {
         return $this->response;
     }
 
-
+    protected function getResponse(): Response {
+        return $this->response;
+    }
 }

@@ -36,7 +36,7 @@ readonly class Dispatcher
      */
     public function handleRequest(Request $request): Response
     {
-
+        $interceptors = Config::get_interceptors();
         $params = $this->router->match($request->uri);
 
         if ($params === false) {
@@ -62,7 +62,9 @@ readonly class Dispatcher
                 $this->processAnnotation($attribute, $controller_object);
             }
             $controller_object->setRequest($request);
-            $controller_object->setResponse($this->container->get(Response::class));
+            $response = $this->container->get(Response::class);
+            $controller_object->setResponse($response);
+
             $action = $params['action'];
             $action = $this->convertToCamelCase($action);
 
@@ -101,6 +103,16 @@ readonly class Dispatcher
                 $this->processAnnotation($attribute, $controller_object);
             }
 
+            foreach ($interceptors as $interceptor) {
+                $int = 'Application\\'.$interceptor['name'];
+                if (class_exists($int) && $interceptor['call-chain'] == 'before' && boolval($interceptor['enabled'])) {
+                    $interceptor_object = new $int();
+                    if ($interceptor_object instanceof InterceptorInterface) {
+                        $interceptor_object->invoke($request, $controller_object->getResponse());
+                    }
+                }
+            }
+
             if ($request_method !== 'GET') {
                 if ($method->getNumberOfParameters() === 1) {
                     $response = $controller_object->$action($_POST);
@@ -114,6 +126,17 @@ readonly class Dispatcher
                     $response = $controller_object->$action($value);
                 } else {
                     $response = $controller_object->$action();
+                }
+            }
+
+
+            foreach ($interceptors as $interceptor) {
+                $int = 'Application\\'.$interceptor['name'];
+                if (class_exists($int) && $interceptor['call-chain'] == 'after' && boolval($interceptor['enabled'])) {
+                    $interceptor_object = new $int();
+                    if ($interceptor_object instanceof InterceptorInterface) {
+                        $response = $interceptor_object->invoke($request, $response);
+                    }
                 }
             }
             $response->send();
