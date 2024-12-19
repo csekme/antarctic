@@ -16,13 +16,17 @@ class Dotenv
      */
     public function load(string $path): void
     {
-        $lines = file($path, FILE_IGNORE_NEW_LINES);
+        if (file_exists($path)) {
 
-        foreach ($lines as $line) {
+            $lines = file($path, FILE_IGNORE_NEW_LINES);
 
-            list($name, $value) = explode("=", $line, 2);
+            foreach ($lines as $line) {
 
-            $_ENV[strtoupper($name)] = $value;
+                list($name, $value) = explode("=", $line, 2);
+
+                $_ENV[strtoupper($name)] = $value;
+            }
         }
+
     }
 }

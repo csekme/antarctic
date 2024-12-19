@@ -53,4 +53,12 @@ class Config {
         return $config['application']['interceptors'] ?? [];
     }
 
+    public static function show_errors(): bool {
+        $_config = Config::get_config();
+        if (isset($_config['framework']['showErrors'])) {
+            return $_config['framework']['showErrors'];
+        }
+        return false;
+    }
+
 }

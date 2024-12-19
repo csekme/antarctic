@@ -5,3 +5,5 @@ src/.env
 /src/composer.lock
 /src/vendor
 /src/Application/application.json
+docker-compose.override.yml
+.DS_Store

@@ -43,7 +43,7 @@ class ErrorHandler
         if (!headers_sent()) {
             http_response_code($code);
         }
-        if (true) { //TODO: config boolean
+        if (Config::show_errors()) {
             echo "<h1>Fatal error</h1>";
             echo "<p>Uncaught exception: '" . get_class($exception) . "'</p>";
             echo "<p>Message: '" . $exception->getMessage() . "'</p>";

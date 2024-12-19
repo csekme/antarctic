@@ -1,8 +1,7 @@
-version: '3.1'
-
 services:
   app:
     container_name: application-cont
+    platform: linux/amd64
     build:
       context: ./docker/apache
       dockerfile: Dockerfile
@@ -17,25 +16,21 @@ services:
       - ./src:/var/www
   database:
     container_name: application-db-cont
+    platform: linux/amd64
     build:
       context: ./docker/${DATABASE}
       dockerfile: Dockerfile
     ports:
       - ${DATABASE_PORT}:${DATABASE_PORT}
     environment:
-      - MYSQL_ROOT_PASSWORD=${DATABASE_ROOT_PASSWORD}
-      - MYSQL_DATABASE=${DATABASE_NAME}
-      - MYSQL_USER=${DATABASE_USER}
-      - MYSQL_PASSWORD=${DATABASE_PASSWORD}
-      #- POSTGRES_USER=${DATABASE_USER} # The PostgreSQL user (useful to connect to the database)
-      #- POSTGRES_PASSWORD=${DATABASE_PASSWORD}
-      #- POSTGRES_DB=${DATABASE_NAME}
-      #- POSTGRES_INITDB_ARGS=--auth-host=md5 --locale=hu_HU.UTF-8
+      - POSTGRES_USER=${DATABASE_USER} # The PostgreSQL user (useful to connect to the database)
+      - POSTGRES_PASSWORD=${DATABASE_PASSWORD}
+      - POSTGRES_DB=${DATABASE_NAME}
+      - POSTGRES_INITDB_ARGS=--auth-host=md5 --locale=hu_HU.UTF-8
     networks:
       - antarctic-web
     volumes:
-      #- ~/.local/share/antarctic/data/:/var/lib/postgresql/data/
-      - ./docker/${DATABASE}/init.sql:/docker-entrypoint-initdb.d/init.sql
+      - ~/.local/share/antarctic/data/:/var/lib/postgresql/data/
 
 networks:
   antarctic-web:

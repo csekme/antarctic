@@ -73,7 +73,7 @@ abstract class Dal {
     {
         return match (strtoupper($_ENV["DATABASE"])) {
             'MARIADB' => 'mariadb:host=',
-            'POSTGRESQL' => 'psql:host=',
+            'POSTGRESQL' => 'pgsql:host=',
             'MYSQL' => 'mysql:host=',
             default => 'mysql:host=',
         };

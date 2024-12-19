@@ -122,3 +122,213 @@ Application configuration file
 }
 
 ```
+
+## VSCODE xdebug launcher
+```json
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Listen for Xdebug",
+            "type": "php",
+            "request": "launch",
+            "port": 9003,
+            "pathMappings": {
+                "/var/www/html": "${workspaceFolder}/src/html",
+                "/var/www/Application": "${workspaceFolder}/src/Application",
+                "/var/www/Framework": "${workspaceFolder}/src/Framework",
+                
+            }
+        }
+    ]
+}
+```
+
+## Docker compose file
+
+### Postgresql
+```yaml
+services:
+  app:
+    container_name: application-cont
+    platform: linux/amd64
+    build:
+      context: ./docker/apache
+      dockerfile: Dockerfile
+    ports:
+      - "80:80"
+      - "443:443"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    networks:
+      - antarctic-web
+    volumes:
+      - ./src:/var/www
+  database:
+    container_name: application-db-cont
+    platform: linux/amd64
+    build:
+      context: ./docker/${DATABASE}
+      dockerfile: Dockerfile
+    ports:
+      - ${DATABASE_PORT}:${DATABASE_PORT}
+    environment:
+      - POSTGRES_USER=${DATABASE_USER} # The PostgreSQL user (useful to connect to the database)
+      - POSTGRES_PASSWORD=${DATABASE_PASSWORD}
+      - POSTGRES_DB=${DATABASE_NAME}
+      - POSTGRES_INITDB_ARGS=--auth-host=md5 --locale=hu_HU.UTF-8
+    networks:
+      - antarctic-web
+    volumes:
+      - ~/.local/share/antarctic/data/:/var/lib/postgresql/data/
+
+networks:
+  antarctic-web:
+    name: "antarctic-web"
+    driver: bridge
+```
+
+#### MySQL or MariaDB
+```yaml
+services:
+  app:
+    container_name: application-cont
+    platform: linux/amd64
+    build:
+      context: ./docker/apache
+      dockerfile: Dockerfile
+    ports:
+      - "80:80"
+      - "443:443"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    networks:
+      - antarctic-web
+    volumes:
+      - ./src:/var/www
+  database:
+    container_name: application-db-cont
+    platform: linux/amd64
+    build:
+      context: ./docker/${DATABASE}
+      dockerfile: Dockerfile
+    ports:
+      - ${DATABASE_PORT}:${DATABASE_PORT}
+    environment:
+      - MYSQL_ROOT_PASSWORD=${DATABASE_ROOT_PASSWORD}
+      - MYSQL_DATABASE=${DATABASE_NAME}
+      - MYSQL_USER=${DATABASE_USER}
+      - MYSQL_PASSWORD=${DATABASE_PASSWORD}
+    networks:
+      - antarctic-web
+    volumes:
+      - ./docker/${DATABASE}/init.sql:/docker-entrypoint-initdb.d/init.sql
+
+networks:
+  antarctic-web:
+    name: "antarctic-web"
+    driver: bridge
+```
+# Create a new Project
+
+Let's create a new project (your project) make a directory under src folder called Application
+this will be your project root folder.
+
+Your project folder should use the following strucutre:
+```
+Application
+    Controllers
+    Interceptors
+    TwigExtensions
+    Models
+    Views
+      Errors  
+```
+
+## Example of model
+Let's suppose you have a table called person.
+```sql
+create table person
+(
+    name text   not null,
+    age  bigint not null
+);
+
+```
+
+```php 
+
+<?php
+
+namespace Application\Models;
+
+use Framework\Dal;
+use PDO;
+
+/**
+ * Person Model
+ * @property string $name
+ * @property int $age
+ */
+class TestModel extends Dal
+{
+
+    function save()
+    {
+        $sql = 'INSERT INTO person (name, age) values (:name, :age)';
+        $connection = self::connection();
+        $statement = $connection->prepare($sql);
+        $statement->bindParam(":name", $this->name);
+        $statement->bindParam(":age", $this->age, PDO::PARAM_INT);
+        return $statement->execute();
+    }
+}
+```
+
+## Example of a Controller
+```php
+
+<?php
+
+namespace Application\Controllers;
+
+use Framework\AbstractController;
+use Framework\Controller as Controller;
+use Framework\Path as Path;
+use Framework\Response;
+use Framework\ResponseBuilder;
+use Application\Models\TestModel;
+
+#[Path("/")]
+class TestController extends Controller
+{
+
+    #[Path(method: AbstractController::POST)]
+    function save(): Response
+    {
+        $model = new TestModel($this->request->getJson());
+        if ($model->save()) {
+        $builder = ResponseBuilder::create();
+        return $builder
+            ->setBody('Resource have been saved')
+            ->addHeader('Content-Type: text/plain')
+            ->setStatusCode(200)
+            ->build();
+        }
+
+    }
+
+    #[Path(method: AbstractController::GET)]
+    function testAction(): Response
+    {
+        $response = new Response();
+        $response->setBody("Hello, World!");
+        return $response;
+    }
+}
+
+
+```
