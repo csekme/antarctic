@@ -7,3 +7,9 @@ src/.env
 /src/Application/application.json
 docker-compose.override.yml
 .DS_Store
+
+# Dev tooling local overrides
+/src/phpstan.neon
+/src/phpunit.xml
+/src/.phpunit.cache
+/src/.phpunit.result.cache

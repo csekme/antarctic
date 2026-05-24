@@ -1,0 +1,11 @@
+parameters:
+    level: 1
+    paths:
+        - Framework
+    excludePaths:
+        - Framework/Views
+    treatPhpDocTypesAsCertain: false
+    ignoreErrors:
+        # Dynamic properties on Dal (uses #[AllowDynamicProperties])
+        - '#Access to an undefined property Framework\\Dal::\$#'
+        - '#Access to an undefined property Framework\\Models\\AbstractUser::\$#'
