@@ -1,215 +1,198 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Framework\Routing;
+
+use Framework\AbstractController;
 use Framework\ClassExploder;
 use Framework\Path;
 use ReflectionClass;
-use Framework\Request;
-use Framework\Response;
-use Framework\Container;
 use ReflectionException;
 use ReflectionMethod;
 
 /**
- * Router
+ * Az alap-router: az `Application` és `Framework` controller-namespace-ekből
+ * összegyűjtött `#[Path]` attribútumokat regexes routing-táblába konvertálja.
  *
- * PHP version 8.0
+ * Két konstruktor-módja van:
+ *
+ *   - **Discovery**: paraméter nélkül scanneli a `ClassExploder`-rel a
+ *     controller-osztályokat és reflection-nel olvassa a `#[Path]`-eket.
+ *     Dev-időben minden requesten lefut.
+ *
+ *   - **Cache hydrate**: a `$cachedRoutes` paraméterrel azonnal a kész
+ *     route-tábla töltődik be — a `RouteCache::load()` adja vissza.
+ *     Production-ban ezt használjuk; nincs reflection-cost.
  */
-class StandardRouterImpl implements Router {
-
+class StandardRouterImpl implements Router
+{
+    /**
+     * @var array<string, array<string, mixed>>
+     */
+    protected array $routes = [];
 
     /**
+     * @param array<string, array<string, mixed>>|null $cachedRoutes
+     *    Ha nem null, ezzel inicializáljuk a route-táblát és NEM scanneljük újra
+     *    a controller-osztályokat.
+     *
      * @throws ReflectionException
      */
-    public function __construct()
+    public function __construct(?array $cachedRoutes = null)
     {
+        if ($cachedRoutes !== null) {
+            $this->routes = $cachedRoutes;
+            return;
+        }
+
+        $this->routes = self::discoverRoutes();
+    }
+
+    /**
+     * Reflection-alapú scan: a `ClassExploder` által visszaadott controller-listából
+     * minden `#[Path]`-os method-re route-ot képez. A visszaadott tömböt a
+     * `RouteCache::save()` is használhatja.
+     *
+     * @return array<string, array<string, mixed>>
+     * @throws ReflectionException
+     */
+    public static function discoverRoutes(): array
+    {
+        $routes = [];
         $classExploder = new ClassExploder();
         $mapping = $classExploder->get_controller_mapping();
         foreach ($mapping as $path => $param) {
-            if (str_starts_with($path, "/")) {
-                $path = substr($path, 1);
+            // A `/__class__/{FQCN}` sentinel kulcs azt jelzi: az osztálynak
+            // nincs class-szintű `#[Path]` prefix; csak a method-szintű attribútumok
+            // adják a teljes route-ot.
+            if (str_starts_with($path, '/__class__/')) {
+                $path = '';
+            } else {
+                $path = ltrim($path, '/');
             }
             $className = $param['className'];
             $namespace = $param['nameSpace'];
             $fullQualifiedClass = $namespace . '\\' . $className;
-            if (class_exists($fullQualifiedClass)) {
-                $controllerObj = new $fullQualifiedClass([]);
-                $reflectionClass = new ReflectionClass($controllerObj::class);
-                $methods = $reflectionClass->getMethods(ReflectionMethod::IS_PUBLIC);
-                foreach ($methods as $method) {
-                    $action = $method->name;
-                    if (str_ends_with($action, "Action")) {
-                      //  $action = substr($action, 0, strlen($action) - 6);
-                    }
-                    $attributes = $method->getAttributes(Path::class);
-                    foreach ($attributes as $attribute) {
-                        $attributeObj = $attribute->newInstance();
-                        $pathVariable = $attributeObj->path;
-                        $emptyPath = false;
-                        if ($pathVariable == "") {
-                            $emptyPath = true;
-                        } else {
-                            if ($path!='' && !str_starts_with($pathVariable, "/")) {
-                                $pathVariable = "/" . $pathVariable;
-                            } else if ($path=='' && str_starts_with($pathVariable, "/")) {
-                                $pathVariable = substr($pathVariable, 1);
-                            }
+            if (!class_exists($fullQualifiedClass)) {
+                continue;
+            }
+            $reflectionClass = new ReflectionClass($fullQualifiedClass);
+            $methods = $reflectionClass->getMethods(ReflectionMethod::IS_PUBLIC);
+            foreach ($methods as $method) {
+                $action = $method->name;
+                $attributes = $method->getAttributes(Path::class);
+                foreach ($attributes as $attribute) {
+                    $attributeObj = $attribute->newInstance();
+                    $pathVariable = $attributeObj->path ?? '';
+                    $emptyPath = ($pathVariable === '');
+                    if (!$emptyPath) {
+                        if ($path !== '' && !str_starts_with($pathVariable, '/')) {
+                            $pathVariable = '/' . $pathVariable;
+                        } elseif ($path === '' && str_starts_with($pathVariable, '/')) {
+                            $pathVariable = substr($pathVariable, 1);
                         }
-                        if (str_contains($pathVariable, '{')) {
-                            $pathVariable = $this->convertPathPattern($pathVariable);
-                        }
-                        $this->add(
-                            $path . $pathVariable,
-                            [
-                                'controller' => $className,
-                                'namespace' => $param['nameSpace'],
-                                'action' => $pathVariable == '' ? '': $action,
-                                'method' => $attributeObj->method ?? 'GET',
-                                'emptyPath' => $emptyPath
-                            ]
-                        );
                     }
+                    if (str_contains($pathVariable, '{')) {
+                        $pathVariable = self::convertPathPattern($pathVariable);
+                    }
+                    $routeKey = self::compileRoute($path . $pathVariable);
+                    $routes[$routeKey] = [
+                        'controller' => $className,
+                        'namespace' => $param['nameSpace'],
+                        'action' => $pathVariable === '' ? '' : $action,
+                        'method' => $attributeObj->method ?? AbstractController::GET,
+                        'emptyPath' => $emptyPath,
+                    ];
                 }
-
             }
         }
+        return $routes;
     }
 
-    protected function convertPathPattern($path)
+    /**
+     * Az `add()` mostmár tisztán a routing-táblába tesz; a `discoverRoutes()`
+     * is ezt használja, ill. a `RouteCacheCommand` ezzel iterál.
+     *
+     * @param array<string, mixed> $params
+     */
+    public function add(string $route, array $params = []): void
     {
-        // Példa a konverzióra a '{id:\d+}' alapján
-        $pattern = preg_replace_callback('/\{(\w+)(?::([^}]+))?\}/', function ($matches) {
-            $varName = $matches[1];
-            $regex = $matches[2] ?? '[^/]+';
-            return '(?P<' . $varName . '>' . $regex . ')';
-        }, $path);
-        return $pattern;
+        $this->routes[self::compileRoute($route)] = $params;
     }
 
     /**
-     * Associative array of routes (the routing table)
-     * @var array
+     * @return array<string, array<string, mixed>>
      */
-    protected $routes = [];
-
-    /**
-     * Parameters from the matched route
-     * @var array
-     */
-    protected $params = [];
-
-    /**
-     * Add a route to the routing table
-     *
-     * @param string $route  The route URL
-     * @param array  $params Parameters (controller, action, etc.)
-     *
-     * @return void
-     */
-    public function add($route, $params = []): void {
-        // Convert the route to a regular expression: escape forward slashes
-        $route = preg_replace('/\//', '\\/', $route);
-
-        // Convert variables e.g. {controller}
-        $route = preg_replace('/\{([a-z]+)\}/', '(?P<\1>[a-z-]+)', $route);
-
-        // Convert variables with custom regular expressions e.g. {id:\d+}
-        $route = preg_replace('/\{([a-z]+):([^\}]+)\}/', '(?P<\1>\2)', $route);
-
-        // Add start and end delimiters, and case insensitive flag
-        $route = '/^' . $route . '$/i';
-
-        $this->routes[$route] = $params;
-    }
-
-    /**
-     * Get all the routes from the routing table
-     *
-     * @return array
-     */
-    public function getRoutes()
+    public function getRoutes(): array
     {
         return $this->routes;
     }
 
-    /**
-     * Match the route to the routes in the routing table, setting the $params
-     * property if a route is found.
-     *
-     * @param string $url The route URL
-     *
-     * @return boolean  true if a match found, false otherwise
-     */
-    public function match($url) : array | bool
+    public function match(string $url, ?string $method = null): MatchResult
     {
-        // actual request method
-        //$requestMethod = $_SERVER['REQUEST_METHOD'];
-        $url = $this->removeQueryStringVariables($url);
-        foreach ($this->routes as $route => $params) {
-            //$routeMethod = $params['method'] ?? 'GET|POST|PUT|DELETE';
-            if (preg_match($route, $url, $matches) /*&& preg_match("/$routeMethod/", $requestMethod)*/) {
-                // Get named capture group values
-                foreach ($matches as $key => $match) {
-                    if (is_string($key)) {
-                        $params[$key] = $match;
-                    }
+        $url = self::removeQueryStringVariables($url);
+        $methodUpper = $method !== null ? strtoupper($method) : null;
+        $allowedMethods = [];
+
+        foreach ($this->routes as $routeRegex => $params) {
+            if (!preg_match($routeRegex, $url, $matches)) {
+                continue;
+            }
+            $routeMethod = strtoupper((string) ($params['method'] ?? AbstractController::GET));
+
+            // Method-aware leg: ha a metódus nem stimmel, jelöljük allow-list-be.
+            if ($methodUpper !== null && $methodUpper !== $routeMethod) {
+                $allowedMethods[] = $routeMethod;
+                continue;
+            }
+
+            foreach ($matches as $key => $matchValue) {
+                if (is_string($key)) {
+                    $params[$key] = $matchValue;
                 }
-
-                $this->params = $params;
-                return $this->params;
             }
+            return MatchResult::found($params);
         }
 
-        return false;
+        if ($allowedMethods !== []) {
+            return MatchResult::methodNotAllowed($allowedMethods);
+        }
+        return MatchResult::notFound();
+    }
+
+    protected static function convertPathPattern(string $path): string
+    {
+        return (string) preg_replace_callback(
+            '/\{(\w+)(?::([^}]+))?\}/',
+            static function (array $matches): string {
+                $varName = $matches[1];
+                $regex = $matches[2] ?? '[^/]+';
+                return '(?P<' . $varName . '>' . $regex . ')';
+            },
+            $path,
+        );
     }
 
     /**
-     * Get the currently matched parameters
-     *
-     * @return array
+     * Konvertálja a route-mintát end-to-end PCRE regexszé. Ugyanaz a logika
+     * fut, mint a régi `add()`-ben — kiterjesztve arra, hogy a `discoverRoutes`
+     * is használja static contextben.
      */
-    public function getParams()
+    protected static function compileRoute(string $route): string
     {
-        return $this->params;
+        $regex = preg_replace('/\//', '\\/', $route);
+        $regex = preg_replace('/\{([a-z]+)\}/', '(?P<\1>[a-z-]+)', $regex);
+        $regex = preg_replace('/\{([a-z]+):([^\}]+)\}/', '(?P<\1>\2)', $regex);
+        return '/^' . $regex . '$/i';
     }
- 
 
-    /**
-     * Remove the query string variables from the URL (if any). As the full
-     * query string is used for the route, any variables at the end will need
-     * to be removed before the route is matched to the routing table. For
-     * example:
-     *
-     *   URL                           $_SERVER['QUERY_STRING']  Route
-     *   -------------------------------------------------------------------
-     *   localhost                     ''                        ''
-     *   localhost/?                   ''                        ''
-     *   localhost/?page=1             page=1                    ''
-     *   localhost/posts?page=1        posts&page=1              posts
-     *   localhost/posts/index         posts/index               posts/index
-     *   localhost/posts/index?page=1  posts/index&page=1        posts/index
-     *
-     * A URL of the format localhost/?page (one variable name, no value) won't
-     * work however. (NB. The .htaccess file converts the first ? to a & when
-     * it's passed through to the $_SERVER variable).
-     *
-     * @param string $url The full URL
-     *
-     * @return string The URL with the query string variables removed
-     */
-    protected function removeQueryStringVariables($url)
+    protected static function removeQueryStringVariables(string $url): string
     {
-        if ($url != '') {
-            $parts = explode('&', $url, 2);
-
-            if (strpos($parts[0], '=') === false) {
-                $url = $parts[0];
-            } else {
-                $url = '';
-            }
+        if ($url === '') {
+            return $url;
         }
-
-        return $url;
+        $parts = explode('&', $url, 2);
+        return strpos($parts[0], '=') === false ? $parts[0] : '';
     }
-
 }

@@ -1,9 +1,50 @@
-# Remove the question mark from the request but maintain the query string
+# Antarctic — Apache rewrite konfig (M3.a)
+#
+# Háromféle deploy-módot támogat:
+#
+#   1. embedded — a `src/html/app/` alá másolt SPA build-et szolgáljuk
+#      ugyanazon az origin-en, mint a backendet. A SPA history-mode
+#      routerét fájl-fallback-kel kezeljük.
+#   2. separate — a SPA külön origin-en fut; a backend csak az API
+#      végpontokat szállítja. (`src/html/app/index.html` nem létezik;
+#      ekkor a SPA-fallback szabályok nem aktiválódnak.)
+#   3. both — fejlesztéshez: mindkettő működik.
+#
+# A mód kiválasztása fájl-jelenlét alapján: ha `app/index.html` létezik,
+# embedded/both módban vagyunk. Az `APP_SPA_MODE` env változó csak a
+# PHP backend (CORS, info endpoint) számára informatív.
+
 RewriteEngine On
+Options -MultiViews
 
-# Uncomment the following line if your public folder isn't the web server's root
-# RewriteBase /
+# --- 1. API endpointok mindig a backend-hez ---
+RewriteRule ^api/(.*)$ index.php?api/$1 [L,QSA]
 
+# --- 2. Rendszer endpointok (healthz/readyz) is a backend-hez ---
+RewriteRule ^(healthz|readyz)$ index.php?$1 [L,QSA]
+
+# --- 3. Drop-in SPA: /app/* alatt létező fájl → kiszolgáljuk ---
+RewriteCond %{REQUEST_URI} ^/app/
+RewriteCond %{REQUEST_FILENAME} -f [OR]
+RewriteCond %{REQUEST_FILENAME} -d
+RewriteRule ^ - [L]
+
+# --- 4. Drop-in SPA: /app/* alatt nem létező fájl → SPA history fallback ---
+RewriteCond %{REQUEST_URI} ^/app/
+RewriteCond %{DOCUMENT_ROOT}/app/index.html -f
+RewriteRule ^ /app/index.html [L]
+
+# --- 5. Gyökér útvonal és minden ismeretlen path: ha embedded módban
+#       vagyunk (app/index.html létezik), a SPA-t szolgáljuk; egyébként
+#       továbbengedjük a backendnek (separate mód: 404). ---
+RewriteCond %{DOCUMENT_ROOT}/app/index.html -f
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteCond %{REQUEST_URI} !^/api/
+RewriteCond %{REQUEST_URI} !^/(healthz|readyz)$
+RewriteRule ^ /app/index.html [L]
+
+# --- 6. Egyébként: index.php a fallback (separate mód, vagy meglévő fájl) ---
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
 RewriteCond %{REQUEST_FILENAME} !-l

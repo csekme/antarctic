@@ -1,0 +1,4 @@
+# Drop-in SPA webroot
+
+A buildelt SPA `dist/` mappáját ide kell másolni (`cp -r dist/* src/html/app/`).
+A mappa tartalma (a `.gitkeep` és `.htaccess` kivételével) git-ignored.

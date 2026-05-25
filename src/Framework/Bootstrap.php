@@ -16,6 +16,7 @@ use Framework\Http\ErrorHandlerMiddleware;
 use Framework\Http\LegacyDispatcherMiddleware;
 use Framework\Http\MiddlewarePipeline;
 use Framework\Http\NotFoundHandler;
+use Framework\Routing\RouteCache;
 use Framework\Routing\StandardRouterImpl;
 use Laminas\HttpHandlerRunner\Emitter\SapiEmitter;
 use Nyholm\Psr7\Factory\Psr17Factory;
@@ -31,7 +32,12 @@ $dotenv = new Dotenv();
 $dotenv->load(ROOT_PATH . "/.env");
 
 $container = new Container();
-$router = new StandardRouterImpl();
+
+// Route cache: ha létezik a `var/cache/routes.php`, abból töltjük a route-táblát,
+// különben reflection-scan minden requesten (dev).
+$routeCache = new RouteCache(ROOT_PATH . '/var/cache/routes.php');
+$cachedRoutes = $routeCache->load();
+$router = new StandardRouterImpl($cachedRoutes);
 $dispatcher = new Dispatcher($router, $container);
 
 $psr17 = new Psr17Factory();

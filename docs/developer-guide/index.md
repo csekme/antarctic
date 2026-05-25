@@ -37,8 +37,8 @@ A keretrendszer fejlesztése milestone-okra van bontva (M0…M6). A milestone PR
 |---|---|---|
 | M0 | PHPStan + PHPUnit + Monolog + CI alap | ✅ kész |
 | M1 | PSR-7/PSR-15 pipeline, CORS, RFC 7807 | ✅ kész |
-| M2 | RS256 JWT auth + refresh rotation | 🚧 M2.a–b kész (TokenService + endpointok + RequireAuth) — M2.c: 2FA, M2.d: legacy törlés |
-| M3 | Drop-in SPA + routing rewrite + DI | ⏳ tervezett |
+| M2 | RS256 JWT auth + refresh rotation + 2FA | ✅ M2.a–d kész |
+| M3 | Drop-in SPA + routing rewrite + DI | 🚧 M3.a kész (webroot + .htaccess + APP_SPA_MODE) |
 | M4 | Migrations + validáció + OpenAPI | ⏳ tervezett |
 | M5 | Production Docker + observability | ⏳ tervezett |
 | M6 | Példa React SPA | ⏳ tervezett |

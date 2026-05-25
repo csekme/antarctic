@@ -7,6 +7,7 @@ namespace Framework;
 use Exception;
 use Framework\Auth\RequireAuth;
 use Framework\Auth\RequireRole;
+use Framework\Routing\MatchResult;
 use Framework\Routing\Router as Router;
 use ReflectionAttribute;
 use ReflectionClass;
@@ -39,11 +40,20 @@ readonly class Dispatcher
     public function handleRequest(Request $request): Response
     {
         $interceptors = Config::get_interceptors();
-        $params = $this->router->match($request->uri);
+        $matchResult = $this->router->match($request->uri, $request->method);
 
-        if ($params === false) {
+        if ($matchResult->isMethodNotAllowed()) {
+            $allow = implode(', ', $matchResult->allowedMethods);
+            throw new Exception(
+                message: "Method '{$request->method}' not allowed for '{$request->uri}'. Allowed: {$allow}",
+                code: 405,
+            );
+        }
+        if (!$matchResult->isFound()) {
             throw new Exception(message: "No route matched for '$request->uri' with method '{$request->method}'", code: 404);
         }
+
+        $params = $matchResult->params;
 
         $this->crossSiteRequestForgeryProtection($request);
 

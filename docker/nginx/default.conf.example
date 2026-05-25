@@ -1,0 +1,75 @@
+# Antarctic — Nginx vhost minta (M3.a)
+#
+# Production deploy-hoz. PHP-FPM upstream-mel feltételezi, hogy az index.php
+# a `src/html/` alatt van, és a SPA build a `src/html/app/`-ba van másolva.
+#
+# Másold át `docker/nginx/default.conf`-ra (gitignore-old) vagy az
+# `nginx/conf.d/`-be, és igazítsd a `server_name` + `root` értékeket.
+
+server {
+    listen 80;
+    server_name antarctic.local;
+
+    root /var/www/antarctic/src/html;
+    index index.php index.html;
+
+    # --- 1. API endpointok mindig a backendhez ---
+    location /api/ {
+        try_files $uri /index.php?$query_string;
+    }
+
+    # --- 2. Rendszer endpointok ---
+    location ~ ^/(healthz|readyz)$ {
+        try_files $uri /index.php?$query_string;
+    }
+
+    # --- 3. Drop-in SPA — /app/* alatt fájl, ha létezik; egyébként SPA history fallback ---
+    location /app/ {
+        try_files $uri $uri/ /app/index.html;
+    }
+
+    # --- 4. Gyökér útvonal és minden ismeretlen path ---
+    #   - embedded módban (létezik /app/index.html) → a SPA-t szolgáljuk
+    #   - separate módban → a backend (404 a not found route-okra)
+    location / {
+        try_files $uri $uri/ @spa_or_backend;
+    }
+
+    location @spa_or_backend {
+        # Ha a SPA index létezik, redirektünk rá; egyébként a backendre engedünk.
+        # A nginx nem tud feltételeset egy `if` nélkül, ezért:
+        if (-f $document_root/app/index.html) {
+            rewrite ^ /app/index.html last;
+        }
+        rewrite ^ /index.php?$query_string last;
+    }
+
+    # --- PHP-FPM fastcgi ---
+    location ~ \.php$ {
+        fastcgi_split_path_info ^(.+\.php)(/.+)$;
+        fastcgi_pass php-fpm:9000;
+        fastcgi_index index.php;
+        include fastcgi_params;
+        fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
+        fastcgi_param PATH_INFO $fastcgi_path_info;
+
+        # Backend olvassa az APP_SPA_MODE / APP_ENV értékeit ezeken keresztül.
+        fastcgi_param APP_SPA_MODE $app_spa_mode if_not_empty;
+        fastcgi_param APP_ENV $app_env if_not_empty;
+    }
+
+    # Statikus eszközök cache (SPA build assetjei tipikusan content-hash-eltek).
+    location ~* \.(?:css|js|svg|woff2?|png|jpe?g|gif|ico)$ {
+        expires 7d;
+        add_header Cache-Control "public, immutable";
+        try_files $uri =404;
+    }
+
+    location ~ /\. {
+        deny all;
+    }
+}
+
+# Az env változók upstream szintű mappelése a vhost fölé tehető:
+#   map $host $app_spa_mode { default "embedded"; }
+#   map $host $app_env      { default "production"; }

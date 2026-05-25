@@ -32,7 +32,24 @@
       "Read(//tmp/**)",
       "Bash(rm -f /tmp/jwt-smoke-private.pem /tmp/jwt-smoke-public.pem)",
       "Bash(vendor/bin/phpunit --testdox tests/Framework/Auth)",
-      "Read(//Users/csk/.claude/plans/**)"
+      "Read(//Users/csk/.claude/plans/**)",
+      "Bash(gh auth *)",
+      "Bash(which gh; ls /opt/homebrew/bin/gh /usr/local/bin/gh 2>/dev/null; echo \"---\"; type gh 2>&1)",
+      "Read(//usr/local/bin/**)",
+      "Bash(cp docs/m2.md /tmp/m2-full.md && grep -n \"^# M2\\\\.\" docs/m2.md)",
+      "Bash(git restore *)",
+      "Bash(git reset *)",
+      "Bash(git stash *)",
+      "Bash(php src/bin/console route:cache)",
+      "Bash(php src/bin/console route:cache --clear)",
+      "Bash(vendor/bin/phpunit --filter ClassExploderTest)",
+      "Bash(php -r 'require '\\\\''vendor/autoload.php'\\\\''; $loaders = Composer\\\\Autoload\\\\ClassLoader::getRegisteredLoaders\\(\\); $loader = array_values\\($loaders\\)[0]; print_r\\($loader->getPrefixesPsr4\\(\\)\\); echo '\\\\''---classmap count: '\\\\'' . count\\($loader->getClassMap\\(\\)\\) . PHP_EOL; var_dump\\(class_exists\\('\\\\''Framework\\\\\\\\Controllers\\\\\\\\Api\\\\\\\\V1\\\\\\\\AuthController'\\\\''\\)\\);')",
+      "Bash(php -r 'require '\\\\''vendor/autoload.php'\\\\''; $loaders = Composer\\\\Autoload\\\\ClassLoader::getRegisteredLoaders\\(\\); $loader = array_values\\($loaders\\)[0]; $cm = $loader->getClassMap\\(\\); foreach \\($cm as $c => $f\\) { if \\(str_contains\\($c, '\\\\''AuthController'\\\\''\\)\\) print $c . PHP_EOL; }')",
+      "Bash(php -r 'require '\\\\''vendor/autoload.php'\\\\''; $e = new Framework\\\\ClassExploder\\(['\\\\''Framework\\\\\\\\Controllers\\\\\\\\Api\\\\\\\\V1'\\\\'']\\); var_dump\\($e->get_controller_mapping\\(\\)\\);')",
+      "Bash(php -r ' *)"
+    ],
+    "additionalDirectories": [
+      "/tmp"
     ]
   }
 }
