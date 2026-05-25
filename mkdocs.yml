@@ -80,6 +80,8 @@ nav:
       - auth/index.md
       - JWT és TokenService: auth/jwt.md
       - Refresh token rotáció: auth/refresh-tokens.md
+      - Auth endpointok: auth/endpoints.md
+      - "#[RequireAuth] és #[RequireRole]": auth/attributes.md
       - Kulcsok kezelése: auth/keys.md
   - Konfiguráció: configuration.md
   - Tesztelés: testing.md

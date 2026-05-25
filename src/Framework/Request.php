@@ -9,6 +9,12 @@ class Request {
     public array $json = []; // Új tulajdonság a JSON adatok tárolására
     private AbstractController $controller;
 
+    /** @var ?\Framework\Auth\AuthenticatedUser PSR-15 AuthMiddleware állítja be sikeres Bearer verify után. */
+    public ?\Framework\Auth\AuthenticatedUser $authUser = null;
+
+    /** Bearer hiba oka, ha a middleware nem fogadta el a tokent (a Dispatcher 401-ben használja). */
+    public ?string $unauthenticatedReason = null;
+
     public function __construct(public string $uri,
                                 public string $method,
                                 public array $get,

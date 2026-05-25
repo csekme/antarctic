@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Framework;
 
 use Exception;
+use Framework\Auth\RequireAuth;
+use Framework\Auth\RequireRole;
 use Framework\Routing\Router as Router;
 use ReflectionAttribute;
 use ReflectionClass;
@@ -59,7 +61,7 @@ readonly class Dispatcher
             $reflectionClass = new ReflectionClass($controller_object::class);
             $attributes = $reflectionClass->getAttributes();
             foreach ($attributes as $attribute) {
-                $this->processAnnotation($attribute, $controller_object);
+                $this->processAnnotation($attribute, $controller_object, $request);
             }
             $controller_object->setRequest($request);
             $response = $this->container->get(Response::class);
@@ -100,7 +102,7 @@ readonly class Dispatcher
 
             $attributes = $method->getAttributes();
             foreach ($attributes as $attribute) {
-                $this->processAnnotation($attribute, $controller_object);
+                $this->processAnnotation($attribute, $controller_object, $request);
             }
 
             foreach ($interceptors as $interceptor) {
@@ -154,6 +156,13 @@ readonly class Dispatcher
      */
     private function crossSiteRequestForgeryProtection(Request $request): void
     {
+        // Bearer tokenes API kéréseknek nincs session-CSRF (a Bearer token
+        // önmagában nem küldhető cross-site az SPA-n kívül). Az /api/v1/auth/refresh
+        // a double-submit cookie-jával maga gondoskodik a CSRF védelemről.
+        if (str_starts_with(ltrim((string) $request->uri, '/'), 'api/v1/')) {
+            return;
+        }
+
         if ($request->method == AbstractController::GET) {
             $token = new Token();
             $_SESSION['csrf'] = $token;
@@ -190,21 +199,33 @@ readonly class Dispatcher
      * @return void
      * @throws Exception
      */
-    private function processAnnotation(ReflectionAttribute $attribute, Controller $controller_object): void
+    private function processAnnotation(ReflectionAttribute $attribute, Controller $controller_object, Request $request): void
     {
         $attribute = $attribute->newInstance();
-        if ($attribute instanceof HasRoles) {
-            $requestRoles = $attribute->roles;
-            $user = Auth::getUser();
 
+        if ($attribute instanceof RequireAuth) {
+            $this->requireAuthenticatedUser($request);
+            return;
+        }
+
+        if ($attribute instanceof RequireRole) {
+            $user = $this->requireAuthenticatedUser($request);
+            if (!$user->hasAnyRole($attribute->roles)) {
+                throw new Exception('User does not have the required role.', 403);
+            }
+            return;
+        }
+
+        if ($attribute instanceof HasRoles) {
+            // Legacy session-alapú ellenőrzés. M2.d-ben kivezetve a RequireRole javára.
+            $user = Auth::getUser();
             if ($user == null) {
                 throw new Exception("User is not logged in", 401);
             }
-
             $userRoles = $user->getRoles();
             $allowed = false;
-            foreach ($requestRoles as $roleName) {
-                if (in_array($roleName, $userRoles)) {
+            foreach ($attribute->roles as $roleName) {
+                if (in_array($roleName, $userRoles, true)) {
                     $allowed = true;
                     break;
                 }
@@ -216,6 +237,15 @@ readonly class Dispatcher
         if ($attribute instanceof RequireLogin) {
             $controller_object->requireLogin();
         }
+    }
+
+    private function requireAuthenticatedUser(Request $request): \Framework\Auth\AuthenticatedUser
+    {
+        if ($request->authUser !== null) {
+            return $request->authUser;
+        }
+        $detail = $request->unauthenticatedReason ?? 'Missing or invalid Bearer token.';
+        throw new Exception($detail, 401);
     }
 
     /**

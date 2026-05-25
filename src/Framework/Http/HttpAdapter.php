@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Framework\Http;
 
+use Framework\Auth\AuthMiddleware;
+use Framework\Auth\AuthenticatedUser;
 use Framework\Request as LegacyRequest;
 use Framework\Response as LegacyResponse;
 use Nyholm\Psr7\Response as PsrResponse;
@@ -29,7 +31,7 @@ final class HttpAdapter
             $parsedBody = [];
         }
 
-        return new LegacyRequest(
+        $legacy = new LegacyRequest(
             $uri,
             $psrRequest->getMethod(),
             $psrRequest->getQueryParams(),
@@ -38,6 +40,17 @@ final class HttpAdapter
             $psrRequest->getCookieParams(),
             $serverParams,
         );
+
+        $user = $psrRequest->getAttribute(AuthMiddleware::ATTR_USER);
+        if ($user instanceof AuthenticatedUser) {
+            $legacy->authUser = $user;
+        }
+        $reason = $psrRequest->getAttribute(AuthMiddleware::ATTR_REASON);
+        if (is_string($reason)) {
+            $legacy->unauthenticatedReason = $reason;
+        }
+
+        return $legacy;
     }
 
     public static function toPsrResponse(LegacyResponse $legacyResponse): PsrResponse

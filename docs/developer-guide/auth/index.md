@@ -2,8 +2,8 @@
 
 Az Antarctic **RS256 JWT** alapú stateless autentikációt használ, **refresh token rotációval** és **reuse detection**-nel. Ez a fejezet az auth réteg építőelemeit mutatja be.
 
-!!! info "Állapot (M2.a)"
-    A `TokenService` és a `RefreshTokenRepository` készen van. Az endpointok (`POST /api/v1/auth/login`, `…/refresh`, `…/logout`, `…/me`) és az `AuthMiddleware` az **M2.b** PR-ben érkeznek. Addig csak programozottan tudod használni a tokeneket.
+!!! info "Állapot (M2.b)"
+    A teljes flow működik: `TokenService`, `RefreshTokenRepository`, `AuthMiddleware`, `#[RequireAuth]`, `#[RequireRole]` és a négy auth endpoint (`/login`, `/refresh`, `/logout`, `/me`). A 2FA dispatching az M2.c-ben jön.
 
 ## A séma röviden
 
@@ -59,10 +59,15 @@ A `family_id` egy UUID, ami a legelső `issueRefreshToken()` hívásnál keletke
 | [`RefreshTokenRepository`](refresh-tokens.md) | PDO CRUD a `refresh_tokens` táblán. |
 | `JwtConfigFactory` | `Lcobucci\JWT\Configuration` builder, RS256-tal. |
 | `SystemClock` | PSR-20 óra production-höz. (Tesztekben `FrozenClock`.) |
+| `AuthMiddleware` | PSR-15: Bearer parsing, `AuthenticatedUser` attribute set. Sosem reject-el. |
+| [`AuthController`](endpoints.md) | `/api/v1/auth/{login,refresh,logout,me}` endpointok. |
+| [`#[RequireAuth]` / `#[RequireRole]`](attributes.md) | Deklaratív policy attribútumok kontroller method-okon. |
 | [`KeysGenerateCommand`](keys.md) | `bin/console keys:generate` — RSA kulcspár generátor. |
 
 ## Tovább
 
-- [Kulcsok kezelése](keys.md) — `keys:generate`, fájl jogosultságok, env-be töltés
+- [Auth endpointok](endpoints.md) — `/login`, `/refresh`, `/logout`, `/me` + curl és SPA példák
+- [`#[RequireAuth]` és `#[RequireRole]`](attributes.md) — deklaratív policy attribútumok
 - [JWT és TokenService használata](jwt.md) — issue, verify, claims, példák
 - [Refresh token rotáció](refresh-tokens.md) — flow, reuse detection, DB séma
+- [Kulcsok kezelése](keys.md) — `keys:generate`, fájl jogosultságok, env-be töltés
