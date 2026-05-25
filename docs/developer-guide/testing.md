@@ -18,19 +18,22 @@ PHPStan (static analysis):
 vendor/bin/phpstan analyse --memory-limit=512M --no-progress
 ```
 
-## Strukúra
+## Struktúra
 
 ```
 src/tests/
 └── Framework/
-    ├── ContainerTest.php
+    ├── ContainerFactoryTest.php
+    ├── DispatcherTest.php
     ├── TokenTest.php
-    └── Http/
-        ├── ContentNegotiationTest.php
-        ├── CorsMiddlewareTest.php
-        ├── ErrorHandlerMiddlewareTest.php
-        ├── HttpAdapterTest.php
-        └── MiddlewarePipelineTest.php
+    ├── Auth/                 # JWT, refresh, 2FA, AuthMiddleware
+    ├── Controllers/          # API kontroller-tesztek
+    ├── Http/                 # PSR-15 middleware-ek
+    ├── Logging/              # JSON formatter, factory
+    ├── OpenApi/              # spec dumper
+    ├── Repositories/         # PDO repository-k (sqlite in-memory)
+    ├── Routing/              # router + route cache
+    └── Validation/           # DTO hydrator + validator
 ```
 
 A namespace minden test fájlban `Tests\Framework\…` — a `composer.json` autoload-dev szakasza mappeli.
@@ -157,9 +160,7 @@ final class HelloControllerTest extends TestCase
 {
     public function testIndexReturnsGreeting(): void
     {
-        $controller = new HelloController([]);
-        $controller->setRequest($this->fakeRequest());
-        $controller->setResponse(new Response());
+        $controller = new HelloController($this->fakeRequest(), new Response());
 
         $response = $controller->index();
 
@@ -178,27 +179,27 @@ final class HelloControllerTest extends TestCase
 }
 ```
 
-## Mi tesztelhető és mi nem (jelenleg)
+## Tesztelhetőség komponensenként
 
 | Komponens | Tesztelhetőség | Megjegyzés |
 |---|---|---|
 | PSR-15 middleware-ek | ⭐⭐⭐ Kiváló | Fake handler + ServerRequest. |
 | `HttpAdapter` | ⭐⭐⭐ Kiváló | Tisztán static, semmi side effect. |
-| `MiddlewarePipeline` | ⭐⭐⭐ Kiváló | A test suite-ban már több variációval. |
+| `MiddlewarePipeline` | ⭐⭐⭐ Kiváló | A test suite-ban több variációval. |
 | `ContentNegotiation` | ⭐⭐⭐ Kiváló | Static. |
-| `Router` | ⭐⭐ Megfelelő | A `StandardRouterImpl` konstruktora végigfut a fájlrendszeren — egységteszthez érdemes mockolni vagy stub osztályokat tenni mellé. M3.b-ben javul. |
-| `Dispatcher` | ⭐ Nehéz | Tele van session-, statikus DB-, kontroller-példányosítási csatolásokkal. Az M2-M3 PR-ek után tisztább lesz. |
-| Twig view | ⭐ Nehéz | Globális side effecting (output buffering). Kerüld. |
+| Repositoryk | ⭐⭐⭐ Kiváló | sqlite in-memory + Doctrine migration pattern (lásd `tests/Framework/Repositories/`). |
+| `Dispatcher` | ⭐⭐ Megfelelő | Container-driven instantiation; fake Router + valós `ContainerFactory` párossal integration-tesztelhető (lásd `DispatcherTest`). |
+| `Router` | ⭐⭐ Megfelelő | A `StandardRouterImpl` cached-routes konstruktor-paramétere fix route-táblát fogad — egységteszthez használd ezt a stub-csatornát. |
 
 ## CI
 
-A GitHub Actions workflow (M0 PR-ben hozzáadva) minden PR-en futtatja:
+A GitHub Actions workflow minden PR-en futtatja:
 
 - `composer install`
 - `vendor/bin/phpstan analyse`
 - `vendor/bin/phpunit`
 
-A workflow definíciója a repo `.github/workflows/` alatt.
+A workflow definíciója a repo `.github/workflows/ci.yml` alatt.
 
 ## Konvenciók
 
@@ -206,4 +207,4 @@ A workflow definíciója a repo `.github/workflows/` alatt.
 - **Beszélő test name**: `testRendersProblemJsonForApiPathRegardlessOfAcceptHeader` — a viselkedést írja le, nem az implementációt.
 - **`final` osztály** mindenhol — a PHPUnit teszt osztályoknak nincs okuk öröklődni.
 - **`declare(strict_types=1);`** minden új fájl tetején.
-- **PHPStan level 1**, level emelés ratchet-ben M5-ig.
+- **PHPStan level 1** kötelező zöld; level emelés iteratív ratchet-ben.

@@ -1,6 +1,6 @@
 # Security headers
 
-A `Framework\Http\SecurityHeadersMiddleware` baseline biztonsági header-ekkel dekorálja minden választ — error response-okat és CORS preflight-okat is. Az M5 óta a Bootstrap pipeline legkülső eleme.
+A `Framework\Http\SecurityHeadersMiddleware` baseline biztonsági header-ekkel dekorálja minden választ — error response-okat és CORS preflight-okat is. A Bootstrap pipeline legkülső eleme, hogy minden kimenő válasz biztosan megkapja a baseline-t.
 
 ## Default header-ek
 

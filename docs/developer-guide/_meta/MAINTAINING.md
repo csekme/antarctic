@@ -57,7 +57,7 @@ A `!!! type "Cím"` az MkDocs Material szintaxisa.
 
 ```markdown
 !!! info "Készülő változás"
-    Az M2-ben átveszi a JWT modul.
+    Egy következő verzióban átveszi a JWT modul.
 
 !!! warning "Production-ben"
     Soha ne állítsd `true`-ra.
@@ -104,14 +104,14 @@ docs/developer-guide/
     └── MAINTAINING.md         # Ez az oldal
 ```
 
-Új mappát **akkor** hozz létre, ha legalább 3 különálló oldal lesz benne (pl. `auth/`, `db/`, `cli/` az M2-M4-ben).
+Új mappát **akkor** hozz létre, ha legalább 3 különálló oldal lesz benne (pl. `auth/`, `http/`).
 
 ## Konzisztencia checklist új oldalra
 
 - [ ] H1 cím, ami megegyezik a `mkdocs.yml`-ben szereplővel.
 - [ ] Első bekezdés: "ki vagyok, mit csinálok".
 - [ ] Minimum 1 példa-kódminta.
-- [ ] A jövőbeli M2-M6 változások `!!! note`-tal jelölve (ne hagyd hidden assumption-ben).
+- [ ] Tervezett, de még nem szállított funkciók `!!! note`-tal jelölve (ne hagyd hidden assumption-ben).
 - [ ] Kapcsolódó oldalakra inline link (markdown `[szöveg](path.md)`).
 - [ ] A `mkdocs.yml` `nav:` listájához hozzáadva.
 - [ ] Referencia-blokk az oldal alján a kapcsolódó fájlokra a forráskódban.
@@ -129,7 +129,7 @@ Egy fontos elkülönítés:
 
 Tehát egy CORS PR után:
 
-1. **m{n}.md**: "M1.b — CORS middleware hozzáadva, fájlok X, Y, Z, tesztek N db".
+1. **m{n}.md**: a milestone-jegyzőkönyv kap egy bejegyzést — "CORS middleware hozzáadva, fájlok X, Y, Z, tesztek N db".
 2. **http/cors.md**: a CORS middleware használata, konfig, példák, tesztelés.
 
 A két fájl tartalma **NEM** duplikálódik.

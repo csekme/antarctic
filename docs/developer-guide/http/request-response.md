@@ -1,16 +1,13 @@
 # Request és Response
 
-Az Antarctic jelenleg **két szinten** dolgozik a HTTP üzenetekkel:
+Az Antarctic **két szinten** dolgozik a HTTP üzenetekkel:
 
 - **PSR-7** a pipeline szintjén (middleware-ek között) — `Psr\Http\Message\ServerRequestInterface` és `ResponseInterface`.
-- **Legacy** `Framework\Request` és `Framework\Response` a kontroller szintjén — egyszerűbb public-property API.
+- **Framework Request/Response** a kontroller szintjén — egyszerűbb public-property API, ami a tesztelhető DTO + autowire mintára optimalizált.
 
-A `Framework\Http\HttpAdapter` váltja át a kettőt a `LegacyDispatcherMiddleware` határán.
+A `Framework\Http\HttpAdapter` váltja át a kettőt a `LegacyDispatcherMiddleware` határán. Új middleware-t PSR-7-tel írj; új kontrollert a Framework Request/Response párossal — a `Dispatcher` mindkettőt konstruktor-injektálja, és DTO típushintet is automatikusan hidrál.
 
-!!! note "M3 utáni célállapot"
-    Az M3.b–c PR-ek után a kontrollerek közvetlenül PSR-7 üzenetekkel dolgoznak, és a legacy API kivezetésre kerül. A jelenlegi adapter réteg addig garantálja a kompatibilitást.
-
-## Legacy Request
+## A Framework Request
 
 Az osztály a `src/Framework/Request.php`-ben. Public property-jei:
 
@@ -48,9 +45,9 @@ class LoginController extends AbstractController
 }
 ```
 
-A `$this->request` az `AbstractController::setRequest()`-en keresztül kerül beinjektálásra a Dispatcher által.
+A `$this->request` az `AbstractController` konstruktorán keresztül érkezik — a Dispatcher a php-di `make()` named-param override-jával adja át a per-request `Request`-et. Saját kontroller esetén kérheted egyszerűen a `parent::__construct($request, $response, $route_params)`-szal, vagy a leszármazottban átveheted bármilyen további konstruktor-paraméterrel (autowire).
 
-## Legacy Response
+## A Framework Response
 
 A `src/Framework/Response.php`-ben. Belül egyszerű — body string, header tömb, status code.
 
@@ -70,7 +67,7 @@ $response->addHeader('X-Custom: value');
 $response->redirect('/login');                          // Location header
 ```
 
-### Getterek (M1.a-ban hozzáadva)
+### Getterek
 
 ```php
 $response->getBody();           // string
@@ -78,27 +75,7 @@ $response->getStatusCode();     // int
 $response->getHeaders();        // string[] — raw "Header-Name: value" sorok
 ```
 
-A getterek kellettek a PSR-7 adapternek; nyugodtan használhatod a saját kódodban is.
-
-## A View helper
-
-A `Framework\View` Twig template-eket renderel:
-
-```php
-class HomeController extends AbstractController
-{
-    #[Path(path: '/', method: 'GET')]
-    public function index(): Response
-    {
-        return $this->view('home.twig', ['name' => 'Antarctic']);
-    }
-}
-```
-
-A `view()` metódus belül a `View::renderTemplate()`-et hívja, a generált HTML-t a `$this->response`-ba teszi és visszaadja.
-
-!!! warning "Twig kivezetés (M2.d)"
-    A Twig view réteg az M2.d PR-ben kivezetésre kerül a session-alapú UI-val együtt. Új kódot inkább JSON végpontokra építs.
+A `HttpAdapter::toPsrResponse()` ezeket használja a PSR-7 átalakításhoz; szabadon hívhatod a saját kódodban is.
 
 ## PSR-7 használata közvetlenül
 
@@ -139,8 +116,8 @@ A teljes adapter logika és viselkedési tesztek: [`tests/Framework/Http/HttpAda
 | Helyzet | Használd |
 |---|---|
 | Új middleware írása | PSR-7 (`ServerRequestInterface`, `ResponseInterface`) |
-| Kontroller method írása | legacy `Framework\Request` / `Response` (a Dispatcher ezt adja át) |
+| Kontroller method írása | `Framework\Request` / `Response` (a Dispatcher ezt injektálja) |
 | JSON válasz | `Response::json([...])` |
-| HTML válasz | `$this->view('template.twig', [...])` *(M2.d-ig)* |
+| Validált JSON body | DTO típushint a paraméterben (`CreateUserRequest $dto`) — automatikus hydrate + validate |
 | Body hozzáférés middleware-ben | `$request->getParsedBody()` (form) vagy `(string) $request->getBody()` (raw) |
 | Header hozzáférés middleware-ben | `$request->getHeaderLine('X-Header')` |

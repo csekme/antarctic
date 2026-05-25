@@ -2,8 +2,7 @@
 
 Az Antarctic a [`php-di/php-di`](https://php-di.org/) (PSR-11 kompatibilis) container-t használja a service-ek életciklusának kezelésére. A keretrendszer csak egy vékony adapterrel (`Framework\ContainerFactory`) áll fölötte — a `php-di` minden képessége (autowire, attribute-DI, compile-cache) elérhető.
 
-!!! info "Aktuális állapot (M3.c)"
-    A container ma **belső infrastruktúra**: a `Dispatcher` használja a `Response` instance kezelésére. **Controller-szintű constructor-injection még nem aktív** (egy követő PR-ben jön — addig a Dispatcher direkt `new $controller($params)`-szel példányosít). Amint a controller-injection landol, ez a fejezet részletes példákkal bővül.
+A `Dispatcher` a controllereket a container `make()` hívásán keresztül példányosítja, így a `Request`, `Response` és a route paraméterek mellett minden további constructor-dependency autowire-en érkezik. Részleteket lásd lent a "Controller-injection" szakaszban.
 
 ## A container felépítése
 
@@ -84,7 +83,7 @@ $dispatcher = new Dispatcher($router, $mock);
 
 A `Framework\ContainerFactory::build()` minden hívásra friss, üres-cache-es `DI\Container`-t ad.
 
-## Controller-injection (M3.d + M3.e)
+## Controller-injection
 
 A `Dispatcher` a controllereket a container `make()`-en keresztül kéri, ezért minden konstruktor-paraméter egyetlen csatornán érkezik: a per-request `Request` + `Response` + route params override-ként, a többi service autowire-rel.
 
@@ -107,12 +106,7 @@ A `make()` paraméternév-alapú override-okat fogad; a Dispatcher mind a `route
 
 A `Response` minden dispatchre friss példányt kap (`$container->make(Response::class)`), így long-running worker setupokban (RoadRunner, ReactPHP) sem szivárog header/body két request között.
 
-> **M3.e óta** a `Framework\AbstractController::setRequest()` és `setResponse()` setterek nem léteznek — a Request és Response konstruktoron át érkezik. A régi `__construct($params = [])` szignatúrával írt controllerek a hármas signaturára kell, hogy átálljanak.
-
-## Mit *nem* tartalmaz a jelenlegi container
-
-- **Attribute-DI a controller property-szinten** — az `useAttributes(true)` engedélyezve van (`#[Inject]` property-szinten feloldódik), de a Controller base API a konstruktor-injekcióval mindent ad, ami kell. Property-DI csak akkor jönne szóba, ha trait-szerű viselkedéshez (`@final` constructor + shared property injection) megéri.
-- **Lazy services** — még nem aktív; ha egy service drága construct-ja megéri, a `DI\autowire()->lazy()` opciót lehet majd használni.
+A `useAttributes(true)` engedélyezve van, így a `#[Inject]` property-szintű feloldás is működik, ha valamelyik service ezt igényli — a controller-rétegben a konstruktor-injekció a kanonikus út.
 
 ## Lásd még
 

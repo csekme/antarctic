@@ -132,13 +132,12 @@ openssl rsa -aes256 -in jwt-private.pem -out jwt-private-encrypted.pem
 A `family_id` és `jti` mechanizmusok lehetővé teszik, hogy futás közben váltson a backend új kulcsra **anélkül**, hogy minden user kijelentkezne. A teljes folyamat:
 
 1. **Új kulcspár generálása** különálló néven: `bin/console keys:generate --out=var/keys/jwt-v2`.
-2. **A new public key párhuzamos verifikálása** — két public key töltése a `JwtConfigFactory`-be. *(Jelenleg single-key — multi-key rotation később.)*
-3. **Az új private key élesítése** — config csere a `Bootstrap.php`-ban.
-4. **24-48 órás overlap** alatt a régi tokenek verifikálódnak a régi public-szal, az újak az újjal.
-5. **A régi kulcs eldobása**, amikor az utolsó access token is lejárt.
+2. **Az új private key élesítése** — config csere a `Bootstrap.php`-ban, vagy `JWT_PRIVATE_KEY_PATH` env-átírás + deploy restart.
+3. **24-48 órás overlap** alatt a refresh-flow rotálja át az aktív sessionöket az új kulcs alá; az addig kiadott access tokenek a régi TTL-jük végéig (15 perc) lejárnak.
+4. **A régi kulcs eldobása**, amikor az utolsó access token is lejárt.
 
-!!! info "Jelenleg single-key"
-    Az M2.a egy aktív kulcsot támogat. A multi-key rotation egy későbbi PR hatóköre (M5 nem szállította; helyette a production hardening került szállításra).
+!!! info "Single-key verifikáció"
+    A `JwtConfigFactory` egy aktív kulcsot támogat verifikációra. Zero-downtime párhuzamos kulcs-verifikáció (két public key egyszerre) kiterjesztési pont — a `JwtConfigFactory::create()` body-jának módosítása lcobucci/jwt `MultiKeySigner`-rel megoldja.
 
 ## Tesztelés
 

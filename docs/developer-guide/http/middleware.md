@@ -48,7 +48,7 @@ A `Framework\Http\MiddlewarePipeline` egy `RequestHandlerInterface`, ami:
 - Minden `handle()` híváskor egy `clone`-olt példányon halad tovább a következő middleware-re.
 - Ha kifogytak a middleware-ek, a fallback handlert hívja.
 
-A pipeline összeállítása a `Bootstrap.php`-ban történik. Az M5 óta a teljes production-ready sorrend:
+A pipeline összeállítása a `Bootstrap.php`-ban történik. A teljes production-ready sorrend:
 
 ```php
 $middlewares = [
@@ -96,7 +96,7 @@ A szögletes zárójelben lévők env-flag mögött opcionálisak (`APP_FORCE_HT
 
 ## Új middleware regisztrálása
 
-Az M3.c PR (PSR-11 container csere) óta is a middleware-eket kézzel rakod a Bootstrap pipeline listájába — döntsd el milyen sorrendben kell befonni a saját middleware-edet a build-in sorrendbe:
+A middleware-eket kézzel rakod a Bootstrap pipeline listájába — döntsd el milyen sorrendben kell befonni a saját middleware-edet a build-in sorrendbe:
 
 ```php
 // Bootstrap.php

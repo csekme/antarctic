@@ -17,7 +17,7 @@ Az Antarctic HTTP rétege **PSR-7** (üzenetek) és **PSR-15** (middleware) alap
 | [Rate limit](rate-limit.md) | PSR-15 throttling middleware, 429 + `Retry-After` + `X-RateLimit-*` |
 | [Security headers](security-headers.md) | HSTS, CSP, X-Frame, Referrer-Policy, Permissions-Policy baseline |
 
-## Pipeline-sorrend (M5 állapot)
+## Pipeline-sorrend
 
 ```text
 SecurityHeadersMiddleware

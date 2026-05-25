@@ -17,7 +17,7 @@ new TokenService(
 );
 ```
 
-Tipikusan a Bootstrap-ben (vagy később a DI container-ben) építed:
+Tipikusan a Bootstrap-ben építed (vagy hagyod, hogy a DI container autowiringgel összerakja, ha a service-edben típushintezett konstruktor-paraméterként kéred):
 
 ```php
 use Framework\Auth\JwtConfigFactory;
@@ -38,9 +38,6 @@ $tokenService = new TokenService(
     clockSkew: $jwtConfig['clock_skew'],
 );
 ```
-
-!!! info "M3.c után"
-    A DI container (php-di) ezt automatikusan összerakja autowiringgel — ezt a manuális összeszerelést onnantól nem kell magadnak megírnod.
 
 ## Access token kiállítása
 
@@ -108,8 +105,8 @@ if ($user === null) {
 
 A friss DB lookup biztosítja, hogy a deaktivált usereket azonnal kilőjük (a JWT még érvényes lehet, de a session már nem).
 
-!!! note "M2.b-ben automatizálva"
-    Az `AuthMiddleware` ezt magától megteszi: a token verify után az `$user`-t a request attribútumba teszi, és a `#[RequireAuth]`-os kontroller method-ok tisztán hozzáférhetnek.
+!!! note "Az `AuthMiddleware` ezt magától megteszi"
+    A token verify után az `AuthenticatedUser`-t a request attribútumába teszi, és a `#[RequireAuth]`-os kontroller method-ok tisztán hozzáférhetnek hozzá.
 
 ## Refresh token kiállítása
 

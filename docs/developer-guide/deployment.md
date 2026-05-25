@@ -66,11 +66,11 @@ CI-ban tipikusan a multi-stage Dockerfile teszi ezt — [Production stack](#prod
 
 `APP_SPA_MODE=separate` esetén a SPA külön origin-en fut (pl. `http://localhost:5173` Vite dev-en). A CORS allow-list-et a `config/cors.php`-ben kell beállítani — a [CORS doksi](http/cors.md) részletezi.
 
-A `SpaMode::requiresCors()` igazat ad mindenre, kivéve `embedded` módra — a jövőbeli CORS-middleware ezzel automatikusan ki tud kapcsolni same-origin embedded deploy-ban (jelenleg manuális config).
+A `SpaMode::requiresCors()` igazat ad mindenre, kivéve `embedded` módra — a `CorsMiddleware` ezt figyelheti, ha bekapcsolod a config-ban a SPA-mód alapú auto-disable-t (alapból a `config/cors.php` allow-list-je dönt).
 
 ## Production stack (`docker-compose.prod.yml`)
 
-Az M5 óta a repo szállít egy multi-stage Docker image-et és egy production-ready compose fájlt. A stack 4 service-ből áll:
+A repo szállít egy multi-stage Docker image-et és egy production-ready compose fájlt. A stack 4 service-ből áll:
 
 | Service | Image | Funkció |
 |---|---|---|
@@ -103,7 +103,7 @@ A [Dockerfile](https://github.com/csekme/antarctic/blob/main/docker/php-fpm/Dock
 
 ### Production env változók
 
-A [.env.example](https://github.com/csekme/antarctic/blob/main/src/.env.example) M5 blokk a production-flag-eket dokumentálja. A leglényegesebbek:
+A [.env.example](https://github.com/csekme/antarctic/blob/main/src/.env.example) "production hardening" blokkja dokumentálja a flag-eket. A leglényegesebbek:
 
 | Env | Cél | Production érték |
 |---|---|---|
@@ -126,8 +126,8 @@ A compose healthcheck-ek minden service-en végpontot pingelnek:
 
 A k8s Pod-szinten a `/api/v1/healthz` (liveness) és `/api/v1/readyz` (readiness — DB ping is) endpoint-okat érdemes használni. A `HttpsRedirectMiddleware` excluded prefix listája ezt a két útvonalat plain HTTP-n is átengedi, hogy a k8s probe ne kerüljön redirektbe.
 
-## Mit *nem* csinál még a backend
+## Üzemeltetési határok
 
-- **OpenTelemetry tracing**: jelenleg struktúrált JSON log + trace ID elég a 12-factor observability minimumhoz. OpenTelemetry SDK opcionális — külön PR.
-- **`/` info endpoint**: jelenleg separate módban a `/` 404; nem irányítjuk `/api/v1/docs.json`-ra automatikusan.
-- **phpredis adapter**: a `RedisLike` interface ext-redis-szel is kompatibilis, csak nem szállítjuk a default csomagban. ~30 LOC adapter, lásd `PredisAdapter` szerkezetét.
+- **OpenTelemetry tracing**: a backend strukturált JSON log + trace ID-val ad 12-factor observability minimumot. Teljes OpenTelemetry SDK integráció (span-export, traceparent propagation) az alkalmazás-rétegen szervezhető meg.
+- **`/` info endpoint**: separate módban a `/` 404; nem irányítjuk `/api/v1/docs.json`-ra automatikusan — alkalmazás-szintű döntés.
+- **Redis kliens**: a beépített `PredisAdapter` (composer dep) és `PhpRedisAdapter` (ext-redis) is rendelkezésre áll, a `APP_RATE_LIMIT_BACKEND=redis|phpredis` választja közöttük.

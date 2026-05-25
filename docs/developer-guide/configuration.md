@@ -4,7 +4,7 @@ Az Antarctic háromféle forrásból olvas konfigurációt:
 
 1. **`.env`** — secrets és környezet-specifikus változók (DB jelszó, JWT kulcs path, CORS origin lista). Soha ne commitold.
 2. **`src/Application/application.json`** — alkalmazás-szintű beállítások (app név, admin email, SMTP, framework flags). Gitignored.
-3. **`src/config/*.php`** — PHP konfigurációs fájlok komponensekhez (`cors.php`, később `jwt.php`, `security.php`).
+3. **`src/config/*.php`** — PHP konfigurációs fájlok komponensekhez (`cors.php`, `jwt.php`, `rate-limit.php`, `security-headers.php`).
 
 ## `.env`
 
@@ -27,11 +27,11 @@ CORS_ALLOWED_ORIGINS=http://localhost:5173,https://app.example.com
 # SPA mód — embedded | separate | both
 APP_SPA_MODE=embedded
 
-# JWT — kulcs útvonalak (M2.a óta)
+# JWT — kulcs útvonalak
 JWT_PRIVATE_KEY_PATH=var/keys/jwt-private.pem
 JWT_PUBLIC_KEY_PATH=var/keys/jwt-public.pem
 
-# --- M5: production hardening ---
+# --- Production hardening ---
 
 # Strukturált JSON log szint és csatorna
 APP_LOG_CHANNEL=app
@@ -58,12 +58,9 @@ REDIS_KEY_PREFIX=rl:
 APP_DI_COMPILE=1
 ```
 
-Részletes M5 env változók: [Observability](observability.md), [Security headers](http/security-headers.md), [Rate limit](http/rate-limit.md), [Deployment](deployment.md#production-stack-docker-compose-prod-yml).
+Részletes env változók: [Observability](observability.md), [Security headers](http/security-headers.md), [Rate limit](http/rate-limit.md), [Deployment](deployment.md#production-stack-docker-compose-prod-yml).
 
 Hozzáférés: `getenv('DATABASE_HOST')` vagy `$_ENV['DATABASE_HOST']`.
-
-!!! warning "Migrációs irány (M0 ↔ M2)"
-    A `Framework\Dotenv` saját implementáció. A `vlucas/phpdotenv` átállás (kötelező változók validációja, type cast, immutable env) az M2 keretein belül történik. Az alapvető `getenv()` interfész nem változik.
 
 ## `application.json`
 
@@ -123,9 +120,8 @@ Config::get_interceptors();               // array
 | Kulcs | Hatás |
 |---|---|
 | `framework.showErrors` | `true` → részletes hiba payload (lásd [hibakezelés](http/error-handling.md)). Production-ben `false`. |
-| `framework.useCoreControllers` | `true` → a `Framework\Controllers\*` (Login, Signup, 2FA) is route-olódik. **M2.d-ben kivezetve**, mindenképp `false` lesz a default. |
+| `framework.useCoreControllers` | `true` → a `Framework\Controllers\*` API-kontrollerek (Auth, Health, Docs) is route-olódnak. Production-ben hagyd `true`-n. |
 | `framework.cache` | `true` → DB cache (rétegrendszer szerint). |
-| `application.secretKey` | Régi session-tokenhez használt. **M2-ben kivezetve**, JWT kulcsra cserélve. |
 
 ## `src/config/*.php`
 
@@ -186,4 +182,4 @@ Tegyük fel, hogy egy saját `Application\Http\Middleware\AuditLogMiddleware`-t 
    ) {}
    ```
 
-Az env-flag mögötti opt-in mintát a M4.b.4 (rate-limit) és M5.c (HTTPS redirect) is követi — production-ben kapcsold be, dev-ben hagyd kikapcsolva.
+Az env-flag mögötti opt-in mintát a beépített rate-limit és HTTPS redirect middleware is követi — production-ben kapcsold be, dev-ben hagyd kikapcsolva.

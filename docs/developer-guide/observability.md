@@ -1,6 +1,6 @@
 # Observability
 
-Az M5 óta minden request korrellálható trace ID-vel, és minden log struktúrált JSON-ben megy a stdout-ra. K8s probe-ok két dedikált endpoint-tal pingelhetők.
+Minden request korrellálható trace ID-vel, és minden log struktúrált JSON-ben megy a stdout-ra. K8s probe-ok két dedikált endpoint-tal pingelhetők.
 
 ## Trace ID — request korreláció
 

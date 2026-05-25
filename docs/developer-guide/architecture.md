@@ -28,16 +28,28 @@ Ez az oldal magas szinten mutatja, hogyan utazik egy HTTP kérés az Antarctic-o
                 ┌────────────────────────────────────────┐
                 │  PSR-15 Middleware Pipeline             │
                 │                                         │
+                │  SecurityHeadersMiddleware              │
+                │     │                                   │
+                │     ▼                                   │
+                │  TraceIdMiddleware                      │
+                │     │                                   │
+                │     ▼                                   │
                 │  ErrorHandlerMiddleware                 │
+                │     │                                   │
+                │     ▼                                   │
+                │  HttpsRedirectMiddleware (opcionális)   │
                 │     │                                   │
                 │     ▼                                   │
                 │  CorsMiddleware                         │
                 │     │                                   │
                 │     ▼                                   │
-                │  LegacyDispatcherMiddleware             │
+                │  RateLimitMiddleware (opcionális)       │
                 │     │                                   │
                 │     ▼                                   │
-                │  (jövőben: Auth, RateLimit, …)          │
+                │  AuthMiddleware (JWT, ha konfigurált)   │
+                │     │                                   │
+                │     ▼                                   │
+                │  LegacyDispatcherMiddleware             │
                 │     │                                   │
                 │     ▼                                   │
                 │  NotFoundHandler (fallback)             │
@@ -117,8 +129,8 @@ A pipeline jelenleg utolsó middleware-je a `LegacyDispatcherMiddleware`. Ez:
    - Visszaad egy `Framework\Response`-t.
 3. A legacy Response-t visszaalakítja PSR-7 `ResponseInterface`-szé.
 
-!!! note "Várható változás (M2-M3)"
-    A `LegacyDispatcherMiddleware` átmeneti megoldás. A teljes PSR-15 átállás után a kontrollerek közvetlenül PSR-7-tel fognak dolgozni, és a Dispatcher feloldódik egy `RouterMiddleware + ControllerDispatcherMiddleware` páros mögött.
+!!! note "A `LegacyDispatcherMiddleware` szerepe"
+    A `LegacyDispatcherMiddleware` egy adapter: PSR-15 oldalon natívan ül a pipeline-on, befelé pedig az attribútum-alapú `Dispatcher`-t hívja, ami a kontrollereket a php-di container `make()` hívásán keresztül példányosítja. A jövőbeli irány egy `RouterMiddleware + ControllerDispatcherMiddleware` páros, ami a Dispatcher-t feloldja két middleware-be — ez a jelen verzióban még nem indokolt, mert a kontroller-szignatúra (Request + Response + DTO + autowire) már most konstruktor-injektált.
 
 ### 6. Emit
 
@@ -132,9 +144,14 @@ A `Laminas\HttpHandlerRunner\Emitter\SapiEmitter` kiküldi a PSR-7 választ a kl
 | Bootstrap | `src/Framework/Bootstrap.php` | Pipeline összeállítás |
 | Pipeline | `src/Framework/Http/MiddlewarePipeline.php` | PSR-15 walker |
 | HTTP adapter | `src/Framework/Http/HttpAdapter.php` | PSR-7 ↔ legacy Request/Response |
-| Error boundary | `src/Framework/Http/ErrorHandlerMiddleware.php` | Throwable → response |
+| Security headers | `src/Framework/Http/SecurityHeadersMiddleware.php` | CSP, HSTS, X-Frame-Options, … |
+| Trace ID | `src/Framework/Http/TraceIdMiddleware.php` | Request-correlation id (`X-Request-Id`) |
+| Error boundary | `src/Framework/Http/ErrorHandlerMiddleware.php` | Throwable → problem+json response |
+| HTTPS redirect | `src/Framework/Http/HttpsRedirectMiddleware.php` | `APP_FORCE_HTTPS` mögött, proxy-aware |
 | CORS | `src/Framework/Http/CorsMiddleware.php` | Allow-list + preflight |
-| Legacy dispatcher | `src/Framework/Http/LegacyDispatcherMiddleware.php` | Wrap a régi Dispatcher-ön |
+| Rate limit | `src/Framework/Http/RateLimit/RateLimitMiddleware.php` | Memory / Redis store-okkal, config-driven |
+| Auth | `src/Framework/Auth/AuthMiddleware.php` | RS256 JWT verify, `#[RequireAuth]` |
+| Legacy dispatcher | `src/Framework/Http/LegacyDispatcherMiddleware.php` | Wrap a Dispatcher-en |
 | Router | `src/Framework/Routing/StandardRouterImpl.php` | Attribútum-alapú URL match |
-| Container | `src/Framework/Container.php` | Egyszerű DI (M3.c-ben php-di) |
+| Container | `src/Framework/ContainerFactory.php` | php-di (PSR-11) factory |
 | ErrorHandler (classic) | `src/Framework/ErrorHandler.php` | PHP warning → exception |

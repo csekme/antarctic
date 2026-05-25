@@ -1,9 +1,6 @@
 # Adatbázis: migrációk és repositoryk
 
-Az Antarctic az adatbázis-séma kezelésére a [`doctrine/migrations`](https://www.doctrine-project.org/projects/doctrine-migrations/en/3.7/index.html) (3.7+), a query-réteghez PDO-injektált repository osztályokat használ.
-
-!!! info "Aktuális állapot (M4.a)"
-    A séma-management Doctrine-migration-ön át megy; a repositoryk autowire-osak. A legacy `AbstractUser` és `TwoFactorModel` static finder metódusok továbbra is elérhetők, de új kód a repositorykat használja.
+Az Antarctic az adatbázis-séma kezelésére a [`doctrine/migrations`](https://www.doctrine-project.org/projects/doctrine-migrations/en/3.7/index.html) (3.7+), a query-réteghez PDO-injektált repository osztályokat használ. A legacy `AbstractUser` és `TwoFactorModel` static finder metódusok továbbra is elérhetők BC-kompatibilitás miatt, de új kód a repositorykat használja.
 
 ## Mi van a `db/migrations/`-ban
 
@@ -102,10 +99,10 @@ $pdo->exec('CREATE TABLE user (id INTEGER PRIMARY KEY, ...);');
 $repo = new UserRepository($pdo);
 ```
 
-## Mit *nem* tartalmaz még a repository réteg
+## A repository réteg határai
 
-- **Insert / update entityk** — a `UserRepository` jelenleg csak olvas. Írás-műveletek a következő PR-ben jönnek (regisztráció / profile update az API-n keresztül).
-- **TwoFactorModel entity-hydratálás** — a `TwoFactorRepository` array-rekordokkal dolgozik. Ha service-layer-ben entity-példányokra van szükség, a repositoryban hozzáadható egy hydrate metódus.
+- **Insert / update entityk** — a `UserRepository` és `TwoFactorRepository` írásra a session-flow-hoz szükséges műveleteket adja (`enroll`, `setEnabled`); általános profil-update az alkalmazás-szintű service-rétegen keresztül szervezhető.
+- **Entity-hydratálás** — a `TwoFactorRepository` array-rekordokkal dolgozik. Ha service-layer-ben entity-példányokra van szükség, a repositoryban hozzáadható egy hydrate metódus.
 - **Tranzakció-management** — a repositoryk single-statement műveleteket csinálnak. Több művelet összevonása (transactional service) a service réteg felelőssége; a `Dal::getConnection()` PDO példánya közvetlenül `beginTransaction()`-elhető.
 
 ## Lásd még

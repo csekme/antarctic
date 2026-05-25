@@ -2,8 +2,7 @@
 
 Az Antarctic **attribútum-alapú** routinggal dolgozik. A kontroller metódusaira `#[Path(...)]` attribútumot teszel, és a `ClassExploder` a startupkor scanneli az osztályokat, hogy felépítse a routing táblát.
 
-!!! info "Aktuális állapot (M3.b óta)"
-    A `ClassExploder` **reflection-alapú** — a Composer autoloader class-map-jét és PSR-4 prefixeit használva állítja össze a controller-listát. A `Router::match()` **method-aware**: a URL-re illeszkedő, de rossz HTTP-metódusú route 405-öt ad, nem 404-et. Production-időben a route-tábla előre cache-elhető (`bin/console route:cache`).
+A `ClassExploder` reflection-alapú — a Composer autoloader class-map-jét és PSR-4 prefixeit használva állítja össze a controller-listát. A `Router::match()` method-aware: a URL-re illeszkedő, de rossz HTTP-metódusú route 405-öt ad, nem 404-et. Production-időben a route-tábla előre cache-elhető (`bin/console route:cache`).
 
 ## Az `#[Path]` attribútum
 
@@ -90,7 +89,7 @@ A `ClassExploder` két helyet vizsgál:
 - `src/Application/Controllers/` → `Application\Controllers\` namespace
 - `src/Framework/Controllers/` → `Framework\Controllers\` namespace (csak ha `Config::useCoreController()` `true`)
 
-A te app-od kontrollerei az `Application\Controllers\` alá kerüljenek. A `Framework\Controllers\` ma már csak az API-controllereket tartalmazza (pl. `Framework\Controllers\Api\V1\AuthController` — M2.d óta a legacy Twig UI törölve van).
+A te app-od kontrollerei az `Application\Controllers\` alá kerüljenek. A `Framework\Controllers\` a beépített API-kontrollereket tartalmazza (`AuthController`, `HealthController`, `DocsController`).
 
 !!! tip "Class-szintű `#[Path]` opcionális"
     Ha a controllerednek nincs class-szintű `#[Path]`-ja (csak method-szintűek vannak), a `ClassExploder` egy belső sentinel-kulccsal regisztrálja, és a method path-ok adják a teljes route-ot. Például az `AuthController` osztály-szinten nincs prefixelve, és a `#[Path(path: '/api/v1/auth/login', method: 'POST')]` method-szintű attribútum adja a teljes URL-t.
@@ -145,22 +144,20 @@ Ha a class-szintű `#[Path]` hiányzik, a method-szintű attribútumok adják a 
 
 ## Method-paraméter feloldás
 
-A jelenlegi Dispatcher így hidratálja a kontroller action paramétereit:
+A Dispatcher így hidratálja a kontroller action paramétereit (lásd `Dispatcher::resolveActionArgs`):
 
-- **GET** request 1-paraméteres metóduson → a path változó értékét adja át (ld. `users/{id:\d+}` → `$id`).
-- **Nem-GET** request 1-paraméteres metóduson → a `$_POST` tömböt adja át.
-- 0 paraméter → nincs argumentum.
+1. **DTO típus** (`Validatable` interface) → a `RequestHydrator` deszerializálja a JSON body-t a DTO osztályba, és lefuttatja a `symfony/validator` szabályokat. Hiba esetén `ValidationException` → 422 problem+json. Részletek: [Validáció](validation.md).
+2. **Útvonal paraméter** → ha a paraméter neve egyezik egy route placeholder-rel, a match-értéket kapja.
+3. **Egyetlen untyped paraméter nem-GET kérésnél** → a `$_POST` tömböt kapja (legacy form-handling).
+4. **Default érték / nullable** → a paraméter alapértelmezett értéke vagy `null`.
 
 ```php
 // Path: /api/v1/users/{id:\d+}, GET → $id = "42"
 public function show(int $id): Response { ... }
 
-// Path: /api/v1/users, POST → $body = ['name' => 'Alice', ...]
-public function create(array $body): Response { ... }
+// DTO + automatikus validáció
+public function create(CreateUserRequest $dto): Response { ... }
 ```
-
-!!! info "Jövőbeli DTO-hidrátálás (M4.b)"
-    A `symfony/validator` integráció után az action paramétereken DTO típushintet adhatsz, és a `ControllerDispatcher` automatikusan deserializálja + validálja a JSON body-t.
 
 ## Routing tesztelése
 
@@ -173,4 +170,4 @@ $result = $router->match('api/v1/users/42');
 //    'action' => 'show', 'method' => 'GET', 'id' => '42']
 ```
 
-A test példa: [`tests/Framework/Routing/`](https://github.com/csekme/antarctic/tree/main/src/tests/Framework/Routing) *(M3.b után gyarapodik)*.
+A test példa: [`tests/Framework/Routing/`](https://github.com/csekme/antarctic/tree/main/src/tests/Framework/Routing) — fedi a `MatchResult`, `RouteCache`, `StandardRouterImpl` és `ClassExploder` osztályokat.

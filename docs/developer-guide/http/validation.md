@@ -108,8 +108,8 @@ $this->assertSame('alice@example.com', $dto->email);
 
 Hibás bemenetre `Framework\Validation\ValidationException` dobódik, `getErrors()` visszaadja a problem+json `errors` mezőjét.
 
-## Mit nem kezel ez a réteg
+## A réteg határai
 
 - **CSRF / Bearer auth** — middleware réteg felel értük (`AuthMiddleware`, `Dispatcher::crossSiteRequestForgeryProtection`).
-- **Rate limit** — külön middleware (jövőbeli M4.b.4).
-- **OpenAPI generálás** — külön réteg (jövőbeli M4.b.2); az itt használt `Assert\*` attribútumok viszont OpenAPI-ra is le lesznek képezhetőek.
+- **Rate limit** — külön middleware, lásd [Rate limit](rate-limit.md).
+- **OpenAPI generálás** — külön réteg, lásd [OpenAPI](openapi.md). Az `Assert\*` attribútumok és az `OA\Property` attribútumok közös DTO-n élnek meg, így a kétfajta annotáció jól együttműködik.

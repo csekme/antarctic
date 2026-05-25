@@ -7,15 +7,19 @@
 
 ## Az Antarctic röviden
 
-Az Antarctic egy PHP 8.2+ minimal MVC framework, amely a **SPA-natív backend** szerepre van optimalizálva:
+Az Antarctic egy PHP 8.2+ minimal framework, amely a **SPA-natív backend** szerepre van optimalizálva:
 
 - **PSR-7 / PSR-15** HTTP réteg (middleware pipeline)
 - **Attribútum-alapú routing** (`#[Path]`)
 - **JSON-first** API endpointok `/api/v1/*` namespace alatt
-- **RS256 JWT** autentikáció refresh token rotációval *(M2-ben épül)*
-- **Twig** szerver oldali rendereléshez *(legacy, M2.d-ben kivezetve)*
-- **Drop-in vagy separate** SPA deploy (M3.a)
-- **PSR-11 container** (php-di) autowire-ral (M3.c)
+- **RS256 JWT** autentikáció refresh token rotációval és 2FA-val
+- **Drop-in vagy separate** SPA deploy (`APP_SPA_MODE`)
+- **PSR-11 container** (php-di) autowire-ral, attribútum-DI támogatással
+- **Doctrine migrations + Repository** réteg, dual-database (MariaDB / PostgreSQL)
+- **DTO validáció** (symfony/validator) 422 problem+json válaszokkal
+- **OpenAPI 3.1** + Swagger UI (`zircote/swagger-php`)
+- **Rate limit middleware** in-memory és Redis backend-del
+- **Production hardening** — security headers, trace ID, JSON log, proxy-aware HTTPS
 
 ## Mit hol találsz
 
@@ -34,19 +38,9 @@ Az Antarctic egy PHP 8.2+ minimal MVC framework, amely a **SPA-natív backend** 
 | Config kulcsok, env változók | [Konfiguráció](configuration.md) |
 | Unit / integration test írása | [Tesztelés](testing.md) |
 
-## Verziók és milestone-ok
+## Verziók és változástörténet
 
-A keretrendszer fejlesztése milestone-okra van bontva (M0…M6). A milestone PR-ek konkrét tartalma a [docs/m{n}.md](../m1.md) fájlokban van részletezve.
-
-| Milestone | Téma | Állapot |
-|---|---|---|
-| M0 | PHPStan + PHPUnit + Monolog + CI alap | ✅ kész |
-| M1 | PSR-7/PSR-15 pipeline, CORS, RFC 7807 | ✅ kész |
-| M2 | RS256 JWT auth + refresh rotation + 2FA | ✅ M2.a–d kész |
-| M3 | Drop-in SPA + routing rewrite + DI | ✅ M3.a–c kész (webroot, route cache + method-aware, PSR-11 container) |
-| M4 | Migrations + validáció + OpenAPI | ✅ M4.a + M4.b.1–4 kész (doctrine/migrations + Repository + DTO validator + OpenAPI + pagination + rate limit) |
-| M5 | Production Docker + observability | ✅ kész (security headers + trace ID + JSON log + healthcheck + proxy-aware HTTPS + Redis rate-limit store + multi-stage Docker) |
-| M6 | Példa React SPA | ⏳ tervezett |
+Az aktuális stabil verzió a **1.0.0**. A részletes változástörténet a repo gyökerében található [`CHANGELOG.md`](../../CHANGELOG.md) fájlban. A v1.0.0-ig vezető fejlesztési mérföldkövek belső jegyzőkönyvei a [`docs/m1.md` … `docs/m6.md`](../m1.md) fájlokban vannak.
 
 ## Hozzájárulás a doksihoz
 

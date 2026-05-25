@@ -1,9 +1,6 @@
 # Autentikáció
 
-Az Antarctic **RS256 JWT** alapú stateless autentikációt használ, **refresh token rotációval** és **reuse detection**-nel. Ez a fejezet az auth réteg építőelemeit mutatja be.
-
-!!! info "Állapot (M2.b)"
-    A teljes flow működik: `TokenService`, `RefreshTokenRepository`, `AuthMiddleware`, `#[RequireAuth]`, `#[RequireRole]` és a négy auth endpoint (`/login`, `/refresh`, `/logout`, `/me`). A 2FA dispatching az M2.c-ben jön.
+Az Antarctic **RS256 JWT** alapú stateless autentikációt használ, **refresh token rotációval** és **reuse detection**-nel. Az auth réteg minden építőeleme — `TokenService`, `RefreshTokenRepository`, `AuthMiddleware`, `#[RequireAuth]`, `#[RequireRole]`, a négy auth endpoint (`/login`, `/refresh`, `/logout`, `/me`) és a 2FA challenge-flow — production-ready.
 
 ## A séma röviden
 

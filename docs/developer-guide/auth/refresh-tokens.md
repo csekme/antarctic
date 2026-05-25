@@ -78,7 +78,7 @@ A `refresh_tokens` tábla:
 | Oszlop | Típus | Jelentés |
 |---|---|---|
 | `id` | BIGSERIAL | PK |
-| `user_id` | BIGINT | FK → users (logikai, nincs constraint M4.a-ig) |
+| `user_id` | BIGINT | FK → users (logikai hivatkozás, fizikai constraint nélkül) |
 | `family_id` | VARCHAR(64) | UUID, közös a teljes rotation-családra |
 | `token_hash` | CHAR(64) | `SHA-256(plain token)`, **UNIQUE** |
 | `rotated_from` | BIGINT NULL | Az előző refresh `id`-je a láncban (NULL = login) |
@@ -88,13 +88,11 @@ A `refresh_tokens` tábla:
 | `ip` | VARCHAR(45) | Audit (IPv4 + IPv6) |
 | `created_at` | TIMESTAMP | Sor létrejöttének időpontja |
 
-A migráció SQL-jét a két támogatott driver-re:
+A séma a `doctrine/migrations` által vezérelt — a sémát létrehozó migráció:
 
-- [`db/migrations/postgresql/001_create_refresh_tokens.sql`](https://github.com/csekme/antarctic/blob/main/db/migrations/postgresql/001_create_refresh_tokens.sql)
-- [`db/migrations/mariadb/001_create_refresh_tokens.sql`](https://github.com/csekme/antarctic/blob/main/db/migrations/mariadb/001_create_refresh_tokens.sql)
+- [`db/migrations/Version20260525_010300_CreateRefreshTokens.php`](https://github.com/csekme/antarctic/blob/main/db/migrations/Version20260525_010300_CreateRefreshTokens.php)
 
-!!! info "Doctrine/migrations (M4.a)"
-    Egyelőre kézzel futtatandó SQL fájlok. Az M4.a PR-ben a `doctrine/migrations` veszi át, beleértve az itt definiált schema-t.
+Driver-független `Schema` API-val ír (sqlite, MariaDB, PostgreSQL), futtatás: `vendor/bin/doctrine-migrations migrations:migrate`.
 
 ## RefreshTokenRepository
 
@@ -110,7 +108,7 @@ A PDO repository a `Framework\Auth\RefreshTokenRepository`. Műveletek:
 
 A repository **stateless**, csak PDO-t kap. Tesztben sqlite in-memory-t adsz neki (lásd `RefreshTokenRepositoryTest`).
 
-## Cookie konvenció (M2.b-ben élesítve)
+## Cookie konvenció
 
 A refresh token a kliensen **`__Host-refresh`** nevű cookie-ban él. A `__Host-` prefix kötelez:
 
@@ -128,7 +126,7 @@ Ennek egyik következménye: a `__Host-refresh` cookie **csak ugyanazon az origi
 1. **CORS + `credentials: include`** — a böngésző automatikusan elküldi a refresh cookie-t (de a `SameSite=Strict` ezt nem engedi cross-originra). Kompromisszum: `SameSite=Lax`.
 2. **Drop-in deploy** (a SPA azonos origin alól megy) — nincs probléma, marad `Strict`.
 
-A javasolt deploy a **drop-in** (M3-ban épül ki). Részletek a Configuration oldalon a `APP_SPA_MODE` env változóról.
+A javasolt deploy a **drop-in (embedded)** — részletek a [Deployment](../deployment.md) oldalon az `APP_SPA_MODE` env változóról.
 
 ## Karbantartás
 

@@ -39,7 +39,7 @@ final class LoginRequest implements Validatable
 }
 ```
 
-A `Symfony\Assert\*` és `OA\Property` jelölések egymást kiegészítik — az egyik a futási validációhoz, a másik a dokumentációhoz. (Egy jövőbeli M-ben automatizálható lesz a kettő közötti bridge, jelenleg duplán deklaráljuk.)
+A `Symfony\Assert\*` és `OA\Property` jelölések egymást kiegészítik — az egyik a futási validációhoz, a másik a dokumentációhoz. A két annotációt jelenleg duplán deklaráljuk; egy következő iterációban egy bridge réteg automatizálhatja a leképezést a `Symfony\Assert\*` szabályokból.
 
 ### Controller oldal
 
@@ -64,7 +64,7 @@ public function login(LoginRequest $body): Response
 }
 ```
 
-A `#[Path]` (Antarctic-saját routing) és `#[OA\Post]` (swagger-php) elkülönül szándékosan — előbbi a dispatcher-hez, utóbbi a dokumentációhoz. A két `path` paramétert szinkronban kell tartani; jövőbeli optimalizáció lehet, hogy az `#[OA\Post]` ezt a `#[Path]`-ból olvassa.
+A `#[Path]` (Antarctic-saját routing) és `#[OA\Post]` (swagger-php) elkülönül szándékosan — előbbi a dispatcher-hez, utóbbi a dokumentációhoz. A két `path` paramétert szinkronban kell tartani; ezt egy custom scanner kiterjesztés automatizálhatja, ha értelmes a karbantartási vesztesség mellett.
 
 ## Root metaadat
 
@@ -101,8 +101,8 @@ $this->assertContains('email', $doc['components']['schemas']['LoginRequest']['re
 
 A cache-fájlos ágat egy `new OpenApiGenerator([], $tmpFile)` + `file_put_contents($tmpFile, '...')` kombóval lehet tesztelni; lásd [`OpenApiGeneratorTest`](../../../src/tests/Framework/OpenApi/OpenApiGeneratorTest.php).
 
-## Mit nem kezel
+## A réteg határai
 
-- **Response body schemák** — a 200 válaszok struktúrája jelenleg csak `description`-ban van; külön `AccessTokenResponse` DTO-k a M4.b.3 (`{data, meta}` envelope) után jönnek.
-- **openapi-typescript generálás kliens oldalon** — a React example (M6) `package.json` script-jeként landol.
-- **Auto-bridge `Symfony\Assert\*` → `OA\*`** — jelenleg duplán deklaráljuk; bridge később jöhet.
+- **Response body schemák** — a 200 válaszok struktúrája jelenleg főként `description`-ban van; ahol DTO van (Validation + `Page<T>` envelope), ott referálható. Új response DTO-k a `Application\Dto\` alá kerülhetnek és `OA\Schema`-val annotálhatók.
+- **openapi-typescript generálás kliens oldalon** — kliens-szintű döntés, a [`examples/react-spa/`](https://github.com/csekme/antarctic/tree/main/examples/react-spa) jelenleg kézzel írott típusokkal dolgozik.
+- **Auto-bridge `Symfony\Assert\*` → `OA\*`** — duplán deklaráljuk; egy bridge réteg ennek a karbantartási költségét csökkentheti.

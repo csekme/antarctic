@@ -78,8 +78,8 @@ public function findMatching(array $filter, array $sort, int $limit, int $offset
 }
 ```
 
-## Mit nem kezel ez a réteg
+## A réteg határai
 
-- **Cursor-based pagination** — most page-offset alapú; cursor a `next_cursor` mezővel a `meta`-ban egy jövőbeli M-ben jöhet, ha a nagy táblákon teljesítmény-igény keletkezik.
-- **OpenAPI `Page<T>` schema generálás** — a jelenlegi swagger-php nem támogatja a generikus templating-et; konkrét endpoint-szintű schema-deklarációk (`UserListResponse extends Page` szerű) érkeznek az első list endpoint mellé.
-- **Stream / NDJSON** — egyetlen array-envelope; nagyobb halmazokra eltérő endpoint kell.
+- **Cursor-based pagination** — a beépített konvenció page-offset alapú. Cursor (`next_cursor` mező a `meta`-ban) nagy táblákon kiegészítésként hozzáadható az adott endpointhoz.
+- **OpenAPI `Page<T>` schema generálás** — a swagger-php nem támogatja a generikus templating-et; konkrét endpoint-szintű schema-deklarációkkal (`UserListResponse extends Page` minta) dokumentáld a típusokat.
+- **Stream / NDJSON** — a `Page<T>` egyetlen array-envelope; nagyobb halmazokra eltérő endpoint-mintát érdemes választani.

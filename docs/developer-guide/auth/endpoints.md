@@ -170,7 +170,7 @@ Set-Cookie: csrf_token=; Max-Age=0; Path=/; SameSite=Strict; Secure
 ```
 
 !!! note "Globális logout (mind az eszközről)"
-    A jelenlegi logout csak a kliens saját refresh tokenjét revokálja. Az "összes eszközről kilépés" funkció a `refresh_tokens` táblán `UPDATE … WHERE user_id = X` formában futtatható (lásd [refresh-tokens.md](refresh-tokens.md)). Külön endpointot egy későbbi PR-ben kap (M5 nem szállította).
+    A `/logout` endpoint a kliens saját refresh tokenjét revokálja. "Összes eszközről kilépés" funkcióhoz a `refresh_tokens` táblán `UPDATE … WHERE user_id = X` futtatható (lásd [refresh-tokens.md](refresh-tokens.md)) — alkalmazás-szintű admin endpoint vagy CLI command tehető fölé.
 
 ## `GET /api/v1/auth/me`
 
@@ -242,4 +242,4 @@ await fetch('/api/v1/auth/logout', {
 });
 ```
 
-A teljes React példa-implementáció az M6 PR-ben érkezik (`examples/react-spa/`).
+A teljes React példa-implementáció a [`examples/react-spa/`](https://github.com/csekme/antarctic/tree/main/examples/react-spa) alatt található.

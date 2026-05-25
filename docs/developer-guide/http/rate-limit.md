@@ -79,7 +79,7 @@ A pipeline-pozíció (CORS után) azért fontos, hogy a preflight `OPTIONS` ne s
 
 ## Production: Redis backend
 
-Az `InMemoryStore` per-process — multi-worker FPM-ben minden worker külön bucketet vezet, így egy IP minden worker-nyi-szer érheti el a limit-et. Az M5 óta szállítjuk a `RedisStore`-t és a `PredisAdapter`-t (`predis/predis` alapú); az M5 follow-upban érkezett a `PhpRedisAdapter` is (`ext-redis` natív kliens). Production deployhoz a config `backend` kulcsát állítsd be:
+Az `InMemoryStore` per-process — multi-worker FPM-ben minden worker külön bucketet vezet, így egy IP minden worker-nyi-szer érheti el a limit-et. A `RedisStore` ezt megoldja: a beépített `PredisAdapter` (composer-os `predis/predis`) és `PhpRedisAdapter` (ext-redis natív kliens) közül a config `backend` kulcsa választ:
 
 ```bash
 APP_RATE_LIMIT_BACKEND=redis        # vagy "predis" alias, vagy "phpredis"
@@ -141,9 +141,9 @@ $this->assertSame(429, $blocked->getStatusCode());
 
 A `Psr\Clock\ClockInterface`-t a teszt-suite kis inline implementációkkal pótolja; lásd [`RateLimitMiddlewareTest`](../../../src/tests/Framework/Http/RateLimit/RateLimitMiddlewareTest.php).
 
-## Mit nem kezel
+## A réteg határai
 
 - **DDoS** — a middleware per-IP throttle, nem helyettesíti a CDN/WAF szintű védelmet.
-- **Globális process-throughput** — minden bucket per-key; ha az egész alkalmazás védelme kell, külön catch-all rule a `/`-re.
-- **Adaptív thresholding** — fix `limit/window`; sliding window vagy token bucket variánsok későbbi optimalizáció.
-- **CAPTCHA / fail2ban integráció** — most csak throttle; további lépés (pl. CAPTCHA-trigger N kísérlet után) más middleware-be tartozna.
+- **Globális process-throughput** — minden bucket per-key; ha az egész alkalmazás védelme kell, állíts be külön catch-all rule-t a `/`-re.
+- **Adaptív thresholding** — fix `limit/window`; sliding window vagy token bucket variánsok specializált store implementációval érhetők el.
+- **CAPTCHA / fail2ban integráció** — a middleware throttle-ol; további lépés (pl. CAPTCHA-trigger N kísérlet után) alkalmazás-szintű middleware-be tartozik.

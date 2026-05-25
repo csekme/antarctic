@@ -143,7 +143,7 @@ new ErrorHandlerMiddleware(debug: false, logger: $monolog);
 
 Az 5xx hibák ekkor `error` szinten logolódnak `exception`, `file`, `line`, `trace` kontextussal. A 4xx-ek nem — azok várt válaszok (rossz kliens-input, nem szerverhiba).
 
-!!! info "Strukturált JSON log — M5 óta default"
+!!! info "Strukturált JSON log default"
     A Bootstrap a `LoggerFactory::fromEnv()`-vel injektál egy Monolog loggert az `ErrorHandlerMiddleware`-be. Minden log record JSON-ban megy stdout-ra, és a `extra.trace_id` mezőben ott a request `X-Request-Id`-je. Részletek: [Observability](../observability.md).
 
 ## Tesztelés
