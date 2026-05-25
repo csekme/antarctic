@@ -32,7 +32,17 @@
       "Read(//tmp/**)",
       "Bash(rm -f /tmp/jwt-smoke-private.pem /tmp/jwt-smoke-public.pem)",
       "Bash(vendor/bin/phpunit --testdox tests/Framework/Auth)",
-      "Read(//Users/csk/.claude/plans/**)"
+      "Read(//Users/csk/.claude/plans/**)",
+      "Bash(gh auth *)",
+      "Bash(which gh; ls /opt/homebrew/bin/gh /usr/local/bin/gh 2>/dev/null; echo \"---\"; type gh 2>&1)",
+      "Read(//usr/local/bin/**)",
+      "Bash(cp docs/m2.md /tmp/m2-full.md && grep -n \"^# M2\\\\.\" docs/m2.md)",
+      "Bash(git restore *)",
+      "Bash(git reset *)",
+      "Bash(git stash *)"
+    ],
+    "additionalDirectories": [
+      "/tmp"
     ]
   }
 }

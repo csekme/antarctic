@@ -16,3 +16,8 @@ docker-compose.override.yml
 
 # MkDocs build output
 /site
+
+# Drop-in SPA build target — CI / dev másolja ide a `dist/`-et.
+# A mappa maga (.gitkeep-pel) verzionált, a tartalma nem.
+/src/html/app/*
+!/src/html/app/.gitkeep
