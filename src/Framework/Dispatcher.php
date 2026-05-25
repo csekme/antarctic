@@ -9,6 +9,7 @@ use Framework\Auth\RequireAuth;
 use Framework\Auth\RequireRole;
 use Framework\Routing\MatchResult;
 use Framework\Routing\Router as Router;
+use Psr\Container\ContainerInterface;
 use ReflectionAttribute;
 use ReflectionClass;
 
@@ -26,7 +27,7 @@ use ReflectionClass;
 readonly class Dispatcher
 {
 
-    public function __construct(private Router $router, private Container $container)
+    public function __construct(private Router $router, private ContainerInterface $container)
     {
     }
 

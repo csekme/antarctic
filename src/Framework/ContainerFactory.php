@@ -1,0 +1,44 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Framework;
+
+use DI\Container as PhpDiContainer;
+use DI\ContainerBuilder;
+use Psr\Container\ContainerInterface;
+
+/**
+ * A `php-di/php-di` (PSR-11 kompatibilis) container felépítő-helye.
+ *
+ * Korábban a saját `Framework\Container` szolgált autowire-DI-ként; az M3.c
+ * óta a `php-di/php-di` szállítja. Autowire bekapcsolva — minden konstruktor-
+ * argumentumot a típusa alapján képes feloldani.
+ *
+ * Production-ban opcionálisan compile-cache (`enableCompilation`) — gyorsabb
+ * cold-start, de írható `var/cache/di/` mappát igényel. A bekapcsolás
+ * `APP_DI_COMPILE=1` env változóval történik (lásd `Bootstrap.php`).
+ *
+ * NB. A `Framework\Response` osztály — bár a container kezeli — minden
+ * requestre azonos példányt ad vissza (php-di shared, ez a default).
+ * Standard PHP-FPM-ben ez nem probléma: egy request = egy container =
+ * egy Response. Long-running worker (RoadRunner, ReactPHP) esetén
+ * a Dispatcher fogja request-szinten resetelni a Response-t.
+ */
+final class ContainerFactory
+{
+    public static function build(?string $compilationDir = null): ContainerInterface
+    {
+        $builder = new ContainerBuilder();
+        $builder->useAutowiring(true);
+        $builder->useAttributes(false); // PHP attribútum-alapú DI: jelenleg nincs rá szükségünk.
+
+        if ($compilationDir !== null) {
+            $builder->enableCompilation($compilationDir);
+        }
+
+        /** @var PhpDiContainer $container */
+        $container = $builder->build();
+        return $container;
+    }
+}

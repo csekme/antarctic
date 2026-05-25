@@ -14,7 +14,8 @@ Az Antarctic egy PHP 8.2+ minimal MVC framework, amely a **SPA-natív backend** 
 - **JSON-first** API endpointok `/api/v1/*` namespace alatt
 - **RS256 JWT** autentikáció refresh token rotációval *(M2-ben épül)*
 - **Twig** szerver oldali rendereléshez *(legacy, M2.d-ben kivezetve)*
-- **Drop-in vagy separate** SPA deploy *(M3-ban)*
+- **Drop-in vagy separate** SPA deploy (M3.a)
+- **PSR-11 container** (php-di) autowire-ral (M3.c)
 
 ## Mit hol találsz
 
@@ -38,7 +39,7 @@ A keretrendszer fejlesztése milestone-okra van bontva (M0…M6). A milestone PR
 | M0 | PHPStan + PHPUnit + Monolog + CI alap | ✅ kész |
 | M1 | PSR-7/PSR-15 pipeline, CORS, RFC 7807 | ✅ kész |
 | M2 | RS256 JWT auth + refresh rotation + 2FA | ✅ M2.a–d kész |
-| M3 | Drop-in SPA + routing rewrite + DI | 🚧 M3.a kész (webroot + .htaccess + APP_SPA_MODE) |
+| M3 | Drop-in SPA + routing rewrite + DI | ✅ M3.a–c kész (webroot, route cache + method-aware, PSR-11 container) |
 | M4 | Migrations + validáció + OpenAPI | ⏳ tervezett |
 | M5 | Production Docker + observability | ⏳ tervezett |
 | M6 | Példa React SPA | ⏳ tervezett |

@@ -137,11 +137,11 @@ final class RequireAuthIntegrationTest extends TestCase
 
     private function buildDispatcher(): Dispatcher
     {
-        // A Dispatcher konstruktora Router és Container függőséget kér,
-        // de a processAnnotation()-ben egyiket sem használja.
+        // A Dispatcher konstruktora Router és PSR-11 ContainerInterface
+        // függőséget kér, de a processAnnotation()-ben egyiket sem használja.
         return new Dispatcher(
             $this->createMock(\Framework\Routing\Router::class),
-            new \Framework\Container(),
+            $this->createMock(\Psr\Container\ContainerInterface::class),
         );
     }
 

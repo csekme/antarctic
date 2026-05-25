@@ -7,7 +7,7 @@ use Framework\Auth\RefreshTokenRepository;
 use Framework\Auth\SystemClock;
 use Framework\Auth\TokenService;
 use Framework\Config;
-use Framework\Container;
+use Framework\ContainerFactory;
 use Framework\Dal;
 use Framework\Dispatcher;
 use Framework\Dotenv;
@@ -31,7 +31,9 @@ session_start();
 $dotenv = new Dotenv();
 $dotenv->load(ROOT_PATH . "/.env");
 
-$container = new Container();
+// PSR-11 container (php-di). Production-ban opt-in compilation env-flag mögött.
+$compilationDir = getenv('APP_DI_COMPILE') ? ROOT_PATH . '/var/cache/di' : null;
+$container = ContainerFactory::build($compilationDir);
 
 // Route cache: ha létezik a `var/cache/routes.php`, abból töltjük a route-táblát,
 // különben reflection-scan minden requesten (dev).
