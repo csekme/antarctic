@@ -40,7 +40,7 @@ A keretrendszer fejlesztése milestone-okra van bontva (M0…M6). A milestone PR
 | M1 | PSR-7/PSR-15 pipeline, CORS, RFC 7807 | ✅ kész |
 | M2 | RS256 JWT auth + refresh rotation + 2FA | ✅ M2.a–d kész |
 | M3 | Drop-in SPA + routing rewrite + DI | ✅ M3.a–c kész (webroot, route cache + method-aware, PSR-11 container) |
-| M4 | Migrations + validáció + OpenAPI | ⏳ tervezett |
+| M4 | Migrations + validáció + OpenAPI | 🚧 M4.a kész (doctrine/migrations + Repository réteg) |
 | M5 | Production Docker + observability | ⏳ tervezett |
 | M6 | Példa React SPA | ⏳ tervezett |
 

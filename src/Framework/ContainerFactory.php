@@ -6,7 +6,10 @@ namespace Framework;
 
 use DI\Container as PhpDiContainer;
 use DI\ContainerBuilder;
+use PDO;
 use Psr\Container\ContainerInterface;
+
+use function DI\factory;
 
 /**
  * A `php-di/php-di` (PSR-11 kompatibilis) container felépítő-helye.
@@ -32,6 +35,14 @@ final class ContainerFactory
         $builder = new ContainerBuilder();
         $builder->useAutowiring(true);
         $builder->useAttributes(false); // PHP attribútum-alapú DI: jelenleg nincs rá szükségünk.
+
+        $builder->addDefinitions([
+            // A live PDO ugyanaz a `Framework\Dal` által hagyományosan használt
+            // singleton-conn; a `Dal::getConnection()` ezt képesen factory-vá teszi.
+            // PSR-11 autowire-rel a `UserRepository` és `TwoFactorRepository`
+            // konstruktora automatikusan megkapja.
+            PDO::class => factory(static fn (): PDO => Dal::getConnection()),
+        ]);
 
         if ($compilationDir !== null) {
             $builder->enableCompilation($compilationDir);
