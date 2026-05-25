@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Framework;
 
-class Request {
+final class Request {
 
     public array $json = []; // Új tulajdonság a JSON adatok tárolására
 

@@ -6,9 +6,12 @@ parameters:
         - Framework/Views
     treatPhpDocTypesAsCertain: false
     ignoreErrors:
-        # Dynamic properties on Dal (uses #[AllowDynamicProperties])
+        # Dynamic properties on Dal-derived models (Dal uses #[AllowDynamicProperties]
+        # for PDO::FETCH_CLASS hydration; PHPStan cannot infer the property set).
         - '#Access to an undefined property Framework\\Dal::\$#'
         - '#Access to an undefined property Framework\\Models\\AbstractUser::\$#'
+        - '#Access to an undefined property Framework\\Models\\User::\$#'
+        - '#Access to an undefined property \$this\(Framework\\Models\\User\)::\$#'
         # ROOT_PATH is defined in html/index.php before Bootstrap.php is required.
         -
             message: '#Constant ROOT_PATH not found#'

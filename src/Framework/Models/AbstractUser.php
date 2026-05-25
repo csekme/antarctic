@@ -71,7 +71,7 @@ abstract class AbstractUser extends Dal
      */
     public function save(): bool
     {
-        if ($this->validate()) {
+        if ($this->validate(false)) {
             $password_hash = password_hash($this->password, PASSWORD_DEFAULT);
             $token = new Token();
             $hashed_token = $token->getHash();

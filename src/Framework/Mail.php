@@ -90,6 +90,7 @@ class Mail
                 return $mail->ErrorInfo;
             }
         }
+        return false;
     }
     /**
      * Send a message
