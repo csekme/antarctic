@@ -103,7 +103,17 @@
       "Bash(./vendor/bin/phpunit --filter=DispatcherTest)",
       "Bash(npm install *)",
       "Bash(npx tsc *)",
-      "Bash(npm run *)"
+      "Bash(npm run *)",
+      "Bash(grep -rn 'new $controller\\\\|->setRequest\\\\|->setResponse' /Users/csk/Projects/antarctic/src/)",
+      "Bash(grep -rn 'setRequest\\\\|setResponse\\\\|setController\\\\|new $controller\\($params\\)\\\\|ControllerRequestHandler' /Users/csk/Projects/antarctic/docs/ /Users/csk/Projects/antarctic/src/)",
+      "Bash(composer test *)",
+      "Bash(grep -rnE \"M[0-9]\\([. ]|$\\)\" /Users/csk/Projects/antarctic/docs/developer-guide/)",
+      "Bash(grep -rnE \"M[0-9]\\([.\\\\b ]|$|\\\\\\)\\)|jövőbeli|jövőben|később|tervezett|még nincs|még nem\" /Users/csk/Projects/antarctic/docs/developer-guide/)",
+      "Bash(vendor/bin/composer validate *)",
+      "Bash(/usr/local/bin/composer validate *)",
+      "Bash(php -r \"json_decode\\(file_get_contents\\('composer.json'\\)\\); echo json_last_error\\(\\) === JSON_ERROR_NONE ? 'composer.json valid JSON' : 'INVALID JSON: ' . json_last_error_msg\\(\\), PHP_EOL;\")",
+      "Bash(git tag -a v1.0.0-alpha.1 -m ' *)",
+      "Bash(gh release create v1.0.0-alpha.1 --title 'v1.0.0-alpha.1 — release-ready alfa' --prerelease --notes ' *)"
     ],
     "additionalDirectories": [
       "/tmp"
