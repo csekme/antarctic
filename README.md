@@ -1,339 +1,111 @@
-# Antarctic PHP Lightweight Web Framework
+# Antarctic
 
-This repository contains a lightweight PHP web framework optimized for PHP 8.2. It is designed to provide a simple and efficient foundation for developing modern web applications with an object-oriented approach.
+**SPA-native PHP 8.2 backend framework** — JWT-secured, OpenAPI-documented, container-ready.
 
-## Key Features
+Antarctic is a lightweight PHP framework optimized for the role of a stateless backend behind a single-page application. It ships with everything you need to run a production HTTP API: PSR-7/15 middleware pipeline, RS256 JWT authentication with refresh token rotation, attribute-based routing, php-di container, doctrine migrations, OpenAPI 3.1 spec generation, validated request DTOs, rate-limiting, security headers, structured JSON logging, and a multi-stage Docker production stack.
 
-- **PHP 8.2 Optimized**: This framework leverages the latest features of PHP 8.2, ensuring optimal performance and compatibility.
-- **Twig 3.0 Templating**: Utilizes Twig 3.0 for fast and secure template rendering.
-- **Lightweight Structure**: Focused on simplicity and minimalism, providing only the core features needed for most web applications.
-- **MVC Architecture**: Built-in support for MVC (Model-View-Controller) architecture, allowing for organized and maintainable code.
-- **Routing**: Flexible routing system for handling HTTP requests and directing them to the appropriate controllers.
-- **Future REST API Support**: Planned support for RESTful controllers to easily build REST APIs.
-- **Dependency Injection (DI) Container**: Upcoming support for a DI container to manage dependencies more efficiently, promoting a clean and modular codebase.
-- **Composer Integration**: Handles dependencies and autoloading via Composer for easy management and integration of third-party libraries.
-- **Docker Configuration**: Includes a Docker configuration file for quick setup and deployment, featuring Xdebug support for enhanced debugging capabilities.
+## Highlights
 
-## Getting Started
+- **PSR-7 / PSR-15** HTTP layer with a configurable middleware pipeline.
+- **Attribute-based routing** (`#[Path]`) with method-aware 404/405 resolution and an optional production route cache.
+- **RS256 JWT** authentication: short-lived access tokens, refresh token rotation with reuse detection, optional 2FA challenge flow, and `#[RequireAuth]` / `#[RequireRole]` policy attributes.
+- **PSR-11 container** (`php-di`) with autowiring, attribute-DI, and an opt-in compilation cache.
+- **Doctrine migrations** with platform-agnostic schema definitions (SQLite, MariaDB, PostgreSQL); PDO-injected repository layer.
+- **Request DTOs + symfony/validator** → automatic 422 `application/problem+json` responses with structured `errors`.
+- **OpenAPI 3.1 + Swagger UI** powered by `zircote/swagger-php`; `bin/console openapi:dump` for build-time caching.
+- **Rate limiting**: PSR-15 middleware with in-memory and Redis stores (both `predis/predis` and ext-redis `phpredis` adapters).
+- **Production hardening**: security headers (CSP, HSTS, Referrer-Policy, …), `X-Request-Id` trace propagation, JSON-structured Monolog logging, proxy-aware HTTPS redirect.
+- **Drop-in or separate SPA deploy** via the `APP_SPA_MODE` env variable; ships with a working React + Vite example under [`examples/react-spa/`](examples/react-spa/).
+- **Multi-stage production Docker image** with PHP-FPM, Nginx, PostgreSQL, and Redis healthchecks.
 
-### Prerequisites
+## Requirements
 
-- **PHP 8.2 or higher** is required to run this framework.
-- **Composer** should be installed to manage dependencies.
-- **Docker** and **Docker Compose** are needed for the development environment setup.
+- PHP **8.2+** (with `pdo`, `pdo_pgsql` or `pdo_mysql`, `openssl`, `json`)
+- Composer
+- Optional: Docker + Docker Compose for the bundled dev/prod stacks
+- Optional: `ext-redis` if you want the `phpredis` rate-limit adapter
 
-### Installation
+## Quick start
 
-1. **Clone the repository**:
-   ```bash
-   git clone https://github.com/yourusername/your-repo-name.git
-   cd your-repo-name
-   ```
+```bash
+# Clone
+git clone https://github.com/csekme/antarctic.git
+cd antarctic
 
-2. **Install dependencies using Composer**:
-   ```bash
-   cd src 
-   composer install
-   ```
+# Install dependencies
+cd src
+composer install
+cp .env.example .env                            # edit DATABASE_*, CORS_*, …
 
-3. **Set up Docker environment**:
-   Make sure Docker and Docker Compose are installed on your system. Then, run the following command to start the application in a Docker container:
-   ```bash
-   docker-compose up -d
-   ```
+# Generate JWT signing keys
+bin/console keys:generate                       # writes var/keys/jwt-{private,public}.pem
 
-   This command will build and start the application and database containers defined in the `docker-compose.yml` file.
+# Apply migrations
+vendor/bin/doctrine-migrations migrations:migrate --no-interaction
 
-### Configuration
+# Run tests
+vendor/bin/phpunit
 
-1. **Environment Variables**:
-   Configure your environment variables by copying `.env.example` to `.env` and adjusting the settings to match your environment.
+# Dev server
+php -S localhost:8080 -t html                   # → http://localhost:8080/api/v1/healthz
+```
 
-2. **Docker Configuration**:
-   The `docker-compose.yml` file is pre-configured to set up a PHP application container with Apache and a database container (MySQL or PostgreSQL, configurable). Ensure your `.env` file matches the database settings you want to use.
+Or with Docker (dev stack):
 
-### Usage
+```bash
+docker compose up -d                            # Apache + selectable DB
+```
 
-- **Access the application**: Once the Docker containers are up and running, you can access the application in your web browser at `http://localhost`.
-- **Xdebug**: The development environment includes Xdebug for debugging purposes. Configure your IDE to connect to Xdebug on the appropriate port (usually 9000 or 9003).
+Production stack (PHP-FPM + Nginx + PostgreSQL + Redis):
 
-### Future Roadmap
+```bash
+DATABASE_PASSWORD=secret docker compose -f docker-compose.prod.yml up -d --build
+```
 
-- Implement REST API controllers to support building RESTful services.
-- Add Dependency Injection (DI) container support for better dependency management and testability.
-- Expand the documentation with tutorials and usage examples.
+## Documentation
 
-## Contributing
+The full developer guide lives under [`docs/developer-guide/`](docs/developer-guide/) and is rendered with MkDocs Material:
 
-Contributions are welcome! Please submit a pull request or open an issue to discuss any changes you would like to see.
+```bash
+pip install mkdocs-material
+mkdocs serve                                    # → http://127.0.0.1:8000
+```
 
-1. Fork the repository
-2. Create a new branch (`git checkout -b feature-branch`)
-3. Make your changes
-4. Commit your changes (`git commit -am 'Add new feature'`)
-5. Push to the branch (`git push origin feature-branch`)
-6. Open a pull request
+Key entry points:
+
+- [Getting started](docs/developer-guide/getting-started.md)
+- [Architecture](docs/developer-guide/architecture.md) — middleware pipeline, request flow
+- [Authentication](docs/developer-guide/auth/index.md) — JWT, refresh tokens, endpoints, keys
+- [Routing](docs/developer-guide/http/routing.md)
+- [Validation + DTOs](docs/developer-guide/http/validation.md)
+- [OpenAPI + Swagger UI](docs/developer-guide/http/openapi.md)
+- [Rate limiting](docs/developer-guide/http/rate-limit.md)
+- [Deployment + SPA modes](docs/developer-guide/deployment.md)
+
+## React SPA example
+
+A working React + TypeScript + Vite SPA demonstrating the canonical client-side JWT + refresh cookie + CSRF double-submit flow:
+
+```bash
+cd examples/react-spa
+npm ci
+npm run dev                                     # Vite dev server with /api proxy
+```
+
+See [`examples/react-spa/README.md`](examples/react-spa/README.md) for the design rationale and integration details.
+
+## CLI commands
+
+| Command | Purpose |
+|---|---|
+| `bin/console keys:generate` | Generate the RS256 JWT signing key pair (`var/keys/`). |
+| `bin/console route:cache` | Pre-compile the routing table to `var/cache/routes.php` (production). |
+| `bin/console openapi:dump` | Generate `var/cache/openapi.json` for `/api/v1/docs.json`. |
 
 ## License
 
-This project is open-source and available under the [GNU GENERAL PUBLIC LICENSE Version 3](LICENSE).
+Antarctic is released under the [GNU General Public License v3](LICENSE).
 
 ## Contact
 
-For any questions or suggestions, please feel free to reach out to [csekme.krisztian@outlook.com](mailto:csekme.krisztian@outlook.com).
-
-
-# How to configure
-
-For Database connection create an **.env** file on the root and define the following properties.
-
-Application configuration file
-
-```json
-
-{
-    "administrator": {
-        "email": "xy@server.com"
-    },
-    "application": {
-      "name": "My Production",
-      "description": "This is my application based on Antrarctic Web Framework",
-      "secretKey": "MY-SECRET-KEY"
-    },
-   "framework": {
-      "cache": true,
-      "showErrors": false,
-      "useCoreControllers": false
-   },
-    "smtp": {
-        "debug": 0,
-        "host": "smtp.mail.com",
-        "auth": true,
-        "username": "username",
-        "password": "your-password",
-        "secure": "ssl",
-        "port": 465,
-        "from": "noreply@mail.com",
-        "alias": "Jhon Doe",
-        "charset": "UTF-8",
-        "method": 0,
-        "enabled": true
-    }
-}
-
-```
-
-## VSCODE xdebug launcher
-```json
-{
-    // Use IntelliSense to learn about possible attributes.
-    // Hover to view descriptions of existing attributes.
-    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
-    "version": "0.2.0",
-    "configurations": [
-        {
-            "name": "Listen for Xdebug",
-            "type": "php",
-            "request": "launch",
-            "port": 9003,
-            "pathMappings": {
-                "/var/www/html": "${workspaceFolder}/src/html",
-                "/var/www/Application": "${workspaceFolder}/src/Application",
-                "/var/www/Framework": "${workspaceFolder}/src/Framework",
-                
-            }
-        }
-    ]
-}
-```
-
-## Docker compose file
-
-### Postgresql
-```yaml
-services:
-  app:
-    container_name: application-cont
-    platform: linux/amd64
-    build:
-      context: ./docker/apache
-      dockerfile: Dockerfile
-    ports:
-      - "80:80"
-      - "443:443"
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
-    networks:
-      - antarctic-web
-    volumes:
-      - ./src:/var/www
-  database:
-    container_name: application-db-cont
-    platform: linux/amd64
-    build:
-      context: ./docker/${DATABASE}
-      dockerfile: Dockerfile
-    ports:
-      - ${DATABASE_PORT}:${DATABASE_PORT}
-    environment:
-      - POSTGRES_USER=${DATABASE_USER} # The PostgreSQL user (useful to connect to the database)
-      - POSTGRES_PASSWORD=${DATABASE_PASSWORD}
-      - POSTGRES_DB=${DATABASE_NAME}
-      - POSTGRES_INITDB_ARGS=--auth-host=md5 --locale=hu_HU.UTF-8
-    networks:
-      - antarctic-web
-    volumes:
-      - ~/.local/share/antarctic/data/:/var/lib/postgresql/data/
-
-networks:
-  antarctic-web:
-    name: "antarctic-web"
-    driver: bridge
-```
-
-#### MySQL or MariaDB
-```yaml
-services:
-  app:
-    container_name: application-cont
-    platform: linux/amd64
-    build:
-      context: ./docker/apache
-      dockerfile: Dockerfile
-    ports:
-      - "80:80"
-      - "443:443"
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
-    networks:
-      - antarctic-web
-    volumes:
-      - ./src:/var/www
-  database:
-    container_name: application-db-cont
-    platform: linux/amd64
-    build:
-      context: ./docker/${DATABASE}
-      dockerfile: Dockerfile
-    ports:
-      - ${DATABASE_PORT}:${DATABASE_PORT}
-    environment:
-      - MYSQL_ROOT_PASSWORD=${DATABASE_ROOT_PASSWORD}
-      - MYSQL_DATABASE=${DATABASE_NAME}
-      - MYSQL_USER=${DATABASE_USER}
-      - MYSQL_PASSWORD=${DATABASE_PASSWORD}
-    networks:
-      - antarctic-web
-    volumes:
-      - ./docker/${DATABASE}/init.sql:/docker-entrypoint-initdb.d/init.sql
-
-networks:
-  antarctic-web:
-    name: "antarctic-web"
-    driver: bridge
-```
-# Create a new Project
-
-Let's create a new project (your project) make a directory under src folder called Application
-this will be your project root folder.
-
-Your project folder should use the following strucutre:
-```
-Application
-    Controllers
-    Interceptors
-    TwigExtensions
-    Models
-    Views
-      Errors  
-```
-
-## Example of model
-Let's suppose you have a table called person.
-```sql
-create table person
-(
-    name text   not null,
-    age  bigint not null
-);
-
-```
-
-```php 
-
-<?php
-
-namespace Application\Models;
-
-use Framework\Dal;
-use PDO;
-
-/**
- * Person Model
- * @property string $name
- * @property int $age
- */
-class TestModel extends Dal
-{
-
-    function save()
-    {
-        $sql = 'INSERT INTO person (name, age) values (:name, :age)';
-        $connection = self::connection();
-        $statement = $connection->prepare($sql);
-        $statement->bindParam(":name", $this->name);
-        $statement->bindParam(":age", $this->age, PDO::PARAM_INT);
-        return $statement->execute();
-    }
-}
-```
-
-## Example of a Controller
-```php
-
-<?php
-
-namespace Application\Controllers;
-
-use Framework\AbstractController;
-use Framework\Controller as Controller;
-use Framework\Path as Path;
-use Framework\Response;
-use Framework\ResponseBuilder;
-use Application\Models\TestModel;
-
-#[Path("/")]
-class TestController extends Controller
-{
-
-    #[Path(method: AbstractController::POST)]
-    function save(): Response
-    {
-        $model = new TestModel($this->request->getJson());
-        if ($model->save()) {
-        $builder = ResponseBuilder::create();
-        return $builder
-            ->setBody('Resource have been saved')
-            ->addHeader('Content-Type: text/plain')
-            ->setStatusCode(200)
-            ->build();
-        }
-
-    }
-
-    #[Path(method: AbstractController::GET)]
-    function testAction(): Response
-    {
-        $response = new Response();
-        $response->setBody("Hello, World!");
-        return $response;
-    }
-}
-
-
-```
-
-
-```
-
-```pip install mkdocs-material && mkdocs serve → http://127.0.0.1:8000
+Krisztián Csekme — [krisztian.csekme@visma.com](mailto:krisztian.csekme@visma.com).
