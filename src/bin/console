@@ -1,0 +1,21 @@
+#!/usr/bin/env php
+<?php
+
+declare(strict_types=1);
+
+use Framework\Console\Application;
+use Framework\Console\KeysGenerateCommand;
+
+if (PHP_SAPI !== 'cli') {
+    fwrite(STDERR, "bin/console must be run from the command line.\n");
+    exit(1);
+}
+
+define('ROOT_PATH', dirname(__DIR__));
+
+require_once ROOT_PATH . '/vendor/autoload.php';
+
+$app = new Application();
+$app->register(new KeysGenerateCommand(ROOT_PATH . '/var/keys'));
+
+exit($app->run($argv));

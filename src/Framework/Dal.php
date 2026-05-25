@@ -80,6 +80,21 @@ abstract class Dal {
     }
 
     /**
+     * Public accessor for the lazily-built PDO connection. Intended for
+     * services (repositories, console commands) outside the Dal model
+     * hierarchy that still need direct DB access. M4.a replaces this
+     * with constructor injection from the DI container.
+     */
+    public static function getConnection(): PDO
+    {
+        $pdo = self::connection();
+        if ($pdo === null) {
+            throw new \RuntimeException('PDO connection could not be established.');
+        }
+        return $pdo;
+    }
+
+    /**
      * Return a connection to the database
      * @return PDO|null
      */

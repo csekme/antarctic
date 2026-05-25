@@ -24,7 +24,13 @@
       "Bash(vendor/bin/phpstan analyse *)",
       "Bash(vendor/bin/phpunit)",
       "Bash(pip3 show *)",
-      "Bash(python3 -c \"import yaml; yaml.safe_load\\(open\\('/Users/csk/Projects/antarctic/mkdocs.yml'\\)\\)\")"
+      "Bash(python3 -c \"import yaml; yaml.safe_load\\(open\\('/Users/csk/Projects/antarctic/mkdocs.yml'\\)\\)\")",
+      "Bash(php /tmp/composer require lcobucci/jwt:^5.3 psr/clock:^1.0 --no-interaction --update-with-all-dependencies)",
+      "Bash(chmod +x /Users/csk/Projects/antarctic/src/bin/console)",
+      "Bash(/Users/csk/Projects/antarctic/src/bin/console)",
+      "Bash(/Users/csk/Projects/antarctic/src/bin/console keys:generate --bits=2048 --out=/tmp/jwt-smoke)",
+      "Read(//tmp/**)",
+      "Bash(rm -f /tmp/jwt-smoke-private.pem /tmp/jwt-smoke-public.pem)"
     ]
   }
 }
