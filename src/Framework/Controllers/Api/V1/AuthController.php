@@ -17,6 +17,7 @@ use Framework\Auth\TokenService;
 use Framework\Auth\TwoFactorChallengeService;
 use Framework\Controller;
 use Framework\Dal;
+use Framework\Http\RequestScheme;
 use Framework\Models\AbstractUser;
 use Framework\Models\TwoFactorModel;
 use Framework\Models\User;
@@ -49,7 +50,6 @@ class AuthController extends Controller
     private int $accessTtl;
     private int $refreshTtl;
     private int $challengeTtl;
-    private bool $secureCookies;
 
     public function __construct($params = [])
     {
@@ -58,12 +58,11 @@ class AuthController extends Controller
     }
 
     /** Tesztből / containerből cserélhető. */
-    public function setTokenService(TokenService $service, int $accessTtl, int $refreshTtl, bool $secureCookies): void
+    public function setTokenService(TokenService $service, int $accessTtl, int $refreshTtl): void
     {
         $this->tokenService = $service;
         $this->accessTtl = $accessTtl;
         $this->refreshTtl = $refreshTtl;
-        $this->secureCookies = $secureCookies;
     }
 
     public function setChallengeService(TwoFactorChallengeService $service): void
@@ -86,7 +85,6 @@ class AuthController extends Controller
         $this->accessTtl = (int) $config['access_ttl'];
         $this->refreshTtl = (int) $config['refresh_ttl'];
         $this->challengeTtl = (int) ($config['challenge_ttl'] ?? 300);
-        $this->secureCookies = (getenv('APP_ENV') ?: 'production') !== 'local';
         $jwtConfig = JwtConfigFactory::create($config);
         $clock = new SystemClock();
         $this->tokenService = new TokenService(
@@ -430,12 +428,32 @@ class AuthController extends Controller
             sprintf('Path=%s', $path),
             sprintf('SameSite=%s', $sameSite),
         ];
-        if ($this->secureCookies) {
+        if ($this->isSecureContext()) {
             $parts[] = 'Secure';
         }
         if ($httpOnly) {
             $parts[] = 'HttpOnly';
         }
         return 'Set-Cookie: ' . implode('; ', $parts);
+    }
+
+    /**
+     * Resolve the Secure cookie attribute per-request: true if the current
+     * request is HTTPS (direct or via trusted X-Forwarded-Proto), or if the
+     * deployment forces HTTPS via APP_FORCE_HTTPS — in which case the very
+     * next request will hit HTTPS regardless of what we see on this hop.
+     *
+     * The `__Host-` cookie prefix also *requires* Secure; getting this right
+     * is what makes the refresh cookie survive the upstream proxy.
+     */
+    private function isSecureContext(): bool
+    {
+        if (RequestScheme::forceHttpsFromEnv()) {
+            return true;
+        }
+        return RequestScheme::isHttpsFromServerParams(
+            $this->request->server,
+            RequestScheme::trustProxyFromEnv(),
+        );
     }
 }

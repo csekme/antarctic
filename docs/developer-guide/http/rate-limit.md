@@ -79,42 +79,35 @@ A pipeline-pozíció (CORS után) azért fontos, hogy a preflight `OPTIONS` ne s
 
 ## Production: Redis backend
 
-Az `InMemoryStore` per-process — multi-worker FPM-ben minden worker külön bucketet vezet, így egy IP minden worker-nyi-szer érheti el a limit-et. Az M5 óta szállítjuk a `RedisStore`-t és a `PredisAdapter`-t; production deployhoz kapcsold be a config `backend` kulcsával:
+Az `InMemoryStore` per-process — multi-worker FPM-ben minden worker külön bucketet vezet, így egy IP minden worker-nyi-szer érheti el a limit-et. Az M5 óta szállítjuk a `RedisStore`-t és a `PredisAdapter`-t (`predis/predis` alapú); az M5 follow-upban érkezett a `PhpRedisAdapter` is (`ext-redis` natív kliens). Production deployhoz a config `backend` kulcsát állítsd be:
 
 ```bash
-APP_RATE_LIMIT_BACKEND=redis
+APP_RATE_LIMIT_BACKEND=redis        # vagy "predis" alias, vagy "phpredis"
 REDIS_DSN=tcp://redis:6379
 REDIS_KEY_PREFIX=rl:
 ```
 
-A `Bootstrap.php` ezt a switch-et nézi és a megfelelő store-t építi:
+A `Bootstrap.php` `match`-eli a backend nevet:
+
+| `APP_RATE_LIMIT_BACKEND` | Store | Adapter | Függőség |
+|---|---|---|---|
+| `memory` (default) | `InMemoryStore` | — | — |
+| `redis` / `predis` | `RedisStore` | `PredisAdapter` | `predis/predis` (composer) |
+| `phpredis` | `RedisStore` | `PhpRedisAdapter` | `ext-redis` PECL |
+
+Az `INCR + EXPIRE` atomicity-t mindkét Redis-adapter egy Lua scripttel (`EVAL`) garantálja: az első `INCR`-kor (count==1) áll be a TTL, későbbi hitekkor nem nyúl hozzá. Naïv `INCR; EXPIRE` két parancsként race-elne — két konkurens process közé eshet egy `INCR` egy `EXPIRE` nélkül, és a bucket örökre megmaradna.
+
+### Saját adapter (RoadRunner KV, Memcached, ...)
+
+A `RedisLike` interface minimális: két metódus (`incrementAndExpire`, `ttl`). Bármilyen KV-szerű backend mögé írhatsz adapter osztályt:
 
 ```php
-$rateLimitStore = ($rateLimitConfig['backend'] ?? 'memory') === 'redis'
-    ? new RedisStore(
-        new PredisAdapter(new Predis\Client((string) $rateLimitConfig['redis_dsn'])),
-        (string) $rateLimitConfig['redis_prefix'],
-    )
-    : new InMemoryStore();
-```
-
-Az `INCR + EXPIRE` atomicity-t a `PredisAdapter` egy Lua scripttel (`EVAL`) garantálja: az első `INCR`-kor (count==1) áll be a TTL, későbbi hitekkor nem nyúl hozzá. Naïv `INCR; EXPIRE` két parancsként race-elne — két konkurens process közé eshet egy `INCR` egy `EXPIRE` nélkül, és a bucket örökre megmaradna.
-
-### Saját adapter (phpredis / RoadRunner KV)
-
-A `RedisLike` interface minimális: két metódus (`incrementAndExpire`, `ttl`). Ha `ext-redis`-t használsz a `predis/predis` helyett, írj egy `PhpRedisAdapter`-t — a Lua script ugyanaz, csak a call surface más:
-
-```php
-final class PhpRedisAdapter implements RedisLike
+final class CustomAdapter implements RedisLike
 {
-    public function __construct(private readonly \Redis $client) {}
+    public function __construct(private readonly object $client) {}
 
-    public function incrementAndExpire(string $key, int $ttl): int
-    {
-        return (int) $this->client->eval(self::SCRIPT, [$key, $ttl], 1);
-    }
-
-    public function ttl(string $key): int { return (int) $this->client->ttl($key); }
+    public function incrementAndExpire(string $key, int $ttl): int { /* ... */ }
+    public function ttl(string $key): int { /* ... */ }
 }
 ```
 

@@ -84,10 +84,30 @@ $dispatcher = new Dispatcher($router, $mock);
 
 A `Framework\ContainerFactory::build()` minden hívásra friss, üres-cache-es `DI\Container`-t ad.
 
+## Controller-injection (M3.d)
+
+A `Dispatcher` a controllereket a container `make()`-en keresztül kéri, ezért a konstruktor-injektált függőségek autowire-rel feloldódnak, miközben a meglévő `array $route_params` argumentum is megmarad:
+
+```php
+class TodoController extends Controller
+{
+    public function __construct(
+        public readonly TodoRepository $todos,    // autowired
+        public readonly ClockInterface $clock,    // autowired
+        array $route_params = [],                 // route match params
+    ) {
+        parent::__construct($route_params);
+    }
+}
+```
+
+A `make()` paraméternév-alapú override-okat fogad, és a Dispatcher mind a `route_params`, mind a legacy `params` kulcsot átadja — így a régi és új signature is működik.
+
+A `Response` minden dispatchre friss példányt kap (`$container->make(Response::class)`), így long-running worker setupokban (RoadRunner, ReactPHP) sem szivárog header/body két request között.
+
 ## Mit *nem* tartalmaz a jelenlegi container
 
-- **Attribute-DI** (`#[Inject]`, `#[Autowire]`) — kikapcsolva a builder-ben. Az `useAttributes(true)` opcióval bekapcsolható, ha a controller-injection landol és igényelné.
-- **Per-call (non-shared) instance-ok** — minden `get()` ugyanazt az instance-t adja vissza (`php-di` default). PHP-FPM-ben ez nem probléma (egy request = egy container). Long-running worker (RoadRunner) deploy-hoz a Dispatcher fog request-szintű reset-et adni.
+- **Attribute-DI a controller property-szinten** — az `useAttributes(true)` engedélyezve van (`#[Inject]` property-szinten feloldódna), de a `Controller` base még a `setResponse()` szetterrel kapja a Response-t. Egy követő iteráció lecserélheti property-DI-re.
 - **Lazy services** — még nem aktív; ha egy service drága construct-ja megéri, a `DI\autowire()->lazy()` opciót lehet majd használni.
 
 ## Lásd még

@@ -94,7 +94,16 @@
       "Bash(composer show *)",
       "Bash(composer --version)",
       "Bash(php /tmp/composer require predis/predis --no-interaction)",
-      "Bash(./vendor/bin/phpunit --filter \"Redis|Predis\")"
+      "Bash(./vendor/bin/phpunit --filter \"Redis|Predis\")",
+      "Bash(composer dump-autoload *)",
+      "Bash(./vendor/bin/phpunit --testsuite=default --filter='RequestSchemeTest')",
+      "Bash(./vendor/bin/phpunit --filter=RequestSchemeTest)",
+      "Bash(php -m)",
+      "Bash(ROOT_PATH=$\\(pwd\\) ./vendor/bin/phpstan analyse -c phpstan.neon.dist --no-progress --memory-limit=512M)",
+      "Bash(./vendor/bin/phpunit --filter=DispatcherTest)",
+      "Bash(npm install *)",
+      "Bash(npx tsc *)",
+      "Bash(npm run *)"
     ],
     "additionalDirectories": [
       "/tmp"

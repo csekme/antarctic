@@ -30,8 +30,39 @@ final class RequestScheme
         return false;
     }
 
+    /**
+     * Mirror of {@see self::isHttps()} for code paths that only have a legacy
+     * `$_SERVER`-shape array (e.g. controllers still running through the
+     * `LegacyDispatcherMiddleware` shim). Honours the same headers as the
+     * PSR-7 variant — only the input shape differs.
+     *
+     * @param array<string,mixed> $server
+     */
+    public static function isHttpsFromServerParams(array $server, bool $trustProxy): bool
+    {
+        $https = $server['HTTPS'] ?? '';
+        if (is_string($https) && $https !== '' && strcasecmp($https, 'off') !== 0) {
+            return true;
+        }
+        if (($server['SERVER_PORT'] ?? null) === 443 || ($server['SERVER_PORT'] ?? null) === '443') {
+            return true;
+        }
+        if ($trustProxy) {
+            $forwarded = $server['HTTP_X_FORWARDED_PROTO'] ?? '';
+            if (is_string($forwarded) && strcasecmp($forwarded, 'https') === 0) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     public static function trustProxyFromEnv(): bool
     {
         return filter_var(getenv('APP_TRUST_PROXY') ?: '0', FILTER_VALIDATE_BOOL);
+    }
+
+    public static function forceHttpsFromEnv(): bool
+    {
+        return filter_var(getenv('APP_FORCE_HTTPS') ?: '0', FILTER_VALIDATE_BOOL);
     }
 }

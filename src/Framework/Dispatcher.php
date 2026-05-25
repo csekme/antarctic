@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Framework;
 
+use DI\FactoryInterface;
 use Exception;
 use Framework\Auth\RequireAuth;
 use Framework\Auth\RequireRole;
@@ -72,14 +73,14 @@ readonly class Dispatcher
             $controller = $this->getNamespace($params, "Framework\Controllers\\") . $controller;
         }
         if (class_exists($controller)) {
-            $controller_object = new $controller($params);
+            $controller_object = $this->instantiateController($controller, $params);
             $reflectionClass = new ReflectionClass($controller_object::class);
             $attributes = $reflectionClass->getAttributes();
             foreach ($attributes as $attribute) {
                 $this->processAnnotation($attribute, $controller_object, $request);
             }
             $controller_object->setRequest($request);
-            $response = $this->container->get(Response::class);
+            $response = $this->makeFreshResponse();
             $controller_object->setResponse($response);
 
             $action = $params['action'];
@@ -148,6 +149,53 @@ readonly class Dispatcher
             throw new Exception("Controller class $controller not found");
         }
 
+        return $response;
+    }
+
+    /**
+     * Instantiate the controller through the container when possible, so
+     * constructor-typed dependencies get autowired. The route params (the
+     * legacy `array $route_params` ctor argument) are passed as overrides;
+     * matching by parameter name (`route_params` and the historic alias
+     * `params`) keeps both legacy and modern controller signatures working.
+     *
+     * Falls back to `new $controller($params)` if the container is not a
+     * php-di {@see FactoryInterface}, or if container instantiation throws
+     * (e.g. a controller using a variadic untyped ctor that the container
+     * can't resolve). The fallback preserves pre-M3.d behaviour.
+     *
+     * @param class-string $controller
+     * @param array<string,mixed> $params
+     */
+    private function instantiateController(string $controller, array $params): object
+    {
+        if ($this->container instanceof FactoryInterface) {
+            try {
+                return $this->container->make($controller, [
+                    'route_params' => $params,
+                    'params' => $params,
+                ]);
+            } catch (\Throwable) {
+                // Fall through to the legacy direct-construction path.
+            }
+        }
+        return new $controller($params);
+    }
+
+    /**
+     * Return a fresh {@see Response} for every dispatch — long-running worker
+     * runtimes (RoadRunner, ReactPHP) reuse the container across requests,
+     * so a shared Response would leak headers/body between them.
+     */
+    private function makeFreshResponse(): Response
+    {
+        if ($this->container instanceof FactoryInterface) {
+            /** @var Response $response */
+            $response = $this->container->make(Response::class);
+            return $response;
+        }
+        /** @var Response $response */
+        $response = $this->container->get(Response::class);
         return $response;
     }
 

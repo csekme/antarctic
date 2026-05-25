@@ -18,10 +18,12 @@ use Framework\Http\LegacyDispatcherMiddleware;
 use Framework\Http\MiddlewarePipeline;
 use Framework\Http\NotFoundHandler;
 use Framework\Http\RateLimit\InMemoryStore;
+use Framework\Http\RateLimit\PhpRedisAdapter;
 use Framework\Http\RateLimit\PredisAdapter;
 use Framework\Http\RateLimit\RateLimitConfig;
 use Framework\Http\RateLimit\RateLimitMiddleware;
 use Framework\Http\RateLimit\RateLimitStore;
+use Framework\Http\RateLimit\RedisLike;
 use Framework\Http\RateLimit\RedisStore;
 use Framework\Http\SecurityHeadersMiddleware;
 use Framework\Http\TraceIdMiddleware;
@@ -32,6 +34,7 @@ use Laminas\HttpHandlerRunner\Emitter\SapiEmitter;
 use Nyholm\Psr7\Factory\Psr17Factory;
 use Nyholm\Psr7Server\ServerRequestCreator;
 use Psr\Http\Server\MiddlewareInterface;
+use RuntimeException;
 
 error_reporting(E_ALL);
 set_error_handler('Framework\ErrorHandler::errorHandler');
@@ -91,13 +94,44 @@ $middlewares[] = new CorsMiddleware($corsConfig);
 // (production multi-worker FPM). Master switch a config 'enabled' flag-je.
 $rateLimitConfig = require ROOT_PATH . '/config/rate-limit.php';
 if (RateLimitConfig::isEnabled($rateLimitConfig)) {
+    /**
+     * Build a {@see RedisLike} client from the configured DSN. Kept inline so
+     * the imports stay close to their single call site and tests can sub the
+     * full store via {@see RateLimitMiddleware} constructor injection.
+     */
+    $buildRedisLike = static function (string $backend, string $dsn): RedisLike {
+        if ($backend === 'phpredis') {
+            if (!class_exists('Redis')) {
+                throw new RuntimeException(
+                    'APP_RATE_LIMIT_BACKEND=phpredis requires the ext-redis extension to be installed.',
+                );
+            }
+            $parsed = parse_url($dsn) ?: [];
+            $host = (string) ($parsed['host'] ?? '127.0.0.1');
+            $port = (int) ($parsed['port'] ?? 6379);
+            /** @var \Redis $client */
+            $client = new \Redis();
+            $client->connect($host, $port);
+            if (isset($parsed['pass']) && $parsed['pass'] !== '') {
+                $client->auth((string) $parsed['pass']);
+            }
+            return new PhpRedisAdapter($client);
+        }
+        return new PredisAdapter(new Predis\Client($dsn));
+    };
+
     /** @var RateLimitStore $rateLimitStore */
-    $rateLimitStore = ($rateLimitConfig['backend'] ?? 'memory') === 'redis'
-        ? new RedisStore(
-            new PredisAdapter(new Predis\Client((string) $rateLimitConfig['redis_dsn'])),
+    $rateLimitStore = match (strtolower((string) ($rateLimitConfig['backend'] ?? 'memory'))) {
+        'redis', 'predis' => new RedisStore(
+            $buildRedisLike('predis', (string) $rateLimitConfig['redis_dsn']),
             (string) $rateLimitConfig['redis_prefix'],
-        )
-        : new InMemoryStore();
+        ),
+        'phpredis' => new RedisStore(
+            $buildRedisLike('phpredis', (string) $rateLimitConfig['redis_dsn']),
+            (string) $rateLimitConfig['redis_prefix'],
+        ),
+        default => new InMemoryStore(),
+    };
 
     $middlewares[] = new RateLimitMiddleware(
         rules: RateLimitConfig::rulesFromArray($rateLimitConfig),

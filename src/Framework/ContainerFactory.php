@@ -16,17 +16,17 @@ use function DI\factory;
  *
  * Korábban a saját `Framework\Container` szolgált autowire-DI-ként; az M3.c
  * óta a `php-di/php-di` szállítja. Autowire bekapcsolva — minden konstruktor-
- * argumentumot a típusa alapján képes feloldani.
+ * argumentumot a típusa alapján képes feloldani. Az M3.d óta az attribute-DI
+ * is engedélyezett (`#[Inject]`, `#[Injectable]`), és a {@see Dispatcher}
+ * `make()`-en keresztül kéri a controller-eket, így a route-paraméterek és
+ * a DI-deps együtt oldódnak fel.
  *
  * Production-ban opcionálisan compile-cache (`enableCompilation`) — gyorsabb
  * cold-start, de írható `var/cache/di/` mappát igényel. A bekapcsolás
  * `APP_DI_COMPILE=1` env változóval történik (lásd `Bootstrap.php`).
  *
- * NB. A `Framework\Response` osztály — bár a container kezeli — minden
- * requestre azonos példányt ad vissza (php-di shared, ez a default).
- * Standard PHP-FPM-ben ez nem probléma: egy request = egy container =
- * egy Response. Long-running worker (RoadRunner, ReactPHP) esetén
- * a Dispatcher fogja request-szinten resetelni a Response-t.
+ * NB. A `Framework\Response`-t a {@see Dispatcher} mindig `make()`-kel kéri,
+ * így minden request friss példányt kap (long-running worker safe).
  */
 final class ContainerFactory
 {
@@ -34,7 +34,7 @@ final class ContainerFactory
     {
         $builder = new ContainerBuilder();
         $builder->useAutowiring(true);
-        $builder->useAttributes(false); // PHP attribútum-alapú DI: jelenleg nincs rá szükségünk.
+        $builder->useAttributes(true);
 
         $builder->addDefinitions([
             // A live PDO ugyanaz a `Framework\Dal` által hagyományosan használt
