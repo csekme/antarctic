@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Framework\Http;
 
+use Framework\Validation\ValidationException;
 use Nyholm\Psr7\Response;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -67,6 +68,10 @@ final class ErrorHandlerMiddleware implements MiddlewareInterface
             'detail' => $status >= 500 && !$this->debug ? 'Internal server error.' : $e->getMessage(),
             'instance' => (string) $request->getUri()->getPath(),
         ];
+
+        if ($e instanceof ValidationException) {
+            $payload['errors'] = $e->getErrors();
+        }
 
         if ($this->debug) {
             $payload['exception'] = $e::class;

@@ -43,6 +43,7 @@ A mezők [RFC 7807](https://datatracker.ietf.org/doc/html/rfc7807) szerint:
 - **`status`** — HTTP status code másolva.
 - **`detail`** — részletes szöveg (a `Throwable::getMessage()` 4xx esetén).
 - **`instance`** — az URL path, ahol a hiba történt.
+- **`errors`** (opcionális) — `Framework\Validation\ValidationException` esetén property-path → list<string> map (`{"email": ["Email is required."]}`). Részletek: [Validáció (Request DTO-k)](validation.md).
 
 ### Debug mód
 

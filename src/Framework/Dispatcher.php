@@ -9,9 +9,13 @@ use Framework\Auth\RequireAuth;
 use Framework\Auth\RequireRole;
 use Framework\Routing\MatchResult;
 use Framework\Routing\Router as Router;
+use Framework\Validation\RequestHydrator;
+use Framework\Validation\Validatable;
 use Psr\Container\ContainerInterface;
 use ReflectionAttribute;
 use ReflectionClass;
+use ReflectionMethod;
+use ReflectionNamedType;
 
 /**
  * Class Dispatcher, handles the incoming request and dispatches it to the appropriate controller
@@ -126,21 +130,8 @@ readonly class Dispatcher
                 }
             }
 
-            if ($request_method !== 'GET') {
-                if ($method->getNumberOfParameters() === 1) {
-                    $response = $controller_object->$action($_POST);
-                } else {
-                    $response = $controller_object->$action();
-                }
-            } else {
-                if ($method->getNumberOfParameters() === 1) {
-                    $methodParameters = $method->getParameters();
-                    $value = $params[$methodParameters[0]->name];
-                    $response = $controller_object->$action($value);
-                } else {
-                    $response = $controller_object->$action();
-                }
-            }
+            $args = $this->resolveActionArgs($method, $request, $params);
+            $response = $controller_object->$action(...$args);
 
 
             foreach ($interceptors as $interceptor) {
@@ -158,6 +149,61 @@ readonly class Dispatcher
         }
 
         return $response;
+    }
+
+    /**
+     * Resolve the positional argument list for a controller action.
+     *
+     * Each parameter is filled in turn:
+     *   1. If the type implements {@see Validatable} the body is hydrated
+     *      and validated by {@see RequestHydrator} from `$request->getJson()`.
+     *      Validation failures throw {@see \Framework\Validation\ValidationException}
+     *      that the error-handler middleware maps to 422 problem+json.
+     *   2. Otherwise, if the parameter name appears in the matched route
+     *      params, the route value is passed through.
+     *   3. As a legacy fallback (non-GET requests with a single untyped
+     *      parameter), the raw `$_POST` superglobal is injected — this
+     *      preserves the pre-M4.b dispatch behavior for plain HTML forms.
+     *   4. Else the parameter default (or `null` when nullable) is used.
+     *
+     * @param array<string, mixed> $params route match params
+     * @return list<mixed>
+     */
+    private function resolveActionArgs(ReflectionMethod $method, Request $request, array $params): array
+    {
+        $parameters = $method->getParameters();
+        if ($parameters === []) {
+            return [];
+        }
+        $args = [];
+        $singleUntyped = count($parameters) === 1 && $parameters[0]->getType() === null;
+        foreach ($parameters as $parameter) {
+            $type = $parameter->getType();
+            if ($type instanceof ReflectionNamedType && !$type->isBuiltin()) {
+                $className = $type->getName();
+                if (is_subclass_of($className, Validatable::class)) {
+                    /** @var RequestHydrator $hydrator */
+                    $hydrator = $this->container->get(RequestHydrator::class);
+                    $args[] = $hydrator->hydrate($className, $request->getJson());
+                    continue;
+                }
+            }
+            $name = $parameter->getName();
+            if (array_key_exists($name, $params)) {
+                $args[] = $params[$name];
+                continue;
+            }
+            if ($singleUntyped && $request->method !== 'GET') {
+                $args[] = $_POST;
+                continue;
+            }
+            if ($parameter->isDefaultValueAvailable()) {
+                $args[] = $parameter->getDefaultValue();
+                continue;
+            }
+            $args[] = $parameter->allowsNull() ? null : null;
+        }
+        return $args;
     }
 
     /**

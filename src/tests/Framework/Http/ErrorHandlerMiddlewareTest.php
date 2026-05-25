@@ -6,6 +6,7 @@ namespace Tests\Framework\Http;
 
 use Exception;
 use Framework\Http\ErrorHandlerMiddleware;
+use Framework\Validation\ValidationException;
 use Nyholm\Psr7\Response;
 use Nyholm\Psr7\ServerRequest;
 use PHPUnit\Framework\TestCase;
@@ -111,6 +112,30 @@ final class ErrorHandlerMiddlewareTest extends TestCase
         $this->assertSame(\RuntimeException::class, $body['exception']);
         $this->assertArrayHasKey('file', $body);
         $this->assertArrayHasKey('line', $body);
+    }
+
+    public function testValidationExceptionEmits422ProblemJsonWithErrorsField(): void
+    {
+        $middleware = new ErrorHandlerMiddleware();
+
+        $response = $middleware->process(
+            new ServerRequest('POST', '/api/v1/auth/login'),
+            $this->handlerThrowing(new ValidationException([
+                'email' => ['Email is required.'],
+                'password' => ['Password is required.'],
+            ])),
+        );
+
+        $this->assertSame(422, $response->getStatusCode());
+        $this->assertSame('application/problem+json; charset=utf-8', $response->getHeaderLine('Content-Type'));
+
+        $body = json_decode((string) $response->getBody(), true);
+        $this->assertSame(422, $body['status']);
+        $this->assertSame('Unprocessable Entity', $body['title']);
+        $this->assertSame('The request body failed validation.', $body['detail']);
+        $this->assertArrayHasKey('errors', $body);
+        $this->assertSame(['Email is required.'], $body['errors']['email']);
+        $this->assertSame(['Password is required.'], $body['errors']['password']);
     }
 
     private function handlerReturning(ResponseInterface $response): RequestHandlerInterface

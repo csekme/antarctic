@@ -69,7 +69,16 @@
       "Bash(php -r 'require \"/Users/csk/Projects/antarctic/src/vendor/autoload.php\"; $r = new ReflectionClass\\(Doctrine\\\\Migrations\\\\DependencyFactory::class\\); foreach\\($r->getMethods\\(\\) as $m\\) { if\\(str_starts_with\\($m->name, \"get\"\\) && !$m->isStatic\\(\\)\\) echo $m->name . \"\\\\n\"; }')",
       "Bash(php -r 'require \"/Users/csk/Projects/antarctic/src/vendor/autoload.php\"; $r = new ReflectionClass\\(Doctrine\\\\Migrations\\\\Configuration\\\\Configuration::class\\); foreach\\($r->getMethods\\(\\) as $m\\) { if\\(!$m->isStatic\\(\\)\\) echo $m->name . \"\\\\n\"; }')",
       "Bash(php -r 'require \"/Users/csk/Projects/antarctic/src/vendor/autoload.php\"; $r = new ReflectionClass\\(Doctrine\\\\Migrations\\\\Migrator::class\\); foreach\\($r->getMethods\\(\\) as $m\\) { if\\(!$m->isStatic\\(\\)\\) echo $m->name . \"\\(\" . implode\\(\",\", array_map\\(fn\\($p\\) => $p->getType\\(\\).\":\".$p->getName\\(\\), $m->getParameters\\(\\)\\)\\) . \"\\)\\\\n\"; }')",
-      "Bash(vendor/bin/phpunit --filter MigrationsTest)"
+      "Bash(vendor/bin/phpunit --filter MigrationsTest)",
+      "mcp__gitnexus__query",
+      "Bash(php -r \"echo 'php ok\\\\n';\")",
+      "Bash(curl -sS https://getcomposer.org/installer)",
+      "Bash(php -- --install-dir=/tmp --filename=composer)",
+      "Bash(php /tmp/composer require --no-update \"symfony/validator:^7.1\")",
+      "Bash(php /tmp/composer update symfony/validator -W --no-progress)",
+      "Bash(grep -rn \"public function.*Request \\\\|function.*Response.*$.*[a-z]\" Framework/ --include=\"*.php\")",
+      "Bash(grep -rn \"function.*\\(.*\\\\\\\\$\" Framework/Controllers/)",
+      "Bash(git commit -m ' *)"
     ],
     "additionalDirectories": [
       "/tmp"

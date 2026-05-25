@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Framework\Controllers\Api\V1;
 
+use Application\Dto\LoginRequest;
+use Application\Dto\VerifyTwoFactorRequest;
 use DomainException;
 use Framework\AbstractController;
 use Framework\Auth\AuthenticatedUser;
@@ -110,17 +112,9 @@ class AuthController extends Controller
     }
 
     #[Path(path: '/api/v1/auth/login', method: 'POST')]
-    public function login(): Response
+    public function login(LoginRequest $body): Response
     {
-        $body = $this->request->getJson();
-        $email = (string) ($body['email'] ?? '');
-        $password = (string) ($body['password'] ?? '');
-
-        if ($email === '' || $password === '') {
-            return $this->problem(400, 'Email and password are required.');
-        }
-
-        $user = User::authenticate($email, $password);
+        $user = User::authenticate($body->email, $body->password);
         if ($user === false) {
             return $this->problem(401, 'Invalid credentials.');
         }
@@ -140,18 +134,10 @@ class AuthController extends Controller
     }
 
     #[Path(path: '/api/v1/auth/2fa/verify', method: 'POST')]
-    public function verifyTwoFactor(): Response
+    public function verifyTwoFactor(VerifyTwoFactorRequest $body): Response
     {
-        $body = $this->request->getJson();
-        $challenge = (string) ($body['challenge_token'] ?? '');
-        $code = (string) ($body['code'] ?? '');
-
-        if ($challenge === '' || $code === '') {
-            return $this->problem(400, 'challenge_token and code are required.');
-        }
-
         try {
-            $userId = $this->challengeService->verifyChallenge($challenge);
+            $userId = $this->challengeService->verifyChallenge($body->challenge_token);
         } catch (DomainException $e) {
             return $this->problem(401, $e->getMessage());
         }
@@ -167,7 +153,7 @@ class AuthController extends Controller
         }
 
         $secret = (string) ($twoFactor->secret_key ?? '');
-        if ($secret === '' || !($this->totpVerifier)($secret, $code)) {
+        if ($secret === '' || !($this->totpVerifier)($secret, $body->code)) {
             return $this->problem(401, 'Invalid 2FA code.');
         }
 
