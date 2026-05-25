@@ -1,0 +1,82 @@
+site_name: Antarctic Developer Guide
+site_description: Building applications on top of the Antarctic PHP framework
+site_url: https://example.com/antarctic
+repo_url: https://github.com/csekme/antarctic
+repo_name: csekme/antarctic
+edit_uri: edit/main/docs/developer-guide/
+
+docs_dir: docs/developer-guide
+
+theme:
+  name: material
+  language: hu
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - navigation.expand
+    - navigation.top
+    - navigation.indexes
+    - search.suggest
+    - search.highlight
+    - content.code.copy
+    - content.code.annotate
+    - content.action.edit
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-7
+        name: Sötét téma
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-4
+        name: Világos téma
+  icon:
+    repo: fontawesome/brands/github
+
+markdown_extensions:
+  - admonition
+  - attr_list
+  - def_list
+  - footnotes
+  - md_in_html
+  - tables
+  - toc:
+      permalink: true
+  - pymdownx.details
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.superfences
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.tasklist:
+      custom_checkbox: true
+
+plugins:
+  - search:
+      lang: hu
+
+nav:
+  - Áttekintés: index.md
+  - Első lépések: getting-started.md
+  - Architektúra: architecture.md
+  - HTTP réteg:
+      - http/index.md
+      - Middleware pipeline: http/middleware.md
+      - Routing: http/routing.md
+      - Request és Response: http/request-response.md
+      - CORS: http/cors.md
+      - Hibakezelés (RFC 7807): http/error-handling.md
+  - Konfiguráció: configuration.md
+  - Tesztelés: testing.md
+  - Karbantartói útmutató:
+      - _meta/MAINTAINING.md

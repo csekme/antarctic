@@ -34,6 +34,19 @@ class Response {
     {
         $this->status_code = $code;
     }
+
+    public function getStatusCode(): int
+    {
+        return $this->status_code;
+    }
+
+    /**
+     * @return string[] Raw "Header-Name: value" lines as queued via addHeader().
+     */
+    public function getHeaders(): array
+    {
+        return $this->headers;
+    }
     
     public function redirect(string $url): void
     {

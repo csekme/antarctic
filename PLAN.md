@@ -1,7 +1,7 @@
 # Antarctic — Production-ready, SPA-barát fejlesztési terv
 
 Cél: olyan PHP backend, amely **production környezetben** stabilan kiszolgálja a külön deploy-olt **SPA frontendet** (React / Vue / Svelte / akármi).
-
+ 
 Hat fázis, mindegyik önállóan release-elhető. A milestone-okhoz tartozó konkrét PR-sorrend a végén.
 
 ---

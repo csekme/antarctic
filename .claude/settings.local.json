@@ -1,0 +1,30 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(xargs cat)",
+      "Bash(composer install *)",
+      "Bash(which php; ls /Users/csk/Projects/antarctic/src/composer.phar 2>/dev/null; ls /opt/homebrew/bin/composer 2>/dev/null; which composer.phar 2>/dev/null)",
+      "Read(//opt/homebrew/bin/**)",
+      "Bash(curl -sS https://getcomposer.org/installer -o /tmp/composer-setup.php)",
+      "Bash(php /tmp/composer-setup.php --install-dir=/tmp --filename=composer)",
+      "Bash(php /tmp/composer install --no-interaction)",
+      "Bash(php -l Framework/Http/MiddlewarePipeline.php)",
+      "Bash(php -l Framework/Http/HttpAdapter.php)",
+      "Bash(php -l Framework/Http/LegacyDispatcherMiddleware.php)",
+      "Bash(php -l Framework/Http/NotFoundHandler.php)",
+      "Bash(php -l Framework/Bootstrap.php)",
+      "Bash(php -S 127.0.0.1:18765 -t html -d 'display_errors=stderr')",
+      "Bash(echo \"PID=$!\")",
+      "Bash(curl -s -o /tmp/antarctic-resp.html -w \"HTTP=%{http_code} bytes=%{size_download}\\\\n\" \"http://127.0.0.1:18765/\")",
+      "Bash(curl -s -o /tmp/antarctic-resp2.html -w \"HTTP=%{http_code} bytes=%{size_download}\\\\n\" \"http://127.0.0.1:18765/login\")",
+      "Bash(kill %1)",
+      "Bash(cat /tmp/antarctic-resp.html | head -50; echo \"----- log -----\"; cat /tmp/antarctic-test.log | head -40)",
+      "Read(//private/tmp/**)",
+      "Bash(vendor/bin/phpunit --testdox)",
+      "Bash(vendor/bin/phpstan analyse *)",
+      "Bash(vendor/bin/phpunit)",
+      "Bash(pip3 show *)",
+      "Bash(python3 -c \"import yaml; yaml.safe_load\\(open\\('/Users/csk/Projects/antarctic/mkdocs.yml'\\)\\)\")"
+    ]
+  }
+}

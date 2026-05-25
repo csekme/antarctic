@@ -13,3 +13,6 @@ docker-compose.override.yml
 /src/phpunit.xml
 /src/.phpunit.cache
 /src/.phpunit.result.cache
+
+# MkDocs build output
+/site

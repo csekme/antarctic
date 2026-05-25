@@ -139,7 +139,7 @@ readonly class Dispatcher
                     }
                 }
             }
-            $response->send();
+            // Emission moved to SapiEmitter in Bootstrap; Dispatcher just returns the Response.
         } else {
             throw new Exception("Controller class $controller not found");
         }

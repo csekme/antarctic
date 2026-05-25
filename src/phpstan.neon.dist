@@ -9,3 +9,7 @@ parameters:
         # Dynamic properties on Dal (uses #[AllowDynamicProperties])
         - '#Access to an undefined property Framework\\Dal::\$#'
         - '#Access to an undefined property Framework\\Models\\AbstractUser::\$#'
+        # ROOT_PATH is defined in html/index.php before Bootstrap.php is required.
+        -
+            message: '#Constant ROOT_PATH not found#'
+            path: Framework/Bootstrap.php
