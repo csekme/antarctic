@@ -78,7 +78,15 @@
       "Bash(php /tmp/composer update symfony/validator -W --no-progress)",
       "Bash(grep -rn \"public function.*Request \\\\|function.*Response.*$.*[a-z]\" Framework/ --include=\"*.php\")",
       "Bash(grep -rn \"function.*\\(.*\\\\\\\\$\" Framework/Controllers/)",
-      "Bash(git commit -m ' *)"
+      "Bash(git commit -m ' *)",
+      "Bash(php /tmp/composer require --no-update \"zircote/swagger-php:^4.10\")",
+      "Bash(php /tmp/composer update zircote/swagger-php -W --no-progress)",
+      "Bash(php -r 'require '\\\\''/Users/csk/Projects/antarctic/src/vendor/autoload.php'\\\\''; $gen = \\\\OpenApi\\\\Generator::scan\\(['\\\\''/Users/csk/Projects/antarctic/src/Framework/Controllers'\\\\'']\\); echo $gen->toJson\\(\\) . \"\\\\n\";')",
+      "Bash(php -r 'require '\\\\''/Users/csk/Projects/antarctic/src/vendor/autoload.php'\\\\''; $gen = \\\\OpenApi\\\\Generator::scan\\(['\\\\''/Users/csk/Projects/antarctic/src/Framework/Controllers'\\\\'', '\\\\''/Users/csk/Projects/antarctic/src/Framework/OpenApi'\\\\'', '\\\\''/Users/csk/Projects/antarctic/src/Application/Dto'\\\\'']\\); echo $gen->toJson\\(\\) . \"\\\\n\";')",
+      "Bash(php bin/console openapi:dump)",
+      "Bash(php bin/console openapi:dump --clear)",
+      "Bash(php bin/console help)",
+      "Bash(echo \"exit: $?\")"
     ],
     "additionalDirectories": [
       "/tmp"

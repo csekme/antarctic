@@ -23,6 +23,7 @@ use Framework\Models\User;
 use Framework\Path;
 use Framework\Response;
 use Framework\TwoFactor;
+use OpenApi\Attributes as OA;
 
 /**
  * JWT-alapú auth endpointok. Az M2.b állapotában:
@@ -112,6 +113,18 @@ class AuthController extends Controller
     }
 
     #[Path(path: '/api/v1/auth/login', method: 'POST')]
+    #[OA\Post(
+        path: '/api/v1/auth/login',
+        summary: 'Authenticate with email + password.',
+        tags: ['auth'],
+        security: [],
+        requestBody: new OA\RequestBody(required: true, content: new OA\JsonContent(ref: '#/components/schemas/LoginRequest')),
+        responses: [
+            new OA\Response(response: 200, description: 'Access + refresh issued, or 2FA challenge required.'),
+            new OA\Response(response: 401, description: 'Invalid credentials.'),
+            new OA\Response(response: 422, description: 'Body failed validation.'),
+        ],
+    )]
     public function login(LoginRequest $body): Response
     {
         $user = User::authenticate($body->email, $body->password);
@@ -134,6 +147,18 @@ class AuthController extends Controller
     }
 
     #[Path(path: '/api/v1/auth/2fa/verify', method: 'POST')]
+    #[OA\Post(
+        path: '/api/v1/auth/2fa/verify',
+        summary: 'Complete the 2FA challenge with a TOTP code.',
+        tags: ['auth'],
+        security: [],
+        requestBody: new OA\RequestBody(required: true, content: new OA\JsonContent(ref: '#/components/schemas/VerifyTwoFactorRequest')),
+        responses: [
+            new OA\Response(response: 200, description: 'Access + refresh issued.'),
+            new OA\Response(response: 401, description: 'Challenge expired, code wrong, or 2FA not enabled.'),
+            new OA\Response(response: 422, description: 'Body failed validation.'),
+        ],
+    )]
     public function verifyTwoFactor(VerifyTwoFactorRequest $body): Response
     {
         try {
@@ -161,6 +186,17 @@ class AuthController extends Controller
     }
 
     #[Path(path: '/api/v1/auth/refresh', method: 'POST')]
+    #[OA\Post(
+        path: '/api/v1/auth/refresh',
+        summary: 'Rotate the refresh cookie and issue a fresh access token.',
+        tags: ['auth'],
+        security: [],
+        responses: [
+            new OA\Response(response: 200, description: 'New access + rotated refresh cookie.'),
+            new OA\Response(response: 401, description: 'Missing, unknown, or expired refresh cookie.'),
+            new OA\Response(response: 403, description: 'CSRF double-submit token mismatch.'),
+        ],
+    )]
     public function refresh(): Response
     {
         $refresh = $_COOKIE[self::REFRESH_COOKIE] ?? null;
@@ -213,6 +249,15 @@ class AuthController extends Controller
     }
 
     #[Path(path: '/api/v1/auth/logout', method: 'POST')]
+    #[OA\Post(
+        path: '/api/v1/auth/logout',
+        summary: 'Revoke the current refresh token and clear the cookies.',
+        tags: ['auth'],
+        security: [],
+        responses: [
+            new OA\Response(response: 200, description: 'Logged out (idempotent).'),
+        ],
+    )]
     public function logout(): Response
     {
         $refresh = $_COOKIE[self::REFRESH_COOKIE] ?? null;
@@ -227,6 +272,17 @@ class AuthController extends Controller
 
     #[Path(path: '/api/v1/auth/me', method: 'GET')]
     #[RequireAuth]
+    #[OA\Get(
+        path: '/api/v1/auth/me',
+        summary: 'Return the currently authenticated user.',
+        tags: ['auth'],
+        security: [['bearerAuth' => []]],
+        responses: [
+            new OA\Response(response: 200, description: 'Authenticated user payload.'),
+            new OA\Response(response: 401, description: 'Missing or invalid Bearer token.'),
+            new OA\Response(response: 404, description: 'Authenticated user no longer exists.'),
+        ],
+    )]
     public function me(): Response
     {
         $user = $this->request->authUser;

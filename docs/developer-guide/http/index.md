@@ -12,6 +12,7 @@ Az Antarctic HTTP rétege **PSR-7** (üzenetek) és **PSR-15** (middleware) alap
 | [CORS](cors.md) | Allow-list, preflight, cross-origin SPA támogatás |
 | [Hibakezelés (RFC 7807)](error-handling.md) | Throwable → `application/problem+json` |
 | [Validáció (Request DTO-k)](validation.md) | DTO hidratáció + `symfony/validator` → 422 problem+json `errors` |
+| [OpenAPI + Swagger UI](openapi.md) | `zircote/swagger-php` scan → `/api/v1/docs.json` + Swagger UI dev-ben |
 
 ## Pipeline-sorrend (jelenlegi)
 

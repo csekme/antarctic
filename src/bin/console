@@ -5,7 +5,9 @@ declare(strict_types=1);
 
 use Framework\Console\Application;
 use Framework\Console\KeysGenerateCommand;
+use Framework\Console\OpenApiDumpCommand;
 use Framework\Console\RouteCacheCommand;
+use Framework\OpenApi\OpenApiGenerator;
 use Framework\Routing\RouteCache;
 
 if (PHP_SAPI !== 'cli') {
@@ -20,5 +22,9 @@ require_once ROOT_PATH . '/vendor/autoload.php';
 $app = new Application();
 $app->register(new KeysGenerateCommand(ROOT_PATH . '/var/keys'));
 $app->register(new RouteCacheCommand(new RouteCache(ROOT_PATH . '/var/cache/routes.php')));
+$app->register(new OpenApiDumpCommand(
+    OpenApiGenerator::forSource(ROOT_PATH),
+    ROOT_PATH . '/var/cache/openapi.json',
+));
 
 exit($app->run($argv));
