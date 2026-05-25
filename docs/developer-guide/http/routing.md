@@ -2,8 +2,8 @@
 
 Az Antarctic **attribútum-alapú** routinggal dolgozik. A kontroller metódusaira `#[Path(...)]` attribútumot teszel, és a `ClassExploder` a startupkor scanneli az osztályokat, hogy felépítse a routing táblát.
 
-!!! info "Készülő változások"
-    A jelenlegi routing **regex-alapú** scanningot használ. Az M3.b PR-ben reflection-alapúra cseréljük, és bekerül a method-aware 405 vs 404 kezelés is. Az `#[Path]` attribútum API maga **nem** változik.
+!!! info "Aktuális állapot (M3.b óta)"
+    A `ClassExploder` **reflection-alapú** — a Composer autoloader class-map-jét és PSR-4 prefixeit használva állítja össze a controller-listát. A `Router::match()` **method-aware**: a URL-re illeszkedő, de rossz HTTP-metódusú route 405-öt ad, nem 404-et. Production-időben a route-tábla előre cache-elhető (`bin/console route:cache`).
 
 ## Az `#[Path]` attribútum
 
@@ -69,8 +69,19 @@ public function create(): Response { ... }
 public function delete(int $id): Response { ... }
 ```
 
-!!! warning "Egyelőre nincs 405"
-    A jelenlegi Router 404-et ad, ha az URL nem matchel egyetlen útvonalra sem **akkor is**, ha matchelne egy másik HTTP method-dal. Az M3.b ezt korrigálja: ha az URL match-el, de a method nem, 405 Method Not Allowed-ot kapsz.
+### 405 vs 404 megkülönböztetés
+
+A `Router::match($url, $method)` egy `MatchResult` value object-tel tér vissza, három állapottal:
+
+- `found($params)` — az URL és a metódus is illeszkedik.
+- `methodNotAllowed($allowedMethods)` — az URL illeszkedik, de más HTTP-metódussal. A Dispatcher 405-öt dob, és az `$allowedMethods` lista alapján generálható `Allow:` header.
+- `notFound()` — semmi nem illeszkedik az URL-re.
+
+```php
+// Példa: /api/v1/articles + PUT, ha csak GET van regisztrálva
+HTTP/1.1 405 Method Not Allowed
+Allow: GET
+```
 
 ## Hova helyezd a kontrollert
 
@@ -79,11 +90,32 @@ A `ClassExploder` két helyet vizsgál:
 - `src/Application/Controllers/` → `Application\Controllers\` namespace
 - `src/Framework/Controllers/` → `Framework\Controllers\` namespace (csak ha `Config::useCoreController()` `true`)
 
-A te app-od kontrollerei az `Application\Controllers\` alá kerüljenek. A `Framework\Controllers\` jelenleg legacy session-alapú UI-t tartalmaz (login, signup, 2fa), ami **M2.d-ben törlésre kerül**.
+A te app-od kontrollerei az `Application\Controllers\` alá kerüljenek. A `Framework\Controllers\` ma már csak az API-controllereket tartalmazza (pl. `Framework\Controllers\Api\V1\AuthController` — M2.d óta a legacy Twig UI törölve van).
+
+!!! tip "Class-szintű `#[Path]` opcionális"
+    Ha a controllerednek nincs class-szintű `#[Path]`-ja (csak method-szintűek vannak), a `ClassExploder` egy belső sentinel-kulccsal regisztrálja, és a method path-ok adják a teljes route-ot. Például az `AuthController` osztály-szinten nincs prefixelve, és a `#[Path(path: '/api/v1/auth/login', method: 'POST')]` method-szintű attribútum adja a teljes URL-t.
+
+## Route cache (production)
+
+Dev-időben minden requesten reflection-szel scanneljük a controllereket. Production deploy lépésben érdemes előre cache-elni:
+
+```bash
+composer install --no-dev --optimize-autoloader
+bin/console route:cache
+# → Wrote N route(s) to var/cache/routes.php
+```
+
+A `Bootstrap.php` `RouteCache::load()`-dal próbálkozik betölteni a cache-t — ha létezik a fájl, nincs reflection-cost; ha nincs, scan minden requesten.
+
+```bash
+bin/console route:cache --clear   # invalidate (dev-rebuilding)
+```
+
+A cache-fájl verzióelt (`RouteCache::VERSION`), így a séma-változások automatikusan invalidálódnak. A `/src/var/` egész mappa gitignore-olt.
 
 ## API namespace konvenció
 
-A jövőbeli verziókban (M3.a) az `/api/v1/*` prefix lesz **kötelező** minden REST endpointra. Már most érdemes így nevezni az új végpontokat:
+Az `/api/v1/*` prefix konvenció (nem kötelező a router-en, de a `ContentNegotiation::wantsJson()` minden `/api/*` path-ot JSON-ként kezel). Új endpointok így nevezendők:
 
 | ✅ Jó | ❌ Kerülendő |
 |---|---|
@@ -93,10 +125,23 @@ A jövőbeli verziókban (M3.a) az `/api/v1/*` prefix lesz **kötelező** minden
 
 A `ContentNegotiation::wantsJson()` automatikusan JSON-választ ad bármi `/api/*` path alatt, függetlenül az `Accept` headertől.
 
-## Több attribútum egy osztályon
+## Több attribútum / class-prefix
 
-!!! note "Egyelőre nem támogatott"
-    Több `#[Path]` egy osztályon, vagy class-szintű path prefix az M3.b-ben jön be (`#[Path(path: '/api/v1/users')]` osztály-szinten, egyedi sub-pathok a metódusokon).
+A `#[Path(path: '/api/v1/users')]` osztály-szinten + method-szintű al-pathok kombináció támogatott:
+
+```php
+#[Path(path: '/api/v1/users')]
+class UserController extends Controller
+{
+    #[Path(method: 'GET')]                          // → GET /api/v1/users
+    public function index(): Response { ... }
+
+    #[Path(path: '/{id:\d+}', method: 'GET')]       // → GET /api/v1/users/42
+    public function show(int $id): Response { ... }
+}
+```
+
+Ha a class-szintű `#[Path]` hiányzik, a method-szintű attribútumok adják a teljes URL-t (lásd az `AuthController` mintát).
 
 ## Method-paraméter feloldás
 

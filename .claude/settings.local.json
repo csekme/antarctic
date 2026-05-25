@@ -46,7 +46,16 @@
       "Bash(php -r 'require '\\\\''vendor/autoload.php'\\\\''; $loaders = Composer\\\\Autoload\\\\ClassLoader::getRegisteredLoaders\\(\\); $loader = array_values\\($loaders\\)[0]; print_r\\($loader->getPrefixesPsr4\\(\\)\\); echo '\\\\''---classmap count: '\\\\'' . count\\($loader->getClassMap\\(\\)\\) . PHP_EOL; var_dump\\(class_exists\\('\\\\''Framework\\\\\\\\Controllers\\\\\\\\Api\\\\\\\\V1\\\\\\\\AuthController'\\\\''\\)\\);')",
       "Bash(php -r 'require '\\\\''vendor/autoload.php'\\\\''; $loaders = Composer\\\\Autoload\\\\ClassLoader::getRegisteredLoaders\\(\\); $loader = array_values\\($loaders\\)[0]; $cm = $loader->getClassMap\\(\\); foreach \\($cm as $c => $f\\) { if \\(str_contains\\($c, '\\\\''AuthController'\\\\''\\)\\) print $c . PHP_EOL; }')",
       "Bash(php -r 'require '\\\\''vendor/autoload.php'\\\\''; $e = new Framework\\\\ClassExploder\\(['\\\\''Framework\\\\\\\\Controllers\\\\\\\\Api\\\\\\\\V1'\\\\'']\\); var_dump\\($e->get_controller_mapping\\(\\)\\);')",
-      "Bash(php -r ' *)"
+      "Bash(php -r ' *)",
+      "Bash(git commit --allow-empty -m ' *)",
+      "Bash(npx gitnexus *)",
+      "Bash(composer require *)",
+      "Read(//Users/csk/**)",
+      "Bash(find / -maxdepth 4 -name \"composer.phar\")",
+      "Bash(php -r \"copy\\('https://getcomposer.org/installer', 'composer-setup.php'\\);\")",
+      "Bash(php composer-setup.php --quiet --install-dir=/tmp --filename=composer)",
+      "Bash(/tmp/composer require *)",
+      "Bash(php -r 'require '\\\\''vendor/autoload.php'\\\\''; $c = Framework\\\\ContainerFactory::build\\(\\); var_dump\\(get_class\\($c\\), $c->has\\(Framework\\\\Response::class\\), get_class\\($c->get\\(Framework\\\\Response::class\\)\\)\\);')"
     ],
     "additionalDirectories": [
       "/tmp"

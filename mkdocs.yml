@@ -84,6 +84,7 @@ nav:
       - "#[RequireAuth] és #[RequireRole]": auth/attributes.md
       - Kulcsok kezelése: auth/keys.md
   - Konfiguráció: configuration.md
+  - Container és DI: container.md
   - Deployment és SPA módok: deployment.md
   - Tesztelés: testing.md
   - Karbantartói útmutató:
