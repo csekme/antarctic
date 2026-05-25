@@ -16,6 +16,9 @@ use Framework\Http\ErrorHandlerMiddleware;
 use Framework\Http\LegacyDispatcherMiddleware;
 use Framework\Http\MiddlewarePipeline;
 use Framework\Http\NotFoundHandler;
+use Framework\Http\RateLimit\InMemoryStore;
+use Framework\Http\RateLimit\RateLimitConfig;
+use Framework\Http\RateLimit\RateLimitMiddleware;
 use Framework\Routing\RouteCache;
 use Framework\Routing\StandardRouterImpl;
 use Laminas\HttpHandlerRunner\Emitter\SapiEmitter;
@@ -53,6 +56,19 @@ $middlewares = [
     new ErrorHandlerMiddleware(debug: $debug),
     new CorsMiddleware($corsConfig),
 ];
+
+// Rate limit a Cors után — preflight OPTIONS-ok ne számítsanak bele a bucketbe.
+// In-memory store dev/single-worker SAPI-hoz; multi-worker FPM-hez Redis-adapter
+// kell (M5 prod deploy). A master switch a config 'enabled' flag-je.
+$rateLimitConfig = require ROOT_PATH . '/config/rate-limit.php';
+if (RateLimitConfig::isEnabled($rateLimitConfig)) {
+    $middlewares[] = new RateLimitMiddleware(
+        rules: RateLimitConfig::rulesFromArray($rateLimitConfig),
+        store: new InMemoryStore(),
+        clock: new SystemClock(),
+        trustProxy: RateLimitConfig::trustProxy($rateLimitConfig),
+    );
+}
 
 // AuthMiddleware csak akkor regisztrálódik, ha a JWT konfiguráció érvényes.
 // Hiányzó kulcs (pl. még nem futott a `bin/console keys:generate`) esetén

@@ -14,6 +14,7 @@ Az Antarctic HTTP rétege **PSR-7** (üzenetek) és **PSR-15** (middleware) alap
 | [Validáció (Request DTO-k)](validation.md) | DTO hidratáció + `symfony/validator` → 422 problem+json `errors` |
 | [OpenAPI + Swagger UI](openapi.md) | `zircote/swagger-php` scan → `/api/v1/docs.json` + Swagger UI dev-ben |
 | [Pagination konvenció](pagination.md) | `?page=&perPage=&sort=&filter[]` query + `{data, meta}` envelope |
+| [Rate limit](rate-limit.md) | PSR-15 throttling middleware, 429 + `Retry-After` + `X-RateLimit-*` |
 
 ## Pipeline-sorrend (jelenlegi)
 
@@ -31,5 +32,5 @@ A jövőbeli middleware-ek beillesztési pontjai:
 
 - **SecurityHeaders** — HSTS, CSP, X-Frame-Options *(M5)*
 - **RequestId** — `X-Request-Id` echo + log kontextus *(M1 jövőbeli kibővítés)*
-- **RateLimit** — IP / user-alapú throttling *(M4)*
-- **Auth** — Bearer JWT verifikáció *(M2.b)*
+- **RateLimit** — IP / user-alapú throttling *(M4.b.4, kész — env-flag mögött)*
+- **Auth** — Bearer JWT verifikáció *(M2.b, kész)*
