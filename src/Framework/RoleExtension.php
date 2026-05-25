@@ -26,39 +26,21 @@ class RoleExtension extends \Twig\Extension\AbstractExtension
 
     public function isLogged(): bool
     {
-        return Auth::getUser() != null;
+        return false;
     }
 
-    /**
-     * @throws \Exception
-     */
     public function isAdmin(): bool
     {
-        return $this->hasRole('ROLE_ADMIN');
+        return false;
     }
 
-    public function isNotAdmin()
+    public function isNotAdmin(): bool
     {
-        return !$this->isAdmin();
+        return true;
     }
 
-    /**
-     * @throws \Exception
-     */
     public function hasRole($role): bool
     {
-        $user = Auth::getUser();
-        $userRoles = $user->getRoles();
-
-        if (is_string($role)) {
-            $role = [$role];
-        }
-
-        foreach ($role as $r) {
-            if (in_array($r, $userRoles)) {
-                return true;
-            }
-        }
         return false;
     }
 }
