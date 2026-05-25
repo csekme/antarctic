@@ -85,6 +85,7 @@ nav:
       - Kulcsok kezelése: auth/keys.md
   - Konfiguráció: configuration.md
   - Container és DI: container.md
+  - Adatbázis és migrációk: database.md
   - Deployment és SPA módok: deployment.md
   - Tesztelés: testing.md
   - Karbantartói útmutató:

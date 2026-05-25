@@ -55,7 +55,21 @@
       "Bash(php -r \"copy\\('https://getcomposer.org/installer', 'composer-setup.php'\\);\")",
       "Bash(php composer-setup.php --quiet --install-dir=/tmp --filename=composer)",
       "Bash(/tmp/composer require *)",
-      "Bash(php -r 'require '\\\\''vendor/autoload.php'\\\\''; $c = Framework\\\\ContainerFactory::build\\(\\); var_dump\\(get_class\\($c\\), $c->has\\(Framework\\\\Response::class\\), get_class\\($c->get\\(Framework\\\\Response::class\\)\\)\\);')"
+      "Bash(php -r 'require '\\\\''vendor/autoload.php'\\\\''; $c = Framework\\\\ContainerFactory::build\\(\\); var_dump\\(get_class\\($c\\), $c->has\\(Framework\\\\Response::class\\), get_class\\($c->get\\(Framework\\\\Response::class\\)\\)\\);')",
+      "Bash(DATABASE=mariadb DATABASE_HOST=localhost DATABASE_NAME=test DATABASE_USER=root vendor/bin/doctrine-migrations --configuration=migrations.php --db-configuration=migrations-db.php list)",
+      "Bash(vendor/bin/doctrine-migrations --help)",
+      "Bash(vendor/bin/doctrine-migrations list *)",
+      "Bash(vendor/bin/doctrine-migrations)",
+      "Bash(vendor/bin/doctrine-migrations migrations:list)",
+      "Bash(php -l ../db/migrations/Version20260525_010000_CreateUserTable.php)",
+      "Bash(php -l ../db/migrations/Version20260525_010100_CreateRoleAndUserRole.php)",
+      "Bash(php -l ../db/migrations/Version20260525_010200_CreateTwoFactorTable.php)",
+      "Bash(php -l ../db/migrations/Version20260525_010300_CreateRefreshTokens.php)",
+      "Bash(php /tmp/migration-sqlite-test.php)",
+      "Bash(php -r 'require \"/Users/csk/Projects/antarctic/src/vendor/autoload.php\"; $r = new ReflectionClass\\(Doctrine\\\\Migrations\\\\DependencyFactory::class\\); foreach\\($r->getMethods\\(\\) as $m\\) { if\\(str_starts_with\\($m->name, \"get\"\\) && !$m->isStatic\\(\\)\\) echo $m->name . \"\\\\n\"; }')",
+      "Bash(php -r 'require \"/Users/csk/Projects/antarctic/src/vendor/autoload.php\"; $r = new ReflectionClass\\(Doctrine\\\\Migrations\\\\Configuration\\\\Configuration::class\\); foreach\\($r->getMethods\\(\\) as $m\\) { if\\(!$m->isStatic\\(\\)\\) echo $m->name . \"\\\\n\"; }')",
+      "Bash(php -r 'require \"/Users/csk/Projects/antarctic/src/vendor/autoload.php\"; $r = new ReflectionClass\\(Doctrine\\\\Migrations\\\\Migrator::class\\); foreach\\($r->getMethods\\(\\) as $m\\) { if\\(!$m->isStatic\\(\\)\\) echo $m->name . \"\\(\" . implode\\(\",\", array_map\\(fn\\($p\\) => $p->getType\\(\\).\":\".$p->getName\\(\\), $m->getParameters\\(\\)\\)\\) . \"\\)\\\\n\"; }')",
+      "Bash(vendor/bin/phpunit --filter MigrationsTest)"
     ],
     "additionalDirectories": [
       "/tmp"
