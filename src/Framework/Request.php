@@ -7,7 +7,6 @@ namespace Framework;
 class Request {
 
     public array $json = []; // Új tulajdonság a JSON adatok tárolására
-    private AbstractController $controller;
 
     /** @var ?\Framework\Auth\AuthenticatedUser PSR-15 AuthMiddleware állítja be sikeres Bearer verify után. */
     public ?\Framework\Auth\AuthenticatedUser $authUser = null;
@@ -65,16 +64,4 @@ class Request {
     public function getJson(): array {
         return $this->json;
     }
-
-    public function getController(): AbstractController
-    {
-        return $this->controller;
-    }
-
-    public function setController(AbstractController $controller): void
-    {
-        $this->controller = $controller;
-    }
-
-
 }

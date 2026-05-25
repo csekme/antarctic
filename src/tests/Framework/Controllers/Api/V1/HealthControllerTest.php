@@ -5,14 +5,24 @@ declare(strict_types=1);
 namespace Tests\Framework\Controllers\Api\V1;
 
 use Framework\Controllers\Api\V1\HealthController;
+use Framework\Request;
+use Framework\Response;
 use PDO;
 use PHPUnit\Framework\TestCase;
 
 final class HealthControllerTest extends TestCase
 {
+    private function newController(): HealthController
+    {
+        return new HealthController(
+            new Request('', 'GET', [], [], [], [], []),
+            new Response(),
+        );
+    }
+
     public function testHealthzAlwaysReturnsOk(): void
     {
-        $controller = new HealthController([]);
+        $controller = $this->newController();
 
         $response = $controller->liveness();
 
@@ -24,7 +34,7 @@ final class HealthControllerTest extends TestCase
 
     public function testReadyzReturns200WhenDbPingSucceeds(): void
     {
-        $controller = new HealthController([]);
+        $controller = $this->newController();
         $pdo = new PDO('sqlite::memory:');
         $controller->setPdoFactory(static fn (): PDO => $pdo);
 
@@ -38,7 +48,7 @@ final class HealthControllerTest extends TestCase
 
     public function testReadyzReturns503WhenDbPingFails(): void
     {
-        $controller = new HealthController([]);
+        $controller = $this->newController();
         $controller->setPdoFactory(static function (): PDO {
             throw new \RuntimeException('connection refused');
         });

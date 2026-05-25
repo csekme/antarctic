@@ -3,23 +3,6 @@ namespace Framework;
 use Framework\AbstractController as AbstractController;
 
 abstract class Controller extends AbstractController {
-/**
-     * Parameters from the matched route
-     * @var array
-     */
-    protected $route_params = [];
-
-    /**
-     * Class constructor
-     *
-     * @param array $route_params  Parameters from the route
-     *
-     * @return void
-     */
-    public function __construct($route_params)
-    {
-        $this->route_params = $route_params;
-    }
 
     /**
      * Magic method called when a non-existent or inaccessible method is
@@ -50,7 +33,7 @@ abstract class Controller extends AbstractController {
     /**
      * Before filter - called before an action method.
      *
-     * @return bool 
+     * @return bool
      */
     protected function before() : bool
     {

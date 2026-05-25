@@ -1,7 +1,10 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Framework;
-use \Framework\Config;
+
+use Framework\Config;
 
 abstract class AbstractController {
 
@@ -19,7 +22,7 @@ abstract class AbstractController {
     const CONNECT = "CONNECT";
     # The OPTIONS method describes the communication options for the target resource.
     const OPTIONS = "OPTIONS";
-    # The TRACE method performs a message loop-back test along the path to the target resource.    
+    # The TRACE method performs a message loop-back test along the path to the target resource.
     const TRACE   = "TRACE";
     # The PATCH method applies partial modifications to a resource.
     const PATCH   = "PATH";
@@ -28,15 +31,27 @@ abstract class AbstractController {
 
     protected Response $response;
 
-    public function setResponse(Response $response): void
-    {
-        $this->response = $response;
-    }
+    /**
+     * Parameters from the matched route. Populated by the Dispatcher and
+     * available to action methods (and the legacy `__call` filter chain).
+     *
+     * @var array<string, mixed>
+     */
+    protected array $route_params = [];
 
-    public function setRequest(Request $request): void
+    /**
+     * Request, Response and route params are wired by the Dispatcher through
+     * the container's `make()` call (M3.d). Concrete controllers can declare
+     * additional constructor-injected services after these three — php-di
+     * autowires them and passes the per-request values through by name.
+     *
+     * @param array<string, mixed> $route_params
+     */
+    public function __construct(Request $request, Response $response, array $route_params = [])
     {
         $this->request = $request;
-        $this->request->setController($this);
+        $this->response = $response;
+        $this->route_params = $route_params;
     }
 
     /**
@@ -51,7 +66,6 @@ abstract class AbstractController {
     }
 
     protected function view(string $template, array $data): Response {
-        $result = View::renderTemplate($template, $data);
         $this->response->setBody(View::renderTemplate($template, $data));
         return $this->response;
     }

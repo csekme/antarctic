@@ -51,9 +51,12 @@ class AuthController extends Controller
     private int $refreshTtl;
     private int $challengeTtl;
 
-    public function __construct($params = [])
-    {
-        parent::__construct($params);
+    public function __construct(
+        \Framework\Request $request,
+        \Framework\Response $response,
+        array $route_params = [],
+    ) {
+        parent::__construct($request, $response, $route_params);
         $this->boot();
     }
 

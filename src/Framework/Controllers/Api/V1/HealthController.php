@@ -7,6 +7,7 @@ namespace Framework\Controllers\Api\V1;
 use Framework\Controller;
 use Framework\Dal;
 use Framework\Path;
+use Framework\Request;
 use Framework\Response;
 use PDO;
 use Throwable;
@@ -27,9 +28,9 @@ class HealthController extends Controller
     /** @var callable():PDO */
     private $pdoFactory;
 
-    public function __construct($params = [])
+    public function __construct(Request $request, Response $response, array $route_params = [])
     {
-        parent::__construct($params);
+        parent::__construct($request, $response, $route_params);
         $this->pdoFactory = static fn (): PDO => Dal::getConnection();
     }
 

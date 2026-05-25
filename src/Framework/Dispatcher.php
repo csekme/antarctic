@@ -73,15 +73,13 @@ readonly class Dispatcher
             $controller = $this->getNamespace($params, "Framework\Controllers\\") . $controller;
         }
         if (class_exists($controller)) {
-            $controller_object = $this->instantiateController($controller, $params);
+            $response = $this->makeFreshResponse();
+            $controller_object = $this->instantiateController($controller, $request, $response, $params);
             $reflectionClass = new ReflectionClass($controller_object::class);
             $attributes = $reflectionClass->getAttributes();
             foreach ($attributes as $attribute) {
                 $this->processAnnotation($attribute, $controller_object, $request);
             }
-            $controller_object->setRequest($request);
-            $response = $this->makeFreshResponse();
-            $controller_object->setResponse($response);
 
             $action = $params['action'];
             $action = $this->convertToCamelCase($action);
@@ -153,33 +151,40 @@ readonly class Dispatcher
     }
 
     /**
-     * Instantiate the controller through the container when possible, so
-     * constructor-typed dependencies get autowired. The route params (the
-     * legacy `array $route_params` ctor argument) are passed as overrides;
-     * matching by parameter name (`route_params` and the historic alias
-     * `params`) keeps both legacy and modern controller signatures working.
+     * Instantiate the controller through the container when possible, so the
+     * three per-request values (Request, Response, route params) and any
+     * autowired services arrive together in the constructor. `make()` matches
+     * the override map by parameter name; legacy aliases (`params`) are
+     * passed alongside for back-compat with older signatures.
      *
-     * Falls back to `new $controller($params)` if the container is not a
-     * php-di {@see FactoryInterface}, or if container instantiation throws
-     * (e.g. a controller using a variadic untyped ctor that the container
-     * can't resolve). The fallback preserves pre-M3.d behaviour.
+     * Falls back to direct construction if the container is not a php-di
+     * {@see FactoryInterface}, or if container instantiation throws. The
+     * fallback builds the controller via the AbstractController ctor shape
+     * (Request, Response, route_params) — the previous `new $cls($params)`
+     * shape is unreachable after M3.e.
      *
      * @param class-string $controller
      * @param array<string,mixed> $params
      */
-    private function instantiateController(string $controller, array $params): object
-    {
+    private function instantiateController(
+        string $controller,
+        Request $request,
+        Response $response,
+        array $params,
+    ): object {
         if ($this->container instanceof FactoryInterface) {
             try {
                 return $this->container->make($controller, [
+                    'request' => $request,
+                    'response' => $response,
                     'route_params' => $params,
                     'params' => $params,
                 ]);
             } catch (\Throwable) {
-                // Fall through to the legacy direct-construction path.
+                // Fall through to direct construction.
             }
         }
-        return new $controller($params);
+        return new $controller($request, $response, $params);
     }
 
     /**

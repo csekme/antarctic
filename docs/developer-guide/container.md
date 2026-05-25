@@ -84,30 +84,34 @@ $dispatcher = new Dispatcher($router, $mock);
 
 A `Framework\ContainerFactory::build()` minden hívásra friss, üres-cache-es `DI\Container`-t ad.
 
-## Controller-injection (M3.d)
+## Controller-injection (M3.d + M3.e)
 
-A `Dispatcher` a controllereket a container `make()`-en keresztül kéri, ezért a konstruktor-injektált függőségek autowire-rel feloldódnak, miközben a meglévő `array $route_params` argumentum is megmarad:
+A `Dispatcher` a controllereket a container `make()`-en keresztül kéri, ezért minden konstruktor-paraméter egyetlen csatornán érkezik: a per-request `Request` + `Response` + route params override-ként, a többi service autowire-rel.
 
 ```php
 class TodoController extends Controller
 {
     public function __construct(
-        public readonly TodoRepository $todos,    // autowired
-        public readonly ClockInterface $clock,    // autowired
+        Request $request,                         // per-request override
+        Response $response,                       // per-request override (fresh)
+        private TodoRepository $todos,            // autowired
+        private ClockInterface $clock,            // autowired
         array $route_params = [],                 // route match params
     ) {
-        parent::__construct($route_params);
+        parent::__construct($request, $response, $route_params);
     }
 }
 ```
 
-A `make()` paraméternév-alapú override-okat fogad, és a Dispatcher mind a `route_params`, mind a legacy `params` kulcsot átadja — így a régi és új signature is működik.
+A `make()` paraméternév-alapú override-okat fogad; a Dispatcher mind a `route_params`, mind a legacy `params` kulcsot átadja — így a régi és új signature is működik.
 
 A `Response` minden dispatchre friss példányt kap (`$container->make(Response::class)`), így long-running worker setupokban (RoadRunner, ReactPHP) sem szivárog header/body két request között.
 
+> **M3.e óta** a `Framework\AbstractController::setRequest()` és `setResponse()` setterek nem léteznek — a Request és Response konstruktoron át érkezik. A régi `__construct($params = [])` szignatúrával írt controllerek a hármas signaturára kell, hogy átálljanak.
+
 ## Mit *nem* tartalmaz a jelenlegi container
 
-- **Attribute-DI a controller property-szinten** — az `useAttributes(true)` engedélyezve van (`#[Inject]` property-szinten feloldódna), de a `Controller` base még a `setResponse()` szetterrel kapja a Response-t. Egy követő iteráció lecserélheti property-DI-re.
+- **Attribute-DI a controller property-szinten** — az `useAttributes(true)` engedélyezve van (`#[Inject]` property-szinten feloldódik), de a Controller base API a konstruktor-injekcióval mindent ad, ami kell. Property-DI csak akkor jönne szóba, ha trait-szerű viselkedéshez (`@final` constructor + shared property injection) megéri.
 - **Lazy services** — még nem aktív; ha egy service drága construct-ja megéri, a `DI\autowire()->lazy()` opciót lehet majd használni.
 
 ## Lásd még

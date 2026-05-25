@@ -13,6 +13,8 @@ use Framework\Routing\MatchResult;
 use Framework\Routing\Router;
 use PHPUnit\Framework\TestCase;
 
+// Used by the DiController fixture below.
+
 /**
  * Integration coverage for the M3.d wiring: controllers come out of the
  * php-di {@see \DI\FactoryInterface} `make()` call with route params merged
@@ -108,10 +110,12 @@ final class GreeterService
 class DiController extends Controller
 {
     public function __construct(
+        Request $request,
+        Response $response,
         public readonly GreeterService $greeter,
         array $route_params = [],
     ) {
-        parent::__construct($route_params);
+        parent::__construct($request, $response, $route_params);
     }
 
     public function greet(): Response

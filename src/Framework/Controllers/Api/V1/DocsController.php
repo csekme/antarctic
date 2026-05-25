@@ -7,6 +7,7 @@ namespace Framework\Controllers\Api\V1;
 use Framework\Controller;
 use Framework\OpenApi\OpenApiGenerator;
 use Framework\Path;
+use Framework\Request;
 use Framework\Response;
 
 /**
@@ -24,9 +25,9 @@ class DocsController extends Controller
     private OpenApiGenerator $generator;
     private bool $uiEnabled;
 
-    public function __construct($params = [])
+    public function __construct(Request $request, Response $response, array $route_params = [])
     {
-        parent::__construct($params);
+        parent::__construct($request, $response, $route_params);
         $this->generator = OpenApiGenerator::forSource(
             sourceRoot: defined('ROOT_PATH') ? (string) ROOT_PATH : dirname(__DIR__, 4),
             cacheFile: (defined('ROOT_PATH') ? (string) ROOT_PATH : dirname(__DIR__, 4)) . '/var/cache/openapi.json',

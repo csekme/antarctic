@@ -168,7 +168,7 @@ final class RequireAuthIntegrationTest extends TestCase
         $method = new ReflectionMethod($dispatcher, 'processAnnotation');
         $method->setAccessible(true);
         // A controller_object paraméter most nem releváns; egy üres stub elég.
-        $stubController = new class([]) extends \Framework\Controller {};
+        $stubController = new class ($request, new \Framework\Response()) extends \Framework\Controller {};
         $method->invoke($dispatcher, $attribute, $stubController, $request);
     }
 }
