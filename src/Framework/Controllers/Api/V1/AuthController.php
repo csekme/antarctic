@@ -12,23 +12,26 @@ use Framework\Auth\RefreshTokenRepository;
 use Framework\Auth\RequireAuth;
 use Framework\Auth\SystemClock;
 use Framework\Auth\TokenService;
+use Framework\Auth\TwoFactorChallengeService;
 use Framework\Controller;
 use Framework\Dal;
 use Framework\Models\AbstractUser;
+use Framework\Models\TwoFactorModel;
 use Framework\Models\User;
 use Framework\Path;
 use Framework\Response;
+use Framework\TwoFactor;
 
 /**
  * JWT-alapú auth endpointok. Az M2.b állapotában:
  *
- *   POST   /api/v1/auth/login    — email + password → access + refresh (cookie)
- *   POST   /api/v1/auth/refresh  — rotated access + refresh (double-submit CSRF)
- *   POST   /api/v1/auth/logout   — revoke + cookie clear
- *   GET    /api/v1/auth/me       — aktuális user (RequireAuth)
- *
- * A 2FA elágazás (M2.c) hozzá fog épülni; jelenleg a 2FA-engedélyezett
- * usereket egyszerűen elfogadja.
+ *   POST   /api/v1/auth/login       — email + password → access + refresh,
+ *                                     vagy 2FA challenge token, ha a usernek
+ *                                     engedélyezett TOTP-je van.
+ *   POST   /api/v1/auth/2fa/verify  — challenge_token + code → access + refresh.
+ *   POST   /api/v1/auth/refresh     — rotated access + refresh (double-submit CSRF).
+ *   POST   /api/v1/auth/logout      — revoke + cookie clear.
+ *   GET    /api/v1/auth/me          — aktuális user (RequireAuth).
  */
 class AuthController extends Controller
 {
@@ -37,8 +40,12 @@ class AuthController extends Controller
     private const REFRESH_COOKIE_PATH = '/api/v1/auth';
 
     private TokenService $tokenService;
+    private TwoFactorChallengeService $challengeService;
+    /** @var callable(string $secret, string $code): bool */
+    private $totpVerifier;
     private int $accessTtl;
     private int $refreshTtl;
+    private int $challengeTtl;
     private bool $secureCookies;
 
     public function __construct($params = [])
@@ -56,22 +63,50 @@ class AuthController extends Controller
         $this->secureCookies = $secureCookies;
     }
 
+    public function setChallengeService(TwoFactorChallengeService $service): void
+    {
+        $this->challengeService = $service;
+        $this->challengeTtl = $service->ttl();
+    }
+
+    /**
+     * @param callable(string, string): bool $verifier
+     */
+    public function setTotpVerifier(callable $verifier): void
+    {
+        $this->totpVerifier = $verifier;
+    }
+
     private function boot(): void
     {
         $config = require dirname(__DIR__, 4) . '/config/jwt.php';
         $this->accessTtl = (int) $config['access_ttl'];
         $this->refreshTtl = (int) $config['refresh_ttl'];
+        $this->challengeTtl = (int) ($config['challenge_ttl'] ?? 300);
         $this->secureCookies = (getenv('APP_ENV') ?: 'production') !== 'local';
+        $jwtConfig = JwtConfigFactory::create($config);
+        $clock = new SystemClock();
         $this->tokenService = new TokenService(
-            jwt: JwtConfigFactory::create($config),
+            jwt: $jwtConfig,
             refreshTokens: new RefreshTokenRepository(Dal::getConnection()),
-            clock: new SystemClock(),
+            clock: $clock,
             issuer: $config['issuer'],
             audience: $config['audience'],
             accessTtl: $this->accessTtl,
             refreshTtl: $this->refreshTtl,
             clockSkew: (int) $config['clock_skew'],
         );
+        $this->challengeService = new TwoFactorChallengeService(
+            jwt: $jwtConfig,
+            clock: $clock,
+            issuer: $config['issuer'],
+            audience: $config['audience'],
+            ttl: $this->challengeTtl,
+            clockSkew: (int) $config['clock_skew'],
+        );
+        $this->totpVerifier = static function (string $secret, string $code): bool {
+            return (new TwoFactor())->verifyCode($secret, $code);
+        };
     }
 
     #[Path(path: '/api/v1/auth/login', method: 'POST')]
@@ -88,6 +123,52 @@ class AuthController extends Controller
         $user = User::authenticate($email, $password);
         if ($user === false) {
             return $this->problem(401, 'Invalid credentials.');
+        }
+
+        $methods = $this->enabledTwoFactorMethods((int) $user->id);
+        if ($methods !== []) {
+            $challenge = $this->challengeService->issueChallenge((int) $user->id);
+            return Response::json([
+                'requires' => '2fa',
+                'challenge_token' => $challenge,
+                'methods' => $methods,
+                'expires_in' => $this->challengeTtl,
+            ]);
+        }
+
+        return $this->issueSession($user);
+    }
+
+    #[Path(path: '/api/v1/auth/2fa/verify', method: 'POST')]
+    public function verifyTwoFactor(): Response
+    {
+        $body = $this->request->getJson();
+        $challenge = (string) ($body['challenge_token'] ?? '');
+        $code = (string) ($body['code'] ?? '');
+
+        if ($challenge === '' || $code === '') {
+            return $this->problem(400, 'challenge_token and code are required.');
+        }
+
+        try {
+            $userId = $this->challengeService->verifyChallenge($challenge);
+        } catch (DomainException $e) {
+            return $this->problem(401, $e->getMessage());
+        }
+
+        $user = User::findByID($userId);
+        if ($user === false || !($user->is_active ?? true)) {
+            return $this->problem(401, 'User is inactive.');
+        }
+
+        $twoFactor = TwoFactorModel::findByUserIdAndMethod($userId, TwoFactorModel::METHOD_APP);
+        if (!$twoFactor instanceof TwoFactorModel || (int) $twoFactor->enabled !== (int) Dal::TRUE) {
+            return $this->problem(401, '2FA is not enabled for this user.');
+        }
+
+        $secret = (string) ($twoFactor->secret_key ?? '');
+        if ($secret === '' || !($this->totpVerifier)($secret, $code)) {
+            return $this->problem(401, 'Invalid 2FA code.');
         }
 
         return $this->issueSession($user);
@@ -177,6 +258,24 @@ class AuthController extends Controller
             'username' => $entity->username ?? null,
             'roles' => $user->roles,
         ]);
+    }
+
+    /**
+     * @return list<string> az engedélyezett 2FA módszerek (pl. "app").
+     */
+    private function enabledTwoFactorMethods(int $userId): array
+    {
+        $rows = TwoFactorModel::findByUserId($userId);
+        if (!is_array($rows) || $rows === []) {
+            return [];
+        }
+        $methods = [];
+        foreach ($rows as $row) {
+            if ((int) ($row->enabled ?? 0) === (int) Dal::TRUE) {
+                $methods[] = (string) $row->method;
+            }
+        }
+        return array_values(array_unique($methods));
     }
 
     private function issueSession(AbstractUser $user): Response

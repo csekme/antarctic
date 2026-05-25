@@ -31,7 +31,8 @@
       "Bash(/Users/csk/Projects/antarctic/src/bin/console keys:generate --bits=2048 --out=/tmp/jwt-smoke)",
       "Read(//tmp/**)",
       "Bash(rm -f /tmp/jwt-smoke-private.pem /tmp/jwt-smoke-public.pem)",
-      "Bash(vendor/bin/phpunit --testdox tests/Framework/Auth)"
+      "Bash(vendor/bin/phpunit --testdox tests/Framework/Auth)",
+      "Read(//Users/csk/.claude/plans/**)"
     ]
   }
 }

@@ -216,27 +216,6 @@ readonly class Dispatcher
             return;
         }
 
-        if ($attribute instanceof HasRoles) {
-            // Legacy session-alapú ellenőrzés. M2.d-ben kivezetve a RequireRole javára.
-            $user = Auth::getUser();
-            if ($user == null) {
-                throw new Exception("User is not logged in", 401);
-            }
-            $userRoles = $user->getRoles();
-            $allowed = false;
-            foreach ($attribute->roles as $roleName) {
-                if (in_array($roleName, $userRoles, true)) {
-                    $allowed = true;
-                    break;
-                }
-            }
-            if (!$allowed) {
-                throw new Exception("User does not have the required role", 403);
-            }
-        }
-        if ($attribute instanceof RequireLogin) {
-            $controller_object->requireLogin();
-        }
     }
 
     private function requireAuthenticatedUser(Request $request): \Framework\Auth\AuthenticatedUser

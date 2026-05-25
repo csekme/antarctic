@@ -18,6 +18,7 @@ return [
     'audience' => getenv('JWT_AUDIENCE') ?: 'antarctic-spa',
     'access_ttl' => (int) (getenv('JWT_ACCESS_TTL') ?: 900),          // 15 perc
     'refresh_ttl' => (int) (getenv('JWT_REFRESH_TTL') ?: 2592000),    // 30 nap
+    'challenge_ttl' => (int) (getenv('JWT_CHALLENGE_TTL') ?: 300),    // 5 perc — 2FA két-lépcsős login
     'clock_skew' => (int) (getenv('JWT_CLOCK_SKEW') ?: 5),            // másodperc
     'private_key' => getenv('JWT_PRIVATE_KEY') ?: null,
     'public_key' => getenv('JWT_PUBLIC_KEY') ?: null,

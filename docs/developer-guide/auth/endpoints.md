@@ -1,16 +1,14 @@
 # Auth endpointok
 
-Az Antarctic négy auth végpontot szállít az `/api/v1/auth/*` prefix alatt. Bejövő kliens akár SPA, akár mobil-app — mindegyikkel ugyanaz a flow.
+Az Antarctic öt auth végpontot szállít az `/api/v1/auth/*` prefix alatt. Bejövő kliens akár SPA, akár mobil-app — mindegyikkel ugyanaz a flow.
 
 | Method | URL | Mi kell | Mi jön vissza |
 |---|---|---|---|
-| `POST` | `/api/v1/auth/login` | `{email, password}` JSON | access + refresh + csrf |
+| `POST` | `/api/v1/auth/login` | `{email, password}` JSON | access + refresh + csrf, **vagy** 2FA challenge token |
+| `POST` | `/api/v1/auth/2fa/verify` | `{challenge_token, code}` JSON | access + refresh + csrf |
 | `POST` | `/api/v1/auth/refresh` | refresh cookie + `X-Csrf-Token` header | új access + új refresh + új csrf |
 | `POST` | `/api/v1/auth/logout` | refresh cookie | `{ok: true}` |
 | `GET` | `/api/v1/auth/me` | `Authorization: Bearer …` | aktuális user |
-
-!!! info "Állapot"
-    Az M2.b PR-ben szállított. 2FA dispatching (login → challenge) az M2.c-ben jön.
 
 ## `POST /api/v1/auth/login`
 
@@ -64,6 +62,54 @@ A válasz `application/problem+json` formátumú:
 ```json
 { "type": "about:blank", "title": "Unauthorized", "status": 401, "detail": "Invalid credentials." }
 ```
+
+### 2FA-engedélyezett user
+
+Ha a usernek van `enabled=1` 2FA bejegyzése (`two_factor` tábla, `method='app'`), a `/login` **nem** ad access tokent és **nem** állít be refresh cookie-t. Helyette egy rövid életű challenge tokent ad:
+
+**Siker (200)**:
+
+```json
+{
+  "requires": "2fa",
+  "challenge_token": "eyJ0eXAi…",
+  "methods": ["app"],
+  "expires_in": 300
+}
+```
+
+A kliensnek a `challenge_token`-t és a TOTP kódot a `/2fa/verify`-re kell elküldenie 5 percen belül.
+
+## `POST /api/v1/auth/2fa/verify`
+
+Befejezi a két-lépcsős loginot. A `challenge_token`-t a `/login` válaszából kapta a kliens; a `code` a TOTP-app (Google Authenticator, 1Password, stb.) aktuális 6 számjegye.
+
+**Kérés**:
+
+```http
+POST /api/v1/auth/2fa/verify HTTP/1.1
+Content-Type: application/json
+
+{
+  "challenge_token": "eyJ0eXAi…",
+  "code": "123456"
+}
+```
+
+**Siker (200)**: ugyanaz a payload mint a `/login` 2FA-mentes ágánál — `access_token`, `expires_in`, `csrf_token`, `user`, plusz `Set-Cookie` refresh + csrf.
+
+**Hibák**:
+
+| Status | Helyzet |
+|---|---|
+| 400 | Hiányzó `challenge_token` vagy `code` |
+| 401 | Lejárt / hamis / nem-challenge célú token |
+| 401 | User már inaktív vagy törölt |
+| 401 | A user 2FA-ja közben kikapcsolódott |
+| 401 | Rossz TOTP kód |
+
+!!! info "A challenge token önmagában nem jogosít"
+    A `challenge_token` egy RS256 JWT, ugyanazokkal a kulcsokkal aláírva mint az access token, de **`purpose: "2fa_challenge"`** claim-mel. A `TokenService::verifyAccess` nem fogadja el (mert nincs `purpose=access` szándék-eldöntés rajta), és a `TwoFactorChallengeService` szigorúan ellenőrzi a purpose-t — egy ellopott challenge token önmagában nem ad erőforrás-hozzáférést.
 
 ## `POST /api/v1/auth/refresh`
 
