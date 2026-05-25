@@ -60,7 +60,7 @@ cp -r dist/* ../../src/html/app/
 # Apache vagy Nginx újraindítás nem kell — fájl-alapú a döntés.
 ```
 
-CI-ban tipikusan a multi-stage Dockerfile teszi ezt (M5 fogja szállítani).
+CI-ban tipikusan a multi-stage Dockerfile teszi ezt — [Production stack](#production-stack-docker-compose-prod-yml).
 
 ## Separate mód CORS
 
@@ -68,8 +68,66 @@ CI-ban tipikusan a multi-stage Dockerfile teszi ezt (M5 fogja szállítani).
 
 A `SpaMode::requiresCors()` igazat ad mindenre, kivéve `embedded` módra — a jövőbeli CORS-middleware ezzel automatikusan ki tud kapcsolni same-origin embedded deploy-ban (jelenleg manuális config).
 
+## Production stack (`docker-compose.prod.yml`)
+
+Az M5 óta a repo szállít egy multi-stage Docker image-et és egy production-ready compose fájlt. A stack 4 service-ből áll:
+
+| Service | Image | Funkció |
+|---|---|---|
+| `php-fpm` | [docker/php-fpm/Dockerfile](https://github.com/csekme/antarctic/blob/main/docker/php-fpm/Dockerfile) | PHP-FPM + opcache + JIT, app source + route cache pre-built |
+| `nginx` | [docker/nginx/Dockerfile](https://github.com/csekme/antarctic/blob/main/docker/nginx/Dockerfile) | Front controller + SPA fallback + FastCGI upstream |
+| `db` | `postgres:16-alpine` | Doctrine migration-vezérelt séma |
+| `redis` | `redis:7-alpine` | Shared rate-limit bucket store (multi-worker FPM-hez) |
+
+### Build és indítás
+
+```bash
+DATABASE_PASSWORD=secret \
+  docker compose -f docker-compose.prod.yml up -d --build
+
+# Migrációk az új containerben:
+docker exec antarctic-fpm vendor/bin/doctrine-migrations migrations:migrate --no-interaction
+
+# Smoke test:
+curl -fsS http://localhost/api/v1/healthz   # {"status":"ok"}
+curl -fsS http://localhost/api/v1/readyz    # {"status":"ready","checks":{"database":"ok"}}
+```
+
+### Multi-stage build előnyei
+
+A [Dockerfile](https://github.com/csekme/antarctic/blob/main/docker/php-fpm/Dockerfile) 3 stage-re bontja a buildet:
+
+1. **`vendor`** — composer install `--no-dev`. Külön layer, csak akkor invalidálódik, ha `composer.json` / `composer.lock` változik.
+2. **`build`** — app source copy + `bin/console route:cache` + `bin/console openapi:dump`. A runtime ezeket pre-built artefactként olvassa (nincs runtime reflection-scan).
+3. **`runtime`** — `php:8.2-fpm-alpine` + pdo_pgsql + opcache. Nincs benne composer, sem build tool — kisebb image, kisebb support surface.
+
+### Production env változók
+
+A [.env.example](https://github.com/csekme/antarctic/blob/main/src/.env.example) M5 blokk a production-flag-eket dokumentálja. A leglényegesebbek:
+
+| Env | Cél | Production érték |
+|---|---|---|
+| `APP_TRUST_PROXY` | `X-Forwarded-Proto` + `X-Forwarded-For` honorálás | `1` (TLS-terminating proxy mögött) |
+| `APP_FORCE_HTTPS` | 301 plain HTTP → HTTPS | `1` |
+| `APP_RATE_LIMIT` | rate-limit middleware master switch | `1` |
+| `APP_RATE_LIMIT_BACKEND` | `memory` (single-worker) \| `redis` (multi-worker) | `redis` |
+| `APP_LOG_LEVEL` | Monolog szint | `INFO` (vagy `WARNING` ha hangos) |
+| `APP_DI_COMPILE` | php-di compilation cache | `1` |
+| `APP_CSP` | Content-Security-Policy override | SPA host-spec |
+
+### Healthcheck stratégia
+
+A compose healthcheck-ek minden service-en végpontot pingelnek:
+
+- `nginx` → `GET /api/v1/healthz` (liveness — process up).
+- `php-fpm` → `fsockopen(127.0.0.1, 9000)` (FPM socket fogad).
+- `db` → `pg_isready`.
+- `redis` → `redis-cli ping`.
+
+A k8s Pod-szinten a `/api/v1/healthz` (liveness) és `/api/v1/readyz` (readiness — DB ping is) endpoint-okat érdemes használni. A `HttpsRedirectMiddleware` excluded prefix listája ezt a két útvonalat plain HTTP-n is átengedi, hogy a k8s probe ne kerüljön redirektbe.
+
 ## Mit *nem* csinál még a backend
 
-- **`/healthz` és `/readyz` endpointok**: az M5-ben jönnek (Docker healthcheck + DB ping + JWT kulcs availability). Az `.htaccess` és Nginx már útba küldi őket az `index.php`-re, de a route még nem létezik (404).
+- **OpenTelemetry tracing**: jelenleg struktúrált JSON log + trace ID elég a 12-factor observability minimumhoz. OpenTelemetry SDK opcionális — külön PR.
 - **`/` info endpoint**: jelenleg separate módban a `/` 404; nem irányítjuk `/api/v1/docs.json`-ra automatikusan.
-- **Embedded mód CSP**: az M5 security-header middleware fogja a `Content-Security-Policy` headert hozzáadni.
+- **phpredis adapter**: a `RedisLike` interface ext-redis-szel is kompatibilis, csak nem szállítjuk a default csomagban. ~30 LOC adapter, lásd `PredisAdapter` szerkezetét.

@@ -13,12 +13,19 @@ use Framework\Dispatcher;
 use Framework\Dotenv;
 use Framework\Http\CorsMiddleware;
 use Framework\Http\ErrorHandlerMiddleware;
+use Framework\Http\HttpsRedirectMiddleware;
 use Framework\Http\LegacyDispatcherMiddleware;
 use Framework\Http\MiddlewarePipeline;
 use Framework\Http\NotFoundHandler;
 use Framework\Http\RateLimit\InMemoryStore;
+use Framework\Http\RateLimit\PredisAdapter;
 use Framework\Http\RateLimit\RateLimitConfig;
 use Framework\Http\RateLimit\RateLimitMiddleware;
+use Framework\Http\RateLimit\RateLimitStore;
+use Framework\Http\RateLimit\RedisStore;
+use Framework\Http\SecurityHeadersMiddleware;
+use Framework\Http\TraceIdMiddleware;
+use Framework\Logging\LoggerFactory;
 use Framework\Routing\RouteCache;
 use Framework\Routing\StandardRouterImpl;
 use Laminas\HttpHandlerRunner\Emitter\SapiEmitter;
@@ -49,22 +56,52 @@ $psr17 = new Psr17Factory();
 $request = (new ServerRequestCreator($psr17, $psr17, $psr17, $psr17))->fromGlobals();
 
 $corsConfig = require ROOT_PATH . '/config/cors.php';
+$securityHeadersConfig = require ROOT_PATH . '/config/security-headers.php';
 $debug = Config::show_errors();
+$logger = LoggerFactory::fromEnv();
 
+// Pipeline order:
+//   SecurityHeaders — outermost, decorates every response (including 5xx).
+//   TraceId         — sets the per-request correlation id BEFORE ErrorHandler
+//                     so logged exceptions carry trace_id in their extra.
+//   ErrorHandler    — catches downstream Throwables, logs 5xx, returns JSON/HTML.
+//   Cors / RateLimit / Auth / Dispatcher follow.
 /** @var list<MiddlewareInterface> $middlewares */
 $middlewares = [
-    new ErrorHandlerMiddleware(debug: $debug),
-    new CorsMiddleware($corsConfig),
+    new SecurityHeadersMiddleware($securityHeadersConfig),
+    new TraceIdMiddleware(),
+    new ErrorHandlerMiddleware(debug: $debug, logger: $logger),
 ];
 
+// Opcionális HTTPS-redirect (`APP_FORCE_HTTPS=1`). TLS-terminating proxy
+// mögött `APP_TRUST_PROXY=1` is kell, különben loopol. A healthcheck
+// endpoint-okat (`/api/v1/healthz`, `/api/v1/readyz`) kihagyjuk, hogy a
+// k8s probe pod-IP-n is HTTP-vel pingeljen.
+if (filter_var(getenv('APP_FORCE_HTTPS') ?: '0', FILTER_VALIDATE_BOOL)) {
+    $middlewares[] = new HttpsRedirectMiddleware(
+        trustProxy: filter_var(getenv('APP_TRUST_PROXY') ?: '0', FILTER_VALIDATE_BOOL),
+        excludedPrefixes: ['/api/v1/healthz', '/api/v1/readyz'],
+    );
+}
+
+$middlewares[] = new CorsMiddleware($corsConfig);
+
 // Rate limit a Cors után — preflight OPTIONS-ok ne számítsanak bele a bucketbe.
-// In-memory store dev/single-worker SAPI-hoz; multi-worker FPM-hez Redis-adapter
-// kell (M5 prod deploy). A master switch a config 'enabled' flag-je.
+// A backend a config-ból jön: `memory` (dev/single-worker) vagy `redis`
+// (production multi-worker FPM). Master switch a config 'enabled' flag-je.
 $rateLimitConfig = require ROOT_PATH . '/config/rate-limit.php';
 if (RateLimitConfig::isEnabled($rateLimitConfig)) {
+    /** @var RateLimitStore $rateLimitStore */
+    $rateLimitStore = ($rateLimitConfig['backend'] ?? 'memory') === 'redis'
+        ? new RedisStore(
+            new PredisAdapter(new Predis\Client((string) $rateLimitConfig['redis_dsn'])),
+            (string) $rateLimitConfig['redis_prefix'],
+        )
+        : new InMemoryStore();
+
     $middlewares[] = new RateLimitMiddleware(
         rules: RateLimitConfig::rulesFromArray($rateLimitConfig),
-        store: new InMemoryStore(),
+        store: $rateLimitStore,
         clock: new SystemClock(),
         trustProxy: RateLimitConfig::trustProxy($rateLimitConfig),
     );

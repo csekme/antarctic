@@ -79,17 +79,43 @@ A pipeline-pozíció (CORS után) azért fontos, hogy a preflight `OPTIONS` ne s
 
 ## Production: Redis backend
 
-Az `InMemoryStore` per-process — multi-worker FPM-ben minden worker külön bucketet vezet, így egy IP minden worker-nyi-szer érheti el a limit-et. Production-hez `RedisStore` kell (M5 task), ami `INCR` + `EXPIRE` round-trip-pel atomikusan számol.
+Az `InMemoryStore` per-process — multi-worker FPM-ben minden worker külön bucketet vezet, így egy IP minden worker-nyi-szer érheti el a limit-et. Az M5 óta szállítjuk a `RedisStore`-t és a `PredisAdapter`-t; production deployhoz kapcsold be a config `backend` kulcsával:
 
-A `RateLimitStore` interface designja erre a mintára van szabva — ha implementálsz egy `RedisStore`-t (vagy `MemcachedStore`-t), csak a `RateLimitMiddleware` `store:` paraméterét cseréld:
+```bash
+APP_RATE_LIMIT_BACKEND=redis
+REDIS_DSN=tcp://redis:6379
+REDIS_KEY_PREFIX=rl:
+```
+
+A `Bootstrap.php` ezt a switch-et nézi és a megfelelő store-t építi:
 
 ```php
-$redis = new Predis\Client('tcp://redis:6379');
-$middlewares[] = new RateLimitMiddleware(
-    rules: RateLimitConfig::rulesFromArray($rateLimitConfig),
-    store: new RedisStore($redis),
-    clock: new SystemClock(),
-);
+$rateLimitStore = ($rateLimitConfig['backend'] ?? 'memory') === 'redis'
+    ? new RedisStore(
+        new PredisAdapter(new Predis\Client((string) $rateLimitConfig['redis_dsn'])),
+        (string) $rateLimitConfig['redis_prefix'],
+    )
+    : new InMemoryStore();
+```
+
+Az `INCR + EXPIRE` atomicity-t a `PredisAdapter` egy Lua scripttel (`EVAL`) garantálja: az első `INCR`-kor (count==1) áll be a TTL, későbbi hitekkor nem nyúl hozzá. Naïv `INCR; EXPIRE` két parancsként race-elne — két konkurens process közé eshet egy `INCR` egy `EXPIRE` nélkül, és a bucket örökre megmaradna.
+
+### Saját adapter (phpredis / RoadRunner KV)
+
+A `RedisLike` interface minimális: két metódus (`incrementAndExpire`, `ttl`). Ha `ext-redis`-t használsz a `predis/predis` helyett, írj egy `PhpRedisAdapter`-t — a Lua script ugyanaz, csak a call surface más:
+
+```php
+final class PhpRedisAdapter implements RedisLike
+{
+    public function __construct(private readonly \Redis $client) {}
+
+    public function incrementAndExpire(string $key, int $ttl): int
+    {
+        return (int) $this->client->eval(self::SCRIPT, [$key, $ttl], 1);
+    }
+
+    public function ttl(string $key): int { return (int) $this->client->ttl($key); }
+}
 ```
 
 ## User-key stratégia

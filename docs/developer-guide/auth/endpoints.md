@@ -170,7 +170,7 @@ Set-Cookie: csrf_token=; Max-Age=0; Path=/; SameSite=Strict; Secure
 ```
 
 !!! note "Globális logout (mind az eszközről)"
-    A jelenlegi logout csak a kliens saját refresh tokenjét revokálja. Az "összes eszközről kilépés" funkció a `refresh_tokens` táblán `UPDATE … WHERE user_id = X` formában futtatható (lásd [refresh-tokens.md](refresh-tokens.md)). Endpointot M5-ben kap.
+    A jelenlegi logout csak a kliens saját refresh tokenjét revokálja. Az "összes eszközről kilépés" funkció a `refresh_tokens` táblán `UPDATE … WHERE user_id = X` formában futtatható (lásd [refresh-tokens.md](refresh-tokens.md)). Külön endpointot egy későbbi PR-ben kap (M5 nem szállította).
 
 ## `GET /api/v1/auth/me`
 

@@ -20,6 +20,11 @@ declare(strict_types=1);
 return [
     'enabled' => filter_var(getenv('APP_RATE_LIMIT') ?: '0', FILTER_VALIDATE_BOOL),
     'trust_proxy' => filter_var(getenv('APP_TRUST_PROXY') ?: '0', FILTER_VALIDATE_BOOL),
+    // Store backend: "memory" (single-worker only) or "redis" (multi-worker FPM/k8s).
+    // `redis_dsn` / `redis_prefix` are read when backend=redis.
+    'backend' => strtolower((string) (getenv('APP_RATE_LIMIT_BACKEND') ?: 'memory')),
+    'redis_dsn' => getenv('REDIS_DSN') ?: 'tcp://127.0.0.1:6379',
+    'redis_prefix' => getenv('REDIS_KEY_PREFIX') ?: 'rl:',
     'rules' => [
         // Brute-force protection for the password and 2FA flows.
         ['name' => 'auth-login', 'path_prefix' => '/api/v1/auth/login', 'limit' => 5, 'window' => 60],

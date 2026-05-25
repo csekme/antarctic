@@ -45,7 +45,7 @@ A keretrendszer fejlesztése milestone-okra van bontva (M0…M6). A milestone PR
 | M2 | RS256 JWT auth + refresh rotation + 2FA | ✅ M2.a–d kész |
 | M3 | Drop-in SPA + routing rewrite + DI | ✅ M3.a–c kész (webroot, route cache + method-aware, PSR-11 container) |
 | M4 | Migrations + validáció + OpenAPI | ✅ M4.a + M4.b.1–4 kész (doctrine/migrations + Repository + DTO validator + OpenAPI + pagination + rate limit) |
-| M5 | Production Docker + observability | ⏳ tervezett |
+| M5 | Production Docker + observability | ✅ kész (security headers + trace ID + JSON log + healthcheck + proxy-aware HTTPS + Redis rate-limit store + multi-stage Docker) |
 | M6 | Példa React SPA | ⏳ tervezett |
 
 ## Hozzájárulás a doksihoz

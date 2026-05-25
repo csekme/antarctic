@@ -74,8 +74,13 @@ nav:
       - Middleware pipeline: http/middleware.md
       - Routing: http/routing.md
       - Request és Response: http/request-response.md
+      - Validation és DTO: http/validation.md
+      - Pagination: http/pagination.md
       - CORS: http/cors.md
       - Hibakezelés (RFC 7807): http/error-handling.md
+      - Security headers: http/security-headers.md
+      - Rate limit: http/rate-limit.md
+      - OpenAPI és Swagger UI: http/openapi.md
   - Autentikáció:
       - auth/index.md
       - JWT és TokenService: auth/jwt.md
@@ -87,6 +92,7 @@ nav:
   - Container és DI: container.md
   - Adatbázis és migrációk: database.md
   - Deployment és SPA módok: deployment.md
+  - Observability: observability.md
   - Tesztelés: testing.md
   - Karbantartói útmutató:
       - _meta/MAINTAINING.md

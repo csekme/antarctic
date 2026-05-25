@@ -86,7 +86,15 @@
       "Bash(php bin/console openapi:dump)",
       "Bash(php bin/console openapi:dump --clear)",
       "Bash(php bin/console help)",
-      "Bash(echo \"exit: $?\")"
+      "Bash(echo \"exit: $?\")",
+      "Bash(./vendor/bin/phpunit --filter SecurityHeadersMiddleware)",
+      "Bash(./vendor/bin/phpunit)",
+      "Bash(./vendor/bin/phpstan analyse *)",
+      "Bash(./vendor/bin/phpunit --filter \"TraceId|LoggerFactory|HealthController|SecurityHeaders\")",
+      "Bash(composer show *)",
+      "Bash(composer --version)",
+      "Bash(php /tmp/composer require predis/predis --no-interaction)",
+      "Bash(./vendor/bin/phpunit --filter \"Redis|Predis\")"
     ],
     "additionalDirectories": [
       "/tmp"

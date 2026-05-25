@@ -15,22 +15,28 @@ Az Antarctic HTTP rétege **PSR-7** (üzenetek) és **PSR-15** (middleware) alap
 | [OpenAPI + Swagger UI](openapi.md) | `zircote/swagger-php` scan → `/api/v1/docs.json` + Swagger UI dev-ben |
 | [Pagination konvenció](pagination.md) | `?page=&perPage=&sort=&filter[]` query + `{data, meta}` envelope |
 | [Rate limit](rate-limit.md) | PSR-15 throttling middleware, 429 + `Retry-After` + `X-RateLimit-*` |
+| [Security headers](security-headers.md) | HSTS, CSP, X-Frame, Referrer-Policy, Permissions-Policy baseline |
 
-## Pipeline-sorrend (jelenlegi)
+## Pipeline-sorrend (M5 állapot)
 
 ```text
+SecurityHeadersMiddleware
+   ↓
+TraceIdMiddleware                 (← X-Request-Id + Monolog extra.trace_id)
+   ↓
 ErrorHandlerMiddleware
+   ↓
+HttpsRedirectMiddleware            (← opcionális: APP_FORCE_HTTPS=1)
    ↓
 CorsMiddleware
    ↓
-LegacyDispatcherMiddleware       (← itt fut a Dispatcher → Router → Controller)
+RateLimitMiddleware                (← opcionális: APP_RATE_LIMIT=1; in-memory vagy Redis)
+   ↓
+AuthMiddleware                     (← JWT kulcs jelenlétén múlik)
+   ↓
+LegacyDispatcherMiddleware         (← itt fut a Dispatcher → Router → Controller)
    ↓
 NotFoundHandler  (fallback)
 ```
 
-A jövőbeli middleware-ek beillesztési pontjai:
-
-- **SecurityHeaders** — HSTS, CSP, X-Frame-Options *(M5)*
-- **RequestId** — `X-Request-Id` echo + log kontextus *(M1 jövőbeli kibővítés)*
-- **RateLimit** — IP / user-alapú throttling *(M4.b.4, kész — env-flag mögött)*
-- **Auth** — Bearer JWT verifikáció *(M2.b, kész)*
+A részletes sorrendi indokláshoz: [Middleware pipeline](middleware.md#pipeline-sorrend).

@@ -1,0 +1,94 @@
+# Production stack — PHP-FPM behind nginx, PostgreSQL, Redis for shared
+# state (rate-limit buckets). Run with:
+#
+#   docker compose -f docker-compose.prod.yml up -d --build
+#
+# Environment variables come from `.env.prod` (gitignored). Secrets in real
+# deployments should come from Docker secrets / k8s secrets, not a file.
+
+services:
+  php-fpm:
+    container_name: antarctic-fpm
+    build:
+      context: .
+      dockerfile: docker/php-fpm/Dockerfile
+    expose:
+      - "9000"
+    environment:
+      APP_ENV: production
+      APP_DI_COMPILE: "1"
+      APP_RATE_LIMIT: "1"
+      APP_RATE_LIMIT_BACKEND: redis
+      APP_TRUST_PROXY: "1"
+      APP_FORCE_HTTPS: "1"
+      REDIS_DSN: tcp://redis:6379
+      DATABASE: postgresql
+      DATABASE_HOST: db
+      DATABASE_PORT: "5432"
+      DATABASE_NAME: ${DATABASE_NAME:-antarctic}
+      DATABASE_USER: ${DATABASE_USER:-antarctic}
+      DATABASE_PASSWORD: ${DATABASE_PASSWORD}
+    depends_on:
+      - db
+      - redis
+    networks:
+      - antarctic-prod
+    healthcheck:
+      test: ["CMD", "php", "-r", "exit((fsockopen('127.0.0.1', 9000, $$e, $$s, 1)) ? 0 : 1);"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+
+  nginx:
+    container_name: antarctic-nginx
+    build:
+      context: .
+      dockerfile: docker/nginx/Dockerfile
+    ports:
+      - "80:80"
+    depends_on:
+      - php-fpm
+    networks:
+      - antarctic-prod
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O-", "http://127.0.0.1/api/v1/healthz"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+
+  db:
+    image: postgres:16-alpine
+    container_name: antarctic-db
+    environment:
+      POSTGRES_DB: ${DATABASE_NAME:-antarctic}
+      POSTGRES_USER: ${DATABASE_USER:-antarctic}
+      POSTGRES_PASSWORD: ${DATABASE_PASSWORD}
+    volumes:
+      - antarctic-db-data:/var/lib/postgresql/data
+    networks:
+      - antarctic-prod
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "${DATABASE_USER:-antarctic}"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+
+  redis:
+    image: redis:7-alpine
+    container_name: antarctic-redis
+    command: ["redis-server", "--save", "", "--appendonly", "no", "--maxmemory", "128mb", "--maxmemory-policy", "allkeys-lru"]
+    networks:
+      - antarctic-prod
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+
+networks:
+  antarctic-prod:
+    name: antarctic-prod
+    driver: bridge
+
+volumes:
+  antarctic-db-data:
