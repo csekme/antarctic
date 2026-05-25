@@ -5,6 +5,8 @@ declare(strict_types=1);
 
 use Framework\Console\Application;
 use Framework\Console\KeysGenerateCommand;
+use Framework\Console\RouteCacheCommand;
+use Framework\Routing\RouteCache;
 
 if (PHP_SAPI !== 'cli') {
     fwrite(STDERR, "bin/console must be run from the command line.\n");
@@ -17,5 +19,6 @@ require_once ROOT_PATH . '/vendor/autoload.php';
 
 $app = new Application();
 $app->register(new KeysGenerateCommand(ROOT_PATH . '/var/keys'));
+$app->register(new RouteCacheCommand(new RouteCache(ROOT_PATH . '/var/cache/routes.php')));
 
 exit($app->run($argv));

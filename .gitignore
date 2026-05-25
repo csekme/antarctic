@@ -21,3 +21,6 @@ docker-compose.override.yml
 # A mappa maga (.gitkeep-pel) verzionált, a tartalma nem.
 /src/html/app/*
 !/src/html/app/.gitkeep
+
+# Var (runtime artefactek): JWT kulcsok, route cache, log fájlok
+/src/var/
