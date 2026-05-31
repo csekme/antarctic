@@ -34,7 +34,6 @@ use Laminas\HttpHandlerRunner\Emitter\SapiEmitter;
 use Nyholm\Psr7\Factory\Psr17Factory;
 use Nyholm\Psr7Server\ServerRequestCreator;
 use Psr\Http\Server\MiddlewareInterface;
-use RuntimeException;
 
 error_reporting(E_ALL);
 set_error_handler('Framework\ErrorHandler::errorHandler');

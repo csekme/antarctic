@@ -71,13 +71,18 @@ abstract class Dal {
      */
     private static function getDbHost() : string
     {
-        return match (strtoupper($_ENV["DATABASE"])) {
-            'MARIADB' => 'mariadb:host=',
+        // NB. MariaDB is served via the pdo_mysql driver (mysql: DSN); there
+        // is no separate `mariadb:` PDO prefix until php-src ships a dedicated
+        // pdo_mariadb driver. Using `mariadb:` here would produce
+        // "could not find driver" at runtime.
+        return match (strtoupper($_ENV["DATABASE"] ?? '')) {
             'POSTGRESQL' => 'pgsql:host=',
-            'MYSQL' => 'mysql:host=',
+            'MARIADB', 'MYSQL' => 'mysql:host=',
             default => 'mysql:host=',
         };
     }
+
+    private static ?PDO $connection = null;
 
     /**
      * Public accessor for the lazily-built PDO connection. Intended for
@@ -95,24 +100,33 @@ abstract class Dal {
     }
 
     /**
+     * Test-only override of the cached PDO connection. Used by integration
+     * tests to inject an sqlite memory database; in production the
+     * connection is built lazily from $_ENV by connection().
+     */
+    public static function setConnection(?PDO $pdo): void
+    {
+        self::$connection = $pdo;
+    }
+
+    /**
      * Return a connection to the database
      * @return PDO|null
      */
     protected static function connection(): ?PDO
     {
-        static $db = null;
-        if ($db === null) {
+        if (self::$connection === null) {
             $connectionString =
                 Dal::getDbHost() . $_ENV['DATABASE_HOST'] .
                 ';port=' . $_ENV['DATABASE_PORT'] .
                 ';dbname=' . $_ENV['DATABASE_NAME'] ;
 
 
-            $db = new PDO($connectionString, $_ENV['DATABASE_USER'], $_ENV['DATABASE_PASSWORD']);
+            self::$connection = new PDO($connectionString, $_ENV['DATABASE_USER'], $_ENV['DATABASE_PASSWORD']);
             // Throw an Exception when an error occurs
-            $db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+            self::$connection->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
         }
-        return $db;
+        return self::$connection;
     }
 
     public function getErrorsAsJson(): false|string

@@ -23,14 +23,20 @@ services:
     ports:
       - ${DATABASE_PORT}:${DATABASE_PORT}
     environment:
-      - POSTGRES_USER=${DATABASE_USER} # The PostgreSQL user (useful to connect to the database)
+      # PostgreSQL (DATABASE=postgresql esetén)
+      - POSTGRES_USER=${DATABASE_USER}
       - POSTGRES_PASSWORD=${DATABASE_PASSWORD}
       - POSTGRES_DB=${DATABASE_NAME}
       - POSTGRES_INITDB_ARGS=--auth-host=md5 --locale=hu_HU.UTF-8
+      # MariaDB (DATABASE=mariadb esetén)
+      - MARIADB_ROOT_PASSWORD=${DATABASE_ROOT_PASSWORD}
+      - MARIADB_DATABASE=${DATABASE_NAME}
+      - MARIADB_USER=${DATABASE_USER}
+      - MARIADB_PASSWORD=${DATABASE_PASSWORD}
     networks:
       - antarctic-web
     volumes:
-      - ~/.local/share/antarctic/data/:/var/lib/postgresql/data/
+      - ~/.local/share/antarctic/data/${DATABASE}/:${DATABASE_DATADIR}
 
 networks:
   antarctic-web:

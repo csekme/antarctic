@@ -60,8 +60,8 @@ class Mail
      */
     public static function sendHtmlMessage($to, $subject, $html): bool | string
     {
-        $smtp_config = Config::get_config()["smtp"];
-        if ($smtp_config["enabled"]) {
+        $smtp_config = Config::get_config()["smtp"] ?? null;
+        if (is_array($smtp_config) && ($smtp_config["enabled"] ?? false)) {
             if ($smtp_config['method'] == 0){
                 $mail = Mail::smtp();
             } else {
@@ -104,8 +104,8 @@ class Mail
      */
     public static function send($to, $subject, $text, $html) : void
     {
-        $smtp_config = Config::get_config()["smtp"];
-        if ($smtp_config["enabled"]) {
+        $smtp_config = Config::get_config()["smtp"] ?? null;
+        if (is_array($smtp_config) && ($smtp_config["enabled"] ?? false)) {
             if ($smtp_config['method'] == 0){
                 $mail = Mail::smtp();
             } else {

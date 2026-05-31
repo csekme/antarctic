@@ -37,10 +37,10 @@ final class RefreshTokenRepository
             ':family_id' => $familyId,
             ':token_hash' => $tokenHash,
             ':rotated_from' => $rotatedFrom,
-            ':expires_at' => $expiresAt->format(DATE_ATOM),
+            ':expires_at' => $expiresAt->format('Y-m-d H:i:s'),
             ':user_agent' => $userAgent,
             ':ip' => $ip,
-            ':created_at' => (new DateTimeImmutable())->format(DATE_ATOM),
+            ':created_at' => (new DateTimeImmutable())->format('Y-m-d H:i:s'),
         ]);
 
         return (int) $this->pdo->lastInsertId();
@@ -75,7 +75,7 @@ final class RefreshTokenRepository
     public function markRotated(int $id, DateTimeImmutable $at): void
     {
         $stmt = $this->pdo->prepare('UPDATE refresh_tokens SET revoked_at = :at WHERE id = :id AND revoked_at IS NULL');
-        $stmt->execute([':at' => $at->format(DATE_ATOM), ':id' => $id]);
+        $stmt->execute([':at' => $at->format('Y-m-d H:i:s'), ':id' => $id]);
     }
 
     /**
@@ -90,7 +90,7 @@ final class RefreshTokenRepository
             'UPDATE refresh_tokens SET revoked_at = :at WHERE family_id = :fid AND revoked_at IS NULL'
         );
         $stmt->execute([
-            ':at' => (new DateTimeImmutable())->format(DATE_ATOM),
+            ':at' => (new DateTimeImmutable())->format('Y-m-d H:i:s'),
             ':fid' => $familyId,
         ]);
         return $stmt->rowCount();
@@ -104,7 +104,7 @@ final class RefreshTokenRepository
         $stmt = $this->pdo->prepare(
             'DELETE FROM refresh_tokens WHERE expires_at < :b OR (revoked_at IS NOT NULL AND revoked_at < :b)'
         );
-        $stmt->execute([':b' => $before->format(DATE_ATOM)]);
+        $stmt->execute([':b' => $before->format('Y-m-d H:i:s')]);
         return $stmt->rowCount();
     }
 }

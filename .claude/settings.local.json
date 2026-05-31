@@ -113,7 +113,26 @@
       "Bash(/usr/local/bin/composer validate *)",
       "Bash(php -r \"json_decode\\(file_get_contents\\('composer.json'\\)\\); echo json_last_error\\(\\) === JSON_ERROR_NONE ? 'composer.json valid JSON' : 'INVALID JSON: ' . json_last_error_msg\\(\\), PHP_EOL;\")",
       "Bash(git tag -a v1.0.0-alpha.1 -m ' *)",
-      "Bash(gh release create v1.0.0-alpha.1 --title 'v1.0.0-alpha.1 — release-ready alfa' --prerelease --notes ' *)"
+      "Bash(gh release create v1.0.0-alpha.1 --title 'v1.0.0-alpha.1 — release-ready alfa' --prerelease --notes ' *)",
+      "Bash(docker compose *)",
+      "Bash(vendor/bin/doctrine-migrations migrations:status)",
+      "Bash(vendor/bin/doctrine-migrations migrations:migrate --no-interaction)",
+      "Bash(lsof -iTCP:8080 -sTCP:LISTEN -P -n)",
+      "Bash(lsof -iTCP -sTCP:LISTEN -P -n)",
+      "Bash(php --version)",
+      "Bash(php vendor/bin/phpstan analyse --memory-limit=512M --no-progress)",
+      "Bash(php vendor/bin/phpunit --testdox tests/Framework/Controllers/Api/V1/AuthControllerTest.php)",
+      "Bash(php vendor/bin/phpunit tests/Framework/Controllers/Api/V1/AuthControllerTest.php)",
+      "Bash(php vendor/bin/phpunit)",
+      "Bash(node_modules/.bin/tsc --noEmit -p .)",
+      "Bash(node_modules/.bin/tsc --noEmit)",
+      "Bash(echo \"exit=$?\")",
+      "Bash(docker exec *)",
+      "Bash(curl -sS -i -X POST http://localhost/api/v1/auth/register -H 'Content-Type: application/json' -d '{\"email\":\"test@example.com\",\"username\":\"tester\",\"password\":\"Secret123!\",\"password_confirm\":\"Secret123!\"}')",
+      "Bash(curl -sS -i -X POST http://localhost/api/v1/auth/register -H 'Content-Type: application/json' -d '{\"email\":\"test1@example.com\",\"username\":\"tester1\",\"password\":\"Secret123!\",\"password_confirm\":\"Secret123!\"}')",
+      "Bash(curl -sS -i -X POST http://localhost/api/v1/auth/register -H 'Content-Type: application/json' -d '{\"email\":\"test2@example.com\",\"username\":\"tester2\",\"password\":\"Secret123!\",\"password_confirm\":\"Secret123!\"}')",
+      "Bash(curl -sS -i -X POST http://localhost/api/v1/auth/register -H 'Content-Type: application/json' -d '{\"email\":\"t3@example.com\",\"username\":\"t3\",\"password\":\"Secret123!\",\"password_confirm\":\"Secret123!\"}')",
+      "Bash(curl -sS -i -X POST http://localhost/api/v1/auth/login -H 'Content-Type: application/json' -d '{\"email\":\"nope@example.com\",\"password\":\"x\"}')"
     ],
     "additionalDirectories": [
       "/tmp"

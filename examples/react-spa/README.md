@@ -15,11 +15,13 @@ RS256 JWT + refresh-cookie design:
 
 ## Pages
 
-| Route      | Auth         | Notes                                  |
-|------------|--------------|----------------------------------------|
-| `/`        | public       | static content, no API call            |
-| `/login`   | public       | email + password, optional 2FA TOTP    |
-| `/profile` | required     | fetches `GET /api/v1/auth/me`          |
+| Route           | Auth         | Notes                                            |
+|-----------------|--------------|--------------------------------------------------|
+| `/`             | public       | static content, no API call                      |
+| `/login`        | public       | email + password, optional 2FA TOTP              |
+| `/register`     | public       | new account; account starts inactive             |
+| `/verify-email` | public       | consumes `?token=…` from the activation email    |
+| `/profile`      | required     | `GET /api/v1/auth/me` + 2FA enroll/disable panel |
 
 ## Run
 
@@ -36,6 +38,17 @@ Leave `VITE_API_BASE` empty in `.env`. Vite's dev server proxies
 `/api/v1/*` to `APP_BACKEND_ORIGIN` (default `http://localhost:8080`),
 so the browser sees a single origin — `__Host-` cookies survive and
 no CORS config is needed.
+
+### Backend env vars relevant to this SPA
+
+The backend `src/.env` must set:
+
+- `APP_SECRET_KEY` — HMAC secret for the activation tokens (`openssl rand -hex 32`).
+- `APP_VERIFY_EMAIL_URL` — the URL the email link points to, e.g.
+  `http://localhost:5173/verify-email` (same-origin dev: `/verify-email`).
+- `APP_EXPOSE_VERIFICATION_LINK=1` — dev-only: includes the verification
+  link in the register response body, so the flow works without SMTP.
+  Leave at `0` in production.
 
 ### Separate-origin
 

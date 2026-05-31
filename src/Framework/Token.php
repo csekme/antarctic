@@ -55,10 +55,14 @@ class Token
      */
     public function getHash(): string
     {
-        if (isset(Config::get_config()["application"]["secretKey"])) {
-            return hash_hmac('sha256', $this->token, Config::get_config()["application"]["secretKey"]);  // sha256 = 64 chars
-        } else {
-            throw new Exception(message: 'application.secretKey has not set', code: 500);
+        $secret = Config::get_config()["application"]["secretKey"] ?? null;
+        if (!is_string($secret) || $secret === '') {
+            $envSecret = getenv('APP_SECRET_KEY');
+            $secret = $envSecret !== false && $envSecret !== '' ? $envSecret : null;
         }
+        if ($secret === null) {
+            throw new Exception(message: 'application.secretKey (or APP_SECRET_KEY env) has not been set', code: 500);
+        }
+        return hash_hmac('sha256', $this->token, $secret);  // sha256 = 64 chars
     }
 }

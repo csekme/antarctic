@@ -109,11 +109,12 @@ final class ClassExploder
      */
     private static function defaultNamespaces(): array
     {
-        $namespaces = ['Application\\Controllers'];
-        if (Config::useCoreController()) {
-            $namespaces[] = 'Framework\\Controllers';
-        }
-        return $namespaces;
+        // `Framework\\Controllers` mindig benne van: a hivatalos framework
+        // endpointok (auth, health, docs) ott élnek, és egy SPA-natív backend
+        // ezek nélkül használhatatlan. Az `Application\\Controllers` az app
+        // saját kontrollereinek a háza — a sorrend itt csak a discovery
+        // bejárási sorrendet befolyásolja, nem a route-egyezés precedenciáját.
+        return ['Application\\Controllers', 'Framework\\Controllers'];
     }
 
     /**

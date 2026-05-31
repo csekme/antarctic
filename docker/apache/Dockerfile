@@ -1,5 +1,5 @@
 # syntax=docker/dockerfile:1
-FROM php:8.2-apache-bullseye
+FROM php:8.4-apache-bookworm
 
 # install xdebug
 RUN pecl install xdebug

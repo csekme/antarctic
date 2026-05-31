@@ -29,6 +29,13 @@ return [
         // Brute-force protection for the password and 2FA flows.
         ['name' => 'auth-login', 'path_prefix' => '/api/v1/auth/login', 'limit' => 5, 'window' => 60],
         ['name' => 'auth-2fa', 'path_prefix' => '/api/v1/auth/2fa/verify', 'limit' => 5, 'window' => 60],
+        // Registration is a heavier operation (DB write + email send); IP-based.
+        ['name' => 'auth-register', 'path_prefix' => '/api/v1/auth/register', 'limit' => 3, 'window' => 60],
+        // Email-verify token enumeration guard.
+        ['name' => 'auth-verify-email', 'path_prefix' => '/api/v1/auth/verify-email', 'limit' => 10, 'window' => 60],
+        // 2FA setup endpoints (enroll, confirm, disable) — RequireAuth, so user-keyed.
+        // NB. /2fa/verify is matched above and isn't a setup operation.
+        ['name' => 'auth-2fa-setup', 'path_prefix' => '/api/v1/auth/2fa/', 'limit' => 10, 'window' => 60, 'key' => 'user'],
         // Catch-all for the rest of the API. Tune as endpoints grow.
         ['name' => 'api-default', 'path_prefix' => '/api/v1/', 'limit' => 120, 'window' => 60],
     ],

@@ -8,7 +8,16 @@ import {
   type ReactNode,
 } from "react";
 import { ApiError } from "../api/client.ts";
-import { isTwoFactorChallenge, login as apiLogin, logout as apiLogout, me, type User } from "../api/auth.ts";
+import {
+  isTwoFactorChallenge,
+  login as apiLogin,
+  logout as apiLogout,
+  me,
+  register as apiRegister,
+  type RegisterPayload,
+  type RegisterResponse,
+  type User,
+} from "../api/auth.ts";
 
 type Status = "loading" | "authenticated" | "anonymous";
 
@@ -20,6 +29,7 @@ interface AuthContextValue {
   status: Status;
   user: User | null;
   signIn: (email: string, password: string) => Promise<SignInResult>;
+  signUp: (payload: RegisterPayload) => Promise<RegisterResponse>;
   signOut: () => Promise<void>;
   refreshUser: () => Promise<void>;
 }
@@ -75,9 +85,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setStatus("anonymous");
   }, []);
 
+  // Registration never returns a session — the new user must verify their
+  // email first. We hand the raw RegisterResponse back to the caller so the
+  // page can surface the dev-mode verification link.
+  const signUp = useCallback<AuthContextValue["signUp"]>(async (payload) => {
+    return apiRegister(payload);
+  }, []);
+
   const value = useMemo<AuthContextValue>(
-    () => ({ status, user, signIn, signOut, refreshUser }),
-    [status, user, signIn, signOut, refreshUser],
+    () => ({ status, user, signIn, signUp, signOut, refreshUser }),
+    [status, user, signIn, signUp, signOut, refreshUser],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

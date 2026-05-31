@@ -34,7 +34,12 @@ final class ErrorHandlerMiddleware implements MiddlewareInterface
         try {
             return $handler->handle($request);
         } catch (Throwable $e) {
-            $status = $this->mapStatus($e->getCode());
+            // Throwable::getCode() declared int in the base class, but the
+            // SPL/PDO subclasses (PDOException, MongoDB driver, …) return
+            // strings — SQLSTATE codes like "22007". Cast defensively so the
+            // mapStatus int signature never sees a string.
+            $rawCode = $e->getCode();
+            $status = $this->mapStatus(is_int($rawCode) ? $rawCode : 0);
 
             if ($status >= 500) {
                 $this->logger->error($e->getMessage(), [

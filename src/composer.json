@@ -1,11 +1,11 @@
 {
     "name": "csekme/antarctic",
-    "description": "SPA-native PHP 8.2 backend framework with RS256 JWT, PSR-7/15 pipeline, php-di, doctrine/migrations, OpenAPI, rate limiting, and a production Docker stack.",
+    "description": "SPA-native PHP 8.4 backend framework with RS256 JWT, PSR-7/15 pipeline, php-di, doctrine/migrations, OpenAPI, rate limiting, and a production Docker stack.",
     "type": "project",
     "license": "GPL-3.0-only",
     "homepage": "https://github.com/csekme/antarctic",
     "keywords": [
-        "php82",
+        "php84",
         "framework",
         "jwt",
         "psr-7",
@@ -38,7 +38,7 @@
         }
     },
     "require": {
-        "php": ">=8.2",
+        "php": ">=8.4",
         "twig/twig": "^3.0",
         "phpmailer/phpmailer": "^6.9",
         "ext-pdo": "*",
