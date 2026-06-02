@@ -76,8 +76,11 @@ class Response {
         }
 
         foreach ($this->headers as $header) {
-
-            header($header);
+            // `Set-Cookie` headers must NOT replace each other — a single
+            // response may set multiple cookies (refresh + csrf + …). For
+            // every other header the default replace=true is what we want.
+            $isSetCookie = stripos($header, 'set-cookie:') === 0;
+            header($header, !$isSetCookie);
         }
 
         echo $this->body;
